@@ -14,6 +14,7 @@
 #include "formats/roland_dsk.h"
 
 //#include "bus/midi/midi.h"
+#include "bus/nscsi/cd.h"
 #include "bus/nscsi/hd.h"
 #include "cpu/mcs96/i8x9x.h"
 #include "imagedev/floppy.h"
@@ -374,7 +375,8 @@ void roland_w30_state::w30_mem_map(address_map &map)
 	map(0xe400, 0xe403).rw("lcd", FUNC(lm24014h_device::read), FUNC(lm24014h_device::write)).umask16(0x00ff);
 	//map(0xe800, 0xe83f).w("output", FUNC(upd65006gf_376_3b8_device::write)).umask16(0x00ff);
 	//map(0xf000, 0xf01f).rw(m_tvf, FUNC(mb654419u_device::read), FUNC(mb654419u_device::write)).umask16(0x00ff);
-	map(0xc000, 0xffff).rw(m_wave, FUNC(sa16_device::read), FUNC(sa16_device::write)).umask16(0xff00);
+	map(0xc000, 0xf7ff).rw(m_wave, FUNC(sa16_device::read), FUNC(sa16_device::write)).umask16(0xff00);
+	map(0xf800, 0xffff).rw(FUNC(roland_w30_state::key_r), FUNC(roland_w30_state::key_w));
 }
 
 [[maybe_unused]] void roland_w30_state::s330_mem_map(address_map &map)
@@ -420,6 +422,7 @@ static void floppy_formats(format_registration &fr)
 
 static void scsi_devices(device_slot_interface &device)
 {
+	device.option_add("cdrom", NSCSI_CDROM);
 	device.option_add("harddisk", NSCSI_HARDDISK);
 }
 

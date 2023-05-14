@@ -563,6 +563,10 @@ template <typename T>
 inline detail::rw_delegate_type_t<T> rw_delegate(detail::rw_delegate_device_class_t<T> &object, T &&func, char const *name)
 { return detail::rw_delegate_type_t<T>(object, std::forward<T>(func), name); }
 
+template <typename D, bool Reqd, typename T>
+inline detail::rw_delegate_type_t<T> rw_delegate(device_finder<D, Reqd> const &finder, T &&func, char const *name)
+{ return detail::rw_delegate_type_t<T>(finder, std::forward<T>(func), name); }
+
 } // namespace emu
 
 
@@ -2390,6 +2394,7 @@ public:
 	virtual void remove_passthrough(std::unordered_set<handler_entry *> &handlers) = 0;
 
 	u64 unmap() const { return m_unmap; }
+	void unmap_value_high() { m_unmap = ~0; }
 
 	std::shared_ptr<emu::detail::memory_passthrough_handler_impl> make_mph(memory_passthrough_handler *mph);
 	std::shared_ptr<emu::detail::memory_passthrough_handler_impl> get_default_mpl() { return m_default_mpl; }
