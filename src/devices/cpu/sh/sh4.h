@@ -168,6 +168,8 @@ public:
 
 	void set_mmu_hacktype(int hacktype) { m_mmuhack = hacktype; }
 
+	void set_simulate_wait_states(bool enabled) { m_simulate_wait_states = enabled; }
+
 	TIMER_CALLBACK_MEMBER( sh4_refresh_timer_callback );
 	TIMER_CALLBACK_MEMBER( sh4_rtc_timer_callback );
 	TIMER_CALLBACK_MEMBER( sh4_timer_callback );
@@ -291,6 +293,8 @@ protected:
 	// hack 1 = Naomi hack, hack 2 = WIP implementation
 	int m_mmuhack;
 
+	bool m_simulate_wait_states = false;
+
 	uint32_t  m_exception_priority[128];
 	int     m_exception_requesting[128];
 
@@ -409,6 +413,13 @@ protected:
 			sh4_exception(message, irq);
 		}
 	}
+
+	uint8_t sh4_program_read_byte(offs_t A);
+	uint16_t sh4_program_read_word(offs_t A);
+	uint32_t sh4_program_read_dword(offs_t A);
+	void sh4_program_write_byte(offs_t A, uint8_t V);
+	void sh4_program_write_word(offs_t A, uint16_t V);
+	void sh4_program_write_dword(offs_t A, uint32_t V);
 
 	void sh4_change_register_bank(int to);
 	void sh4_swap_fp_registers();

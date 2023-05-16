@@ -262,22 +262,22 @@ int data_type_of(int n)
 inline uint8_t sh34_base_device::RB(offs_t A)
 {
 	if (A >= 0xe0000000)
-		return m_program->read_byte(A);
+		return sh4_program_read_byte(A);
 
 	if (A >= 0x80000000) // P1/P2/P3 region
 	{
-		return m_program->read_byte(A & SH34_AM);
+		return sh4_program_read_byte(A & SH34_AM);
 	}
 	else // P0 region
 	{
 		if (!m_sh4_mmu_enabled)
 		{
-			return m_program->read_byte(A & SH34_AM);
+			return sh4_program_read_byte(A & SH34_AM);
 		}
 		else
 		{
 			A = get_remap(A & SH34_AM);
-			return m_program->read_byte(A);
+			return sh4_program_read_byte(A);
 		}
 	}
 }
@@ -285,22 +285,22 @@ inline uint8_t sh34_base_device::RB(offs_t A)
 inline uint16_t sh34_base_device::RW(offs_t A)
 {
 	if (A >= 0xe0000000)
-		return m_program->read_word(A);
+		return sh4_program_read_word(A);
 
 	if (A >= 0x80000000) // P1/P2/P3 region
 	{
-		return m_program->read_word(A & SH34_AM);
+		return sh4_program_read_word(A & SH34_AM);
 	}
 	else
 	{
 		if (!m_sh4_mmu_enabled)
 		{
-			return m_program->read_word(A & SH34_AM);
+			return sh4_program_read_word(A & SH34_AM);
 		}
 		else
 		{
 			A = get_remap(A & SH34_AM);
-			return m_program->read_word(A);
+			return sh4_program_read_word(A);
 		}
 	}
 }
@@ -308,22 +308,22 @@ inline uint16_t sh34_base_device::RW(offs_t A)
 inline uint32_t sh34_base_device::RL(offs_t A)
 {
 	if (A >= 0xe0000000)
-		return m_program->read_dword(A);
+		return sh4_program_read_dword(A);
 
 	if (A >= 0x80000000) // P1/P2/P3 region
 	{
-		return m_program->read_dword(A & SH34_AM);
+		return sh4_program_read_dword(A & SH34_AM);
 	}
 	else
 	{
 		if (!m_sh4_mmu_enabled)
 		{
-			return m_program->read_dword(A & SH34_AM);
+			return sh4_program_read_dword(A & SH34_AM);
 		}
 		else
 		{
 			A = get_remap(A & SH34_AM);
-			return m_program->read_dword(A);
+			return sh4_program_read_dword(A);
 		}
 	}
 }
@@ -332,24 +332,24 @@ inline void sh34_base_device::WB(offs_t A, uint8_t V)
 {
 	if (A >= 0xe0000000)
 	{
-		m_program->write_byte(A, V);
+		sh4_program_write_byte(A, V);
 		return;
 	}
 
 	if (A >= 0x80000000) // P1/P2/P3 region
 	{
-		m_program->write_byte(A & SH34_AM, V);
+		sh4_program_write_byte(A & SH34_AM, V);
 	}
 	else
 	{
 		if (!m_sh4_mmu_enabled)
 		{
-			m_program->write_byte(A & SH34_AM, V);
+			sh4_program_write_byte(A & SH34_AM, V);
 		}
 		else
 		{
 			A = get_remap(A & SH34_AM);
-			m_program->write_byte(A, V);
+			sh4_program_write_byte(A, V);
 		}
 	}
 }
@@ -358,24 +358,24 @@ inline void sh34_base_device::WW(offs_t A, uint16_t V)
 {
 	if (A >= 0xe0000000)
 	{
-		m_program->write_word(A, V);
+		sh4_program_write_word(A, V);
 		return;
 	}
 
 	if (A >= 0x80000000) // P1/P2/P3 region
 	{
-		m_program->write_word(A & SH34_AM, V);
+		sh4_program_write_word(A & SH34_AM, V);
 	}
 	else
 	{
 		if (!m_sh4_mmu_enabled)
 		{
-			m_program->write_word(A & SH34_AM, V);
+			sh4_program_write_word(A & SH34_AM, V);
 		}
 		else
 		{
 			A = get_remap(A & SH34_AM);
-			m_program->write_word(A, V);
+			sh4_program_write_word(A, V);
 		}
 	}
 }
@@ -384,24 +384,24 @@ inline void sh34_base_device::WL(offs_t A, uint32_t V)
 {
 	if (A >= 0xe0000000)
 	{
-		m_program->write_dword(A, V);
+		sh4_program_write_dword(A, V);
 		return;
 	}
 
 	if (A >= 0x80000000) // P1/P2/P3 region
 	{
-		m_program->write_dword(A & SH34_AM, V);
+		sh4_program_write_dword(A & SH34_AM, V);
 	}
 	else
 	{
 		if (!m_sh4_mmu_enabled)
 		{
-			m_program->write_dword(A & SH34_AM, V);
+			sh4_program_write_dword(A & SH34_AM, V);
 		}
 		else
 		{
 			A = get_remap(A & SH34_AM);
-			m_program->write_dword(A, V);
+			sh4_program_write_dword(A, V);
 		}
 	}
 }
@@ -2027,8 +2027,6 @@ void sh4_base_device::device_start()
 	}
 }
 
-
-
 void sh34_base_device::device_start()
 {
 	m_isdrc = allow_drc();
@@ -2059,7 +2057,13 @@ void sh34_base_device::device_start()
 	m_internal = &space(AS_PROGRAM);
 	m_program = &space(AS_PROGRAM);
 	m_io = &space(AS_IO);
-	if (m_program->endianness() == ENDIANNESS_LITTLE)
+
+	if (m_simulate_wait_states)
+	{
+		m_pr16 = [this](offs_t address) -> u16 { return sh4_program_read_word(address); };
+		// m_prptr is not needed when DRC is disabled.
+	}
+	else if (m_program->endianness() == ENDIANNESS_LITTLE)
 	{
 		m_program->cache(m_cache64le);
 		m_pr16 = [this](offs_t address) -> u16 { return m_cache64le.read_word(address); };

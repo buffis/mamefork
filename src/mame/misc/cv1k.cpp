@@ -255,8 +255,10 @@ private:
 	uint32_t m_idleramoffs;
 	uint32_t m_idlepc;
 
+	bool use_wait_states = true; // TODO: Make flag.
+
 	uint64_t speedup_r();
-	void install_speedups(uint32_t idleramoff, uint32_t idlepc, bool is_typed);
+	void init(uint32_t idleramoff, uint32_t idlepc, bool is_typed);
 
 	void cv1k_d_map(address_map &map);
 	void cv1k_map(address_map &map);
@@ -954,8 +956,16 @@ uint64_t cv1k_state::speedup_r()
 	return m_ram[m_idleramoffs / 8];
 }
 
-void cv1k_state::install_speedups(uint32_t idleramoff, uint32_t idlepc, bool is_typed)
+void cv1k_state::init(uint32_t idleramoff, uint32_t idlepc, bool is_typed)
 {
+	if (use_wait_states) 
+	{
+		m_maincpu->set_force_no_drc(true);	
+		m_maincpu->set_simulate_wait_states(true);
+		return;
+	}
+
+	// Install speedups.
 	m_idleramoffs = idleramoff;
 	m_idlepc = idlepc;
 
@@ -974,37 +984,37 @@ void cv1k_state::install_speedups(uint32_t idleramoff, uint32_t idlepc, bool is_
 
 void cv1k_state::init_mushisam()
 {
-	install_speedups(0x024d8, 0xc04a2aa, false);
+	init(0x024d8, 0xc04a2aa, false);
 }
 
 void cv1k_state::init_ibara()
 {
-	install_speedups(0x022f0, 0xc04a0aa, false);
+	init(0x022f0, 0xc04a0aa, false);
 }
 
 void cv1k_state::init_espgal2()
 {
-	install_speedups(0x02310, 0xc05177a, false);
+	init(0x02310, 0xc05177a, false);
 }
 
 void cv1k_state::init_mushitam()
 {
-	install_speedups(0x0022f0, 0xc04a0da, false);
+	init(0x0022f0, 0xc04a0da, false);
 }
 
 void cv1k_state::init_pinkswts()
 {
-	install_speedups(0x02310, 0xc05176a, false);
+	init(0x02310, 0xc05176a, false);
 }
 
 void cv1k_state::init_deathsml()
 {
-	install_speedups(0x02310, 0xc0519a2, false);
+	init(0x02310, 0xc0519a2, false);
 }
 
 void cv1k_state::init_ddpdfk()
 {
-	install_speedups(0x02310, 0xc1d1346, true);
+	init(0x02310, 0xc1d1346, true);
 }
 
 
