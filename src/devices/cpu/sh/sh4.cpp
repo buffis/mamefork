@@ -2058,6 +2058,8 @@ void sh34_base_device::device_start()
 	m_program = &space(AS_PROGRAM);
 	m_io = &space(AS_IO);
 
+	m_cache.set_memory(m_program);
+
 	if (m_simulate_wait_states)
 	{
 		m_pr16 = [this](offs_t address) -> u16 { return sh4_program_read_word(address); };

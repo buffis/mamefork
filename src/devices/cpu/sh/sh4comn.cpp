@@ -263,32 +263,50 @@ void sh34_base_device::sh4_swap_fp_couples()
 
 uint8_t sh34_base_device::sh4_program_read_byte(offs_t A) 
 {
-	return m_program->read_byte(A);
+	if (m_simulate_wait_states)
+		return m_cache.read_byte(A);
+	else
+		return m_program->read_byte(A);
 }
 
 uint16_t sh34_base_device::sh4_program_read_word(offs_t A)
 {
-	return m_program->read_word(A);
+	if (m_simulate_wait_states)
+		return m_cache.read_word(A);
+	else
+		return m_program->read_word(A);
 }
 
 uint32_t sh34_base_device::sh4_program_read_dword(offs_t A)
 {
-	return m_program->read_dword(A);
+	if (m_simulate_wait_states)
+		return m_cache.read_dword(A);
+	else
+		return m_program->read_dword(A);
 }
 
 void sh34_base_device::sh4_program_write_byte(offs_t A, uint8_t V)
 {
-	m_program->write_byte(A, V);
+	if (m_simulate_wait_states)
+		m_cache.write_byte(A, V);
+	else
+		m_program->write_byte(A, V);
 }
 
 void sh34_base_device::sh4_program_write_word(offs_t A, uint16_t V)
 {
-	m_program->write_word(A, V);
+	if (m_simulate_wait_states)
+		m_cache.write_word(A, V);
+	else
+		m_program->write_word(A, V);
 }
 
 void sh34_base_device::sh4_program_write_dword(offs_t A, uint32_t V)
 {
-	m_program->write_dword(A, V);
+	if (m_simulate_wait_states)
+		m_cache.write_dword(A, V);
+	else
+		m_program->write_dword(A, V);
 }
 
 void sh34_base_device::sh4_change_register_bank(int to)

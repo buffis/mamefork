@@ -16,6 +16,7 @@
 #pragma once
 
 #include "sh.h"
+#include "sh3_cache.h"
 
 #define SH4_INT_NONE    -1
 enum
@@ -302,6 +303,8 @@ protected:
 	address_space *m_internal;
 	address_space *m_program;
 	address_space *m_io;
+
+	sh3_cache m_cache;
 
 	// sh4 internal
 	uint32_t m_m[16384];
