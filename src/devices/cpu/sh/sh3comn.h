@@ -94,5 +94,6 @@
 #define SH3_TRA_ADDR        ((0xffffffd0 - SH3_UPPER_REGBASE)/4)
 #define SH3_EXPEVT_ADDR     ((0xffffffd4 - SH3_UPPER_REGBASE)/4)
 #define SH3_INTEVT_ADDR     ((0xffffffd8 - SH3_UPPER_REGBASE)/4)
+#define SH3_CCR_ADDR        ((0xffffffec - SH3_UPPER_REGBASE)/4)
 
 #endif /* __SH3COMN_H__ */

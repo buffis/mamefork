@@ -261,54 +261,6 @@ void sh34_base_device::sh4_swap_fp_couples()
 	}
 }
 
-uint8_t sh34_base_device::sh4_program_read_byte(offs_t A) 
-{
-	if (m_simulate_wait_states)
-		return m_cache.read_byte(A);
-	else
-		return m_program->read_byte(A);
-}
-
-uint16_t sh34_base_device::sh4_program_read_word(offs_t A)
-{
-	if (m_simulate_wait_states)
-		return m_cache.read_word(A);
-	else
-		return m_program->read_word(A);
-}
-
-uint32_t sh34_base_device::sh4_program_read_dword(offs_t A)
-{
-	if (m_simulate_wait_states)
-		return m_cache.read_dword(A);
-	else
-		return m_program->read_dword(A);
-}
-
-void sh34_base_device::sh4_program_write_byte(offs_t A, uint8_t V)
-{
-	if (m_simulate_wait_states)
-		m_cache.write_byte(A, V);
-	else
-		m_program->write_byte(A, V);
-}
-
-void sh34_base_device::sh4_program_write_word(offs_t A, uint16_t V)
-{
-	if (m_simulate_wait_states)
-		m_cache.write_word(A, V);
-	else
-		m_program->write_word(A, V);
-}
-
-void sh34_base_device::sh4_program_write_dword(offs_t A, uint32_t V)
-{
-	if (m_simulate_wait_states)
-		m_cache.write_dword(A, V);
-	else
-		m_program->write_dword(A, V);
-}
-
 void sh34_base_device::sh4_change_register_bank(int to)
 {
 	int s;
@@ -1299,6 +1251,12 @@ void sh34_base_device::sh4_parse_configuration()
 			m_pm_clock = m_clock / 4;
 			break;
 		}
+		
+		// TODO: This is a hack that is very uncool, fix up CKIO properly.
+		m_bus_clock = m_clock / 2;
+		m_pm_clock = m_clock / 4;
+		printf("CLOCK %d %d %d %d\n", (m_md[2] << 2) | (m_md[1] << 1) | (m_md[0]), m_cpu_clock, m_bus_clock, m_pm_clock);
+
 		m_is_slave = (~(m_md[7])) & 1;
 	}
 	else

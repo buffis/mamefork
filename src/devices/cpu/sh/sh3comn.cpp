@@ -50,6 +50,10 @@ void sh3_base_device::sh3_internal_high_w(offs_t offset, uint32_t data, uint32_t
 				fatalerror("SH3_TOCR_TSTR_ADDR unused bits accessed (write)\n");
 			}
 			break;
+		case SH3_CCR_ADDR:
+			m_cache.set_enabled((data & 1) == 1);
+			if (data & 8) m_cache.flush();
+			break;
 		case SH3_TCOR0_ADDR:  sh4_handle_tcor0_addr_w(data, mem_mask);break;
 		case SH3_TCOR1_ADDR:  sh4_handle_tcor1_addr_w(data, mem_mask);break;
 		case SH3_TCOR2_ADDR:  sh4_handle_tcor2_addr_w(data, mem_mask);break;
@@ -66,10 +70,6 @@ void sh3_base_device::sh3_internal_high_w(offs_t offset, uint32_t data, uint32_t
 			break;
 
 	}
-
-
-
-
 }
 
 uint32_t sh3_base_device::sh3_internal_high_r(offs_t offset, uint32_t mem_mask)

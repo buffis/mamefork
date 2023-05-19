@@ -417,13 +417,6 @@ protected:
 		}
 	}
 
-	uint8_t sh4_program_read_byte(offs_t A);
-	uint16_t sh4_program_read_word(offs_t A);
-	uint32_t sh4_program_read_dword(offs_t A);
-	void sh4_program_write_byte(offs_t A, uint8_t V);
-	void sh4_program_write_word(offs_t A, uint16_t V);
-	void sh4_program_write_dword(offs_t A, uint32_t V);
-
 	void sh4_change_register_bank(int to);
 	void sh4_swap_fp_registers();
 	void sh4_swap_fp_couples();

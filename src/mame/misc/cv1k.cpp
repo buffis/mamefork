@@ -481,6 +481,11 @@ void cv1k_state::cv1k(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &cv1k_state::cv1k_map);
 	m_maincpu->set_addrmap(AS_IO, &cv1k_state::cv1k_port);
 	m_maincpu->set_vblank_int("screen", FUNC(cv1k_state::irq2_line_hold)); // irq2 actually asserted at V-sync pulse, not at V-blank
+	if (use_wait_states) 
+	{
+		m_maincpu->set_force_no_drc(true);
+		m_maincpu->set_simulate_wait_states(true);
+	}
 
 	RTC9701(config, m_eeprom);
 	SERFLASH(config, m_serflash, 0);
@@ -523,6 +528,11 @@ void cv1k_state::cv1k_d(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &cv1k_state::cv1k_d_map);
 	m_maincpu->set_addrmap(AS_IO, &cv1k_state::cv1k_port);
 	m_maincpu->set_vblank_int("screen", FUNC(cv1k_state::irq2_line_hold));
+	if (use_wait_states) 
+	{
+		m_maincpu->set_force_no_drc(true);
+		m_maincpu->set_simulate_wait_states(true);
+	}
 
 	m_blitter->set_mainramsize(0x1000000);
 }
@@ -958,13 +968,6 @@ uint64_t cv1k_state::speedup_r()
 
 void cv1k_state::init(uint32_t idleramoff, uint32_t idlepc, bool is_typed)
 {
-	if (use_wait_states) 
-	{
-		m_maincpu->set_force_no_drc(true);	
-		m_maincpu->set_simulate_wait_states(true);
-		return;
-	}
-
 	// Install speedups.
 	m_idleramoffs = idleramoff;
 	m_idlepc = idlepc;
