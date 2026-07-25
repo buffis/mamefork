@@ -124,11 +124,11 @@ private:
 
 	void pcat_nit_rombank_w(uint8_t data);
 	uint8_t pcat_nit_io_r(offs_t offset);
-	virtual void machine_start() override;
-	void bonanza_io_map(address_map &map);
-	void bonanza_map(address_map &map);
-	void pcat_map(address_map &map);
-	void pcat_nit_io(address_map &map);
+	virtual void machine_start() override ATTR_COLD;
+	void bonanza_io_map(address_map &map) ATTR_COLD;
+	void bonanza_map(address_map &map) ATTR_COLD;
+	void pcat_map(address_map &map) ATTR_COLD;
+	void pcat_nit_io(address_map &map) ATTR_COLD;
 };
 
 /*************************************
@@ -256,7 +256,7 @@ void pcat_nit_state::pcat_nit(machine_config &config)
 	screen.set_raw(25.1748_MHz_XTAL, 900, 0, 640, 526, 0, 480);
 	screen.set_screen_update("vga", FUNC(vga_device::screen_update));
 
-	vga_device &vga(VGA(config, "vga", 0));
+	vga_device &vga(VGA(config, "vga"));
 	vga.set_screen("screen");
 	vga.set_vram_size(0x100000);
 
@@ -285,7 +285,7 @@ void pcat_nit_state::bonanza(machine_config &config)
 	screen.set_raw(25.1748_MHz_XTAL, 900, 0, 640, 526, 0, 480);
 	screen.set_screen_update("vga", FUNC(cirrus_gd5428_vga_device::screen_update));
 
-	cirrus_gd5428_vga_device &vga(CIRRUS_GD5428_VGA(config, "vga", 0));
+	cirrus_gd5428_vga_device &vga(CIRRUS_GD5428_VGA(config, "vga"));
 	vga.set_screen("screen");
 	vga.set_vram_size(0x200000);
 

@@ -13,6 +13,7 @@
 
 #include "ui/textbox.h"
 
+#include "input.h"
 #include "uiinput.h"
 
 #include <algorithm>
@@ -71,8 +72,8 @@ inline menu_analog::field_data::field_data(ioport_field &f) noexcept
 }
 
 
-menu_analog::menu_analog(mame_ui_manager &mui, render_container &container)
-	: menu(mui, container)
+menu_analog::menu_analog(mame_ui_manager &mui, render_target &target)
+	: menu(mui, target)
 	, m_item_data()
 	, m_field_data()
 	, m_prompt()
@@ -116,7 +117,7 @@ void menu_analog::recompute_metrics(uint32_t width, uint32_t height, float aspec
 void menu_analog::custom_render(uint32_t flags, void *selectedref, float top, float bottom, float origx1, float origy1, float origx2, float origy2)
 {
 	// work out how much space to use for field names
-	float const extrawidth(0.4F + (((ui().box_lr_border() * 2.0F) + ui().get_line_height()) * x_aspect()));
+	float const extrawidth(0.4F + (((ui().box_lr_border() * 2.0F) + ui().get_line_height(target())) * x_aspect()));
 	float const nameavail(1.0F - (lr_border() * 2.0F) - extrawidth);
 	float namewidth(0.0F);
 	for (field_data &data : m_field_data)
@@ -423,7 +424,7 @@ bool menu_analog::handle(event const *ev)
 	{
 		stack_push<menu_fixed_textbox>(
 				ui(),
-				container(),
+				target(),
 				_("menu-analoginput", "Analog Input Adjustments Help"),
 				util::string_format(
 					_("menu-analoginput", HELP_TEXT),
@@ -487,6 +488,8 @@ bool menu_analog::handle(event const *ev)
 	{
 		item_data &data(*reinterpret_cast<item_data *>(ev->itemref));
 		int newval(data.cur);
+		bool const alt_pressed = machine().input().code_pressed(KEYCODE_LALT) || machine().input().code_pressed(KEYCODE_RALT);
+		bool const ctrl_pressed = machine().input().code_pressed(KEYCODE_LCONTROL) || machine().input().code_pressed(KEYCODE_RCONTROL);
 
 		switch (ev->iptkey)
 		{
@@ -503,12 +506,12 @@ bool menu_analog::handle(event const *ev)
 
 		// left decrements
 		case IPT_UI_LEFT:
-			newval -= machine().input().code_pressed(KEYCODE_LSHIFT) ? 10 : 1;
+			newval -= alt_pressed ? 100 : ctrl_pressed ? 10 : 1;
 			break;
 
 		// right increments
 		case IPT_UI_RIGHT:
-			newval += machine().input().code_pressed(KEYCODE_LSHIFT) ? 10 : 1;
+			newval += alt_pressed ? 100 : ctrl_pressed ? 10 : 1;
 			break;
 
 		// move to first item for previous device

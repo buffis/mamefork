@@ -78,7 +78,7 @@ private:
 
 	int m_noise_data = 0;
 	void dambustr_noise_enable_w(uint8_t data);
-	void dambustr_map(address_map &map);
+	void dambustr_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -271,8 +271,8 @@ void dambustr_state::dambustr(machine_config &config)
 
 	MCFG_MACHINE_RESET_OVERRIDE(dambustr_state,galaxold)
 
-	TTL7474(config, "7474_9m_1", 0).output_cb().set(FUNC(dambustr_state::galaxold_7474_9m_1_callback));
-	TTL7474(config, "7474_9m_2", 0).comp_output_cb().set(FUNC(dambustr_state::galaxold_7474_9m_2_q_callback));
+	TTL7474(config, "7474_9m_1").output_cb().set(FUNC(dambustr_state::galaxold_7474_9m_1_callback));
+	TTL7474(config, "7474_9m_2").comp_output_cb().set(FUNC(dambustr_state::galaxold_7474_9m_2_q_callback));
 
 	TIMER(config, "int_timer").configure_generic(FUNC(dambustr_state::galaxold_interrupt_timer));
 

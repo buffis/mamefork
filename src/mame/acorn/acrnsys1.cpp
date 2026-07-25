@@ -67,7 +67,7 @@ public:
 	void acrnsys1(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -81,7 +81,7 @@ private:
 	void acrnsys1_led_segment_w(uint8_t data);
 	TIMER_DEVICE_CALLBACK_MEMBER(kansas_w);
 	TIMER_DEVICE_CALLBACK_MEMBER(kansas_r);
-	void mem_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
 
 	uint8_t m_digit = 0;
 	uint8_t m_cass_data[4]{};
@@ -93,8 +93,6 @@ private:
 
 void acrnsys1_state::machine_start()
 {
-	m_display.resolve();
-
 	save_item(NAME(m_digit));
 	save_item(NAME(m_cass_data));
 	save_item(NAME(m_cassbit));
@@ -274,7 +272,7 @@ void acrnsys1_state::acrnsys1(machine_config &config)
 	b1.out_a().set(FUNC(acrnsys1_state::ins8154_b1_port_a_w));
 	b1.out_b().set(FUNC(acrnsys1_state::acrnsys1_led_segment_w));
 
-	TTL74145(config, m_ttl74145, 0);
+	TTL74145(config, m_ttl74145);
 
 	CASSETTE(config, m_cass);
 	m_cass->set_default_state(CASSETTE_STOPPED | CASSETTE_SPEAKER_ENABLED | CASSETTE_MOTOR_ENABLED);

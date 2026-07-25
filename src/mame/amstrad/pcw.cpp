@@ -784,7 +784,7 @@ void pcw_state::mcu_printer_p2_w(uint8_t data)
 
 	// handle shift/store
 	m_printer_serial = data & 0x04;  // data
-	if((data & 0x02) != 0)  // clock
+	if (!BIT(m_printer_p2_prev, 1) && BIT(data, 1))  // only update when clock goes positive
 	{
 		m_printer_shift <<= 1;
 		if(m_printer_serial == 0)
@@ -1079,7 +1079,7 @@ static INPUT_PORTS_START(pcw)
 
 	PORT_START("LINE1")     /* 0x03ff1 */
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("Exit") PORT_CODE(KEYCODE_PGDN)       PORT_CHAR(UCHAR_MAMEKEY(F10))
-	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("Ptr") //PORT_CODE(KEYCODE_END)     PORT_CHAR(UCHAR_MAMEKEY(PRTSCR))
+	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("Ptr") PORT_CODE(KEYCODE_BACKSLASH)   PORT_CHAR(UCHAR_MAMEKEY(PRTSCR))
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("Cut") PORT_CODE(KEYCODE_SLASH_PAD)   PORT_CHAR(UCHAR_MAMEKEY(F11))
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("Copy") PORT_CODE(KEYCODE_ASTERISK)   PORT_CHAR(UCHAR_MAMEKEY(F12))
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_8_PAD)                        PORT_CHAR(UCHAR_MAMEKEY(8_PAD))
@@ -1294,7 +1294,7 @@ void pcw_state::pcw(machine_config &config)
 	/* internal ram */
 	RAM(config, m_ram).set_default_size("256K");
 
-	TIMER(config, "pcw_timer", 0).configure_periodic(FUNC(pcw_state::pcw_timer_interrupt), attotime::from_hz(300));
+	TIMER(config, "pcw_timer").configure_periodic(FUNC(pcw_state::pcw_timer_interrupt), attotime::from_hz(300));
 }
 
 void pcw_state::pcw8256(machine_config &config)

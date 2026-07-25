@@ -50,17 +50,6 @@ else
 	}
 end
 
-if _OPTIONS["USE_WAYLAND"]=="1" then
-	defines {
-		"SDLMAME_USE_WAYLAND",
-	}
-	if _OPTIONS["targetos"]=="linux" then
-		buildoptions {
-			backtick(pkgconfigcmd() .. " --cflags wayland-egl"),
-		}
-	end
-end
-
 if _OPTIONS["NO_USE_XINPUT"]=="1" then
 	defines {
 		"USE_XINPUT=0",
@@ -146,16 +135,6 @@ if _OPTIONS["targetos"]=="windows" then
 
 	configuration { }
 
-elseif _OPTIONS["targetos"]=="linux" then
-	if _OPTIONS["QT_HOME"]~=nil then
-		buildoptions {
-			"-I" .. backtick(_OPTIONS["QT_HOME"] .. "/bin/qmake -query QT_INSTALL_HEADERS"),
-		}
-	else
-		buildoptions {
-			backtick(pkgconfigcmd() .. " --cflags Qt5Widgets"),
-		}
-	end
 elseif _OPTIONS["targetos"]=="macosx" then
 	defines {
 		"SDLMAME_MACOSX",
@@ -184,4 +163,3 @@ configuration { "netbsd" }
 	}
 
 configuration { }
-

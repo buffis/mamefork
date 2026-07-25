@@ -55,7 +55,7 @@ private:
 class sdlc_logger_device : public device_t, public device_sdlc_consumer_interface
 {
 public:
-	sdlc_logger_device(machine_config const &mconfig, char const *tag, device_t *owner, std::uint32_t clock);
+	sdlc_logger_device(machine_config const &mconfig, char const *tag, device_t *owner, std::uint32_t clock = 0);
 	virtual ~sdlc_logger_device();
 
 	// input signals
@@ -67,8 +67,8 @@ public:
 	void clock_active(int state) { m_clock_active = state ? 1U : 0U; }
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	using device_t::logerror;
 

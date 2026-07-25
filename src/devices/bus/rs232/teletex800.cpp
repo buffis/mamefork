@@ -10,26 +10,9 @@
 #include "machine/z80ctc.h"
 #include "machine/z80daisy.h"
 #include "machine/z80sio.h"
+#include "teletex800.lh"
 
 namespace {
-
-ROM_START( teletex800 )
-	ROM_REGION( 0x1000, "z80", 0 )
-	ROM_LOAD( "ix44_ver1.1.u57", 0x0000, 0x1000, CRC(5c11b89c) SHA1(4911332709a8dcda12e72bcdf7a0acd58d65cbfd) )
-ROM_END
-
-static const z80_daisy_config z80_daisy_chain[] =
-{
-	{ nullptr }
-};
-
-static void printer_devices(device_slot_interface &device)
-{
-	device.option_add("printer", SERIAL_PRINTER);
-}
-
-static INPUT_PORTS_START( teletex800 )
-INPUT_PORTS_END
 
 class teletex_800_device : public device_t, public device_rs232_port_interface
 {
@@ -42,18 +25,34 @@ public:
 		m_sio(*this, "sio"),
 		m_acia(*this, "acia"),
 		m_pia(*this, "pia"),
-		m_pia_cp(*this, "pia_cp")
+		m_pia_cp(*this, "pia_cp"),
+		m_bat_led(*this, "bat_led"),
+		m_pr_led(*this, "pr_led"),
+		m_telex_led(*this, "telex_led"),
+		m_mem_led(*this, "mem_led"),
+		m_obs_led(*this, "obs_led"),
+		m_write_led(*this, "write_led"),
+		m_log_led(*this, "log_led"),
+		m_queue_led(*this, "queue_led"),
+		m_all_led(*this, "all_led"),
+		m_time_led(*this, "time_led"),
+		m_date_led(*this, "date_led"),
+		m_year_led(*this, "year_led"),
+		m_rx_digits(*this, "rx_digit%u", 0U),
+		m_tx_digits(*this, "tx_digit%u", 0U)
 	{
 	}
 
 protected:
-	virtual const tiny_rom_entry *device_rom_region() const override
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD
 	{
 		return ROM_NAME( teletex800 );
 	}
 
-	virtual void device_add_mconfig(machine_config &config) override
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD
 	{
+		config.set_default_layout(layout_teletex800);
+
 		// main board
 		Z80(config, m_maincpu, XTAL(4'915'200));
 		m_maincpu->set_daisy_config(z80_daisy_chain);
@@ -65,18 +64,18 @@ protected:
 		ACIA6850(config, m_acia);
 		PIA6821(config, m_pia);
 
-		RS232_PORT(config, "printer", printer_devices, "printer");
+		RS232_PORT(config, "pr", printer_devices, "printer");
 
 		// control panel
 		PIA6821(config, m_pia_cp);
 	}
 
-	virtual ioport_constructor device_input_ports() const override
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD
 	{
 		return INPUT_PORTS_NAME( teletex800 );
 	}
 
-	virtual void device_start() override
+	virtual void device_start() override ATTR_COLD
 	{
 	}
 
@@ -88,14 +87,55 @@ private:
 	required_device<pia6821_device> m_pia;
 	required_device<pia6821_device> m_pia_cp;
 
-	void program_map(address_map &map)
+	output_finder<> m_bat_led;
+	output_finder<> m_pr_led;
+	output_finder<> m_telex_led;
+	output_finder<> m_mem_led;
+	output_finder<> m_obs_led;
+	output_finder<> m_write_led;
+	output_finder<> m_log_led;
+	output_finder<> m_queue_led;
+	output_finder<> m_all_led;
+	output_finder<> m_time_led;
+	output_finder<> m_date_led;
+	output_finder<> m_year_led;
+	output_finder<2> m_rx_digits;
+	output_finder<2> m_tx_digits;
+
+	void program_map(address_map &map) ATTR_COLD
 	{
 		map(0x0000, 0x0fff).rom().region("z80", 0);
 	}
 
-	void io_map(address_map &map)
+	void io_map(address_map &map) ATTR_COLD
 	{
 	}
+
+	constexpr static const z80_daisy_config z80_daisy_chain[] =
+	{
+		{ nullptr }
+	};
+
+	static void printer_devices(device_slot_interface &device) ATTR_COLD
+	{
+		device.option_add("printer", SERIAL_PRINTER);
+	}
+
+	INPUT_CHANGED_MEMBER( write ) { };
+	INPUT_CHANGED_MEMBER( all ) { };
+	INPUT_CHANGED_MEMBER( clock ) { };
+
+	static INPUT_PORTS_START( teletex800 )
+		PORT_START("BTN")
+		PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("SKRIV") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(teletex_800_device::write), 0)
+		PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("ALLA") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(teletex_800_device::all), 0)
+		PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("KLOCK") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(teletex_800_device::clock), 0)
+	INPUT_PORTS_END
+
+	constexpr ROM_START( teletex800 )
+		ROM_REGION( 0x1000, "z80", 0 )
+		ROM_LOAD( "ix44_ver1.1.u57", 0x0000, 0x1000, CRC(5c11b89c) SHA1(4911332709a8dcda12e72bcdf7a0acd58d65cbfd) )
+	ROM_END
 };
 
 } // anonymous namespace

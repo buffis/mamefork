@@ -255,8 +255,6 @@ void msx_state::machine_reset()
 
 void msx_state::machine_start()
 {
-	m_caps_led.resolve();
-	m_code_led.resolve();
 	m_port_c_old = 0xff;
 
 	if (m_region_kanji.found() && m_region_kanji.length() >= 0x20000)
@@ -278,7 +276,7 @@ void msx_state::machine_start()
 void msx_state::driver_start()
 {
 	m_maincpu->set_input_line_vector(0, 0xff); // Z80
-	m_maincpu->z80_set_m1_cycles(5);
+	m_maincpu->z80_set_m1_cycles(4+1); // 1 WAIT CLK per M1
 
 	save_item(NAME(m_psg_b));
 	save_item(NAME(m_kanji_latch));

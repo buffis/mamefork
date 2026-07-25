@@ -44,10 +44,10 @@ public:
 	void boxer(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void boxer_map(address_map &map);
+	void boxer_map(address_map &map) ATTR_COLD;
 
 	uint8_t input_r(offs_t offset);
 	uint8_t misc_r(offs_t offset);
@@ -455,7 +455,6 @@ GFXDECODE_END
 
 void boxer_state::machine_start()
 {
-	m_leds.resolve();
 	m_pot_interrupt = timer_alloc(FUNC(boxer_state::pot_interrupt), this);
 	m_periodic_timer = timer_alloc(FUNC(boxer_state::periodic_callback), this);
 

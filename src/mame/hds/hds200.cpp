@@ -73,12 +73,12 @@ public:
 	void hds200(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
-	void mem_map(address_map &map);
-	void io_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
 
 	required_device<z80_device> m_maincpu;
 	required_device<z80dma_device> m_dma;
@@ -91,9 +91,9 @@ private:
 	required_memory_bank m_rombank;
 
 	uint8_t attr_r(offs_t offset);
-	void attrram_map(address_map &map);
+	void attrram_map(address_map &map) ATTR_COLD;
 	uint8_t char_r(offs_t offset);
-	void charram_map(address_map &map);
+	void charram_map(address_map &map) ATTR_COLD;
 
 	SCN2674_DRAW_CHARACTER_MEMBER(draw_character);
 
@@ -313,7 +313,7 @@ void hds200_state::hds200(machine_config &config)
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
 	Z80DMA(config, m_dma, 8_MHz_XTAL / 2); // divider not verified
-	m_dma->out_busreq_callback().set_inputline(m_maincpu, Z80_INPUT_LINE_BUSRQ);
+	m_dma->out_busreq_callback().set_inputline(m_maincpu, Z80_INPUT_LINE_BUSREQ);
 	m_dma->in_mreq_callback().set(FUNC(hds200_state::dma_mreq_r));
 	m_dma->out_mreq_callback().set(FUNC(hds200_state::dma_mreq_w));
 

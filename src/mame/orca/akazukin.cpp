@@ -45,8 +45,8 @@ public:
 	void akazukin(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -66,10 +66,10 @@ private:
 	void nmi_sub_mask_w(uint8_t data);
 	INTERRUPT_GEN_MEMBER(sub_irq);
 
-	void main_map(address_map &map);
-	void main_io(address_map &map);
-	void sub_map(address_map &map);
-	void sub_io(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void main_io(address_map &map) ATTR_COLD;
+	void sub_map(address_map &map) ATTR_COLD;
+	void sub_io(address_map &map) ATTR_COLD;
 };
 
 /******************
@@ -279,7 +279,7 @@ void akazukin_state::akazukin(machine_config &config)
 	screen.set_size(32*8, 32*8);
 	screen.set_visarea(0*8, 32*8-1, 2*8, 30*8-1);
 
-	VASTAR_VIDEO_DEVICE(config, m_vasvid, 0);
+	VASTAR_VIDEO_DEVICE(config, m_vasvid);
 	m_vasvid->set_screen("screen");
 	m_vasvid->set_bg_bases(0x000, 0x800, 0x400);
 	m_vasvid->set_fg_bases(0x000, 0x400, 0x800);
@@ -342,4 +342,3 @@ ROM_END
 
 // written as "Akazukin" on title screen & instruction panel flyer.
 GAME( 1983, akazukin, 0, akazukin, akazukin, akazukin_state, empty_init, ROT0, "Sigma", "Akazukin (Japan)", MACHINE_SUPPORTS_SAVE )
-

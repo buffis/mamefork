@@ -1,17 +1,19 @@
 // license:BSD-3-Clause
 // copyright-holders: Angelo Salese
+// thanks-to: vidpro1
 /**************************************************************************************************
 
 Prize Zone (c) 199? Lazer-Tron
 
 TODO:
-- identify proper motherboard/BIOS;
+- hookup proper motherboard type, MSI MS-5169 with ALADDiN V ATX chipset (ALi M1541 / M1543C);
 - hookup vibra16 ISA card in place of sblaster_16;
 - Printer error B0 keeps popping in attract/game select (disable in service mode as workaround);
 - Trackball in place of PS/2 mouse (doesn't seem to use serial);
 - CD-ROM reading test is too fast (739% of what is reported as 8X);
 - Tri-Scraper / Super Solitaire / Super 11's: timer doesn't count down (goes only up),
   it does with mouse click, likely bug for wrong input device?
+- Scud Attack: bonus objects disappear midway thru (virge bug?)
 - Outputs, writes to $301-$305 aren't (comms with a CPU?)
 
 ===================================================================================================
@@ -49,13 +51,13 @@ class isa16_przone_jamma_if : public device_t, public device_isa16_card_interfac
 public:
 	// construction/destruction
 	isa16_przone_jamma_if(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	virtual void remap(int space_id, offs_t start, offs_t end) override;
 
@@ -64,8 +66,8 @@ private:
 	//required_ioport_array<5> m_iocard;
 	required_ioport m_iocard;
 
-	void mem_map(address_map &map);
-	void io_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
 
 	uint16_t iocard_r();
 	uint8_t nvram_r(offs_t offset);
@@ -135,8 +137,10 @@ void isa16_przone_jamma_if::io_map(address_map &map)
 
 static INPUT_PORTS_START( przone_jamma )
 	PORT_START("IOCARD")
+	// "Mechanical" chutes
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_COIN1 )
 	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_COIN2 )
+	// "Electrical" chutes
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_COIN3 )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_COIN4 )
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_COIN5 )
@@ -188,8 +192,8 @@ public:
 	void przone(machine_config &config);
 
 private:
-	void main_io(address_map &map);
-	void main_map(address_map &map);
+	void main_io(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
 
 	static void smc_superio_config(device_t *device);
 };
@@ -247,22 +251,22 @@ void przone_state::smc_superio_config(device_t *device)
 
 void przone_state::przone(machine_config &config)
 {
-	// unknown CPU, lowered to PCI clock for ViRGE being really the bottleneck here.
+	// Socket 7 CPU, lowered to PCI clock for ViRGE being really the bottleneck here.
 	pentium_device &maincpu(PENTIUM(config, "maincpu", 33'333'333));
 	maincpu.set_addrmap(AS_PROGRAM, &przone_state::main_map);
 	maincpu.set_addrmap(AS_IO, &przone_state::main_io);
 	maincpu.set_irq_acknowledge_callback("pci:07.0:pic8259_master", FUNC(pic8259_device::inta_cb));
 	maincpu.smiact().set("pci:00.0", FUNC(i82439hx_host_device::smi_act_w));
 
-	PCI_ROOT(config, "pci", 0);
-	// TODO: confirm size
-	I82439HX(config, "pci:00.0", 0, "maincpu", 256*1024*1024);
+	PCI_ROOT(config, "pci");
+	// 256MB on vidpro1's board, may ship with less RAM
+	I82439HX(config, "pci:00.0", "maincpu", 256*1024*1024);
 
-	i82371sb_isa_device &isa(I82371SB_ISA(config, "pci:07.0", 0, "maincpu"));
+	i82371sb_isa_device &isa(I82371SB_ISA(config, "pci:07.0", "maincpu"));
 	isa.boot_state_hook().set([](u8 data) { /* printf("%02x\n", data); */ });
 	isa.smi().set_inputline("maincpu", INPUT_LINE_SMI);
 
-	i82371sb_ide_device &ide(I82371SB_IDE(config, "pci:07.1", 0, "maincpu"));
+	i82371sb_ide_device &ide(I82371SB_IDE(config, "pci:07.1", "maincpu"));
 	ide.irq_pri().set("pci:07.0", FUNC(i82371sb_isa_device::pc_irq14_w));
 	ide.irq_sec().set("pci:07.0", FUNC(i82371sb_isa_device::pc_mirq0_w));
 	ide.subdevice<bus_master_ide_controller_device>("ide1")->slot(0).set_default_option("cdrom");
@@ -272,8 +276,10 @@ void przone_state::przone(machine_config &config)
 	PCI_SLOT(config, "pci:1", pci_cards, 15, 0, 1, 2, 3, nullptr);
 	PCI_SLOT(config, "pci:2", pci_cards, 16, 1, 2, 3, 0, nullptr);
 	PCI_SLOT(config, "pci:3", pci_cards, 17, 2, 3, 0, 1, nullptr);
+	// TODO: has a stroke with virgevx
 	PCI_SLOT(config, "pci:4", pci_cards, 18, 3, 0, 1, 2, "virge");
 
+	// FIXME: determine ISA bus clock
 	ISA16_SLOT(config, "board4", 0, "pci:07.0:isabus", isa_internal_devices, "fdc37c93x", true).set_option_machine_config("fdc37c93x", smc_superio_config);
 	ISA16_SLOT(config, "isa1", 0, "pci:07.0:isabus", przone_isa16_cards, "przone_jamma_if", true);
 	// TODO: one slot for vibra16

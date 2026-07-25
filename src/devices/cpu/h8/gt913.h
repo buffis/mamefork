@@ -55,17 +55,18 @@ protected:
 	virtual void update_irq_filter() override;
 	virtual void interrupt_taken() override;
 	virtual void internal_update(u64 current_time) override;
+	using h8_device::internal_update;
 	virtual void notify_standby(int state) override;
 	virtual void irq_setup() override;
 	virtual void execute_set_input(int inputnum, int state) override;
 
 	virtual space_config_vector memory_space_config() const override;
 
-	virtual void device_add_mconfig(machine_config &config) override;
-	void map(address_map &map);
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	void map(address_map &map) ATTR_COLD;
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	virtual void do_exec_full() override;
 	virtual void do_exec_partial() override;

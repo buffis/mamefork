@@ -180,9 +180,9 @@ public:
 
 protected:
 	virtual void device_post_load() override;
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	/* memory pointers */
@@ -251,11 +251,11 @@ private:
 	void update_psg1(int port);
 	void update_da();
 	void adpcm_int(int state);
-	void darius_cpub_map(address_map &map);
-	void darius_map(address_map &map);
-	void darius_sound2_io_map(address_map &map);
-	void darius_sound2_map(address_map &map);
-	void darius_sound_map(address_map &map);
+	void darius_cpub_map(address_map &map) ATTR_COLD;
+	void darius_map(address_map &map) ATTR_COLD;
+	void darius_sound2_io_map(address_map &map) ATTR_COLD;
+	void darius_sound2_map(address_map &map) ATTR_COLD;
+	void darius_sound_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -965,14 +965,13 @@ void darius_state::darius(machine_config &config)
 	rscreen.set_screen_update(FUNC(darius_state::screen_update_right));
 	rscreen.set_palette(m_palette);
 
-	PC080SN(config, m_pc080sn, 0, m_palette, gfx_darius_tmap);
+	PC080SN(config, m_pc080sn, m_palette, gfx_darius_tmap);
 	m_pc080sn->set_offsets(-16, 8);
 	m_pc080sn->set_yinvert(0);
 	m_pc080sn->set_dblwidth(1);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	ym2203_device &ym1(YM2203(config, "ym1", XTAL(8'000'000)/2)); /* 4 MHz */
 	ym1.irq_handler().set_inputline(m_audiocpu, 0); /* assumes Z80 sandwiched between 68Ks */
@@ -1009,15 +1008,15 @@ void darius_state::darius(machine_config &config)
 	{
 		for (int out = 0; out < 4; out++)
 		{
-			FILTER_VOLUME(config, m_filter_l[chip][out]).add_route(ALL_OUTPUTS, "lspeaker", 1.0);
-			FILTER_VOLUME(config, m_filter_r[chip][out]).add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+			FILTER_VOLUME(config, m_filter_l[chip][out]).add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+			FILTER_VOLUME(config, m_filter_r[chip][out]).add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 		}
 	}
 
-	FILTER_VOLUME(config, m_msm5205_l).add_route(ALL_OUTPUTS, "lspeaker", 1.0);
-	FILTER_VOLUME(config, m_msm5205_r).add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+	FILTER_VOLUME(config, m_msm5205_l).add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+	FILTER_VOLUME(config, m_msm5205_r).add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 
-	pc060ha_device &ciu(PC060HA(config, "ciu", 0));
+	pc060ha_device &ciu(PC060HA(config, "ciu"));
 	ciu.nmi_callback().set_inputline(m_audiocpu, INPUT_LINE_NMI);
 	ciu.reset_callback().set_inputline(m_audiocpu, INPUT_LINE_RESET);
 }
@@ -1317,8 +1316,8 @@ ROM_END
         DRIVERS
 *******************************************************************************/
 
-GAME( 1986, darius,  0,       darius,  darius,  darius_state, empty_init, ROT0, "Taito Corporation Japan",   "Darius (World, rev 2)",        MACHINE_SUPPORTS_SAVE )
-GAME( 1986, dariusu, darius,  darius,  dariusu, darius_state, empty_init, ROT0, "Taito America Corporation", "Darius (US, rev 2)",           MACHINE_SUPPORTS_SAVE )
-GAME( 1986, dariusj, darius,  darius,  dariusj, darius_state, empty_init, ROT0, "Taito Corporation",         "Darius (Japan, rev 1)",        MACHINE_SUPPORTS_SAVE )
-GAME( 1986, dariuso, darius,  darius,  dariusj, darius_state, empty_init, ROT0, "Taito Corporation",         "Darius (Japan)",               MACHINE_SUPPORTS_SAVE )
-GAME( 1986, dariuse, darius,  darius,  dariuse, darius_state, empty_init, ROT0, "Taito Corporation",         "Darius Extra Version (Japan)", MACHINE_SUPPORTS_SAVE )
+GAME( 1986, darius,  0,       darius,  darius,  darius_state, empty_init, ROT0, "Taito",         "Darius (World, rev 2)",        MACHINE_SUPPORTS_SAVE )
+GAME( 1986, dariusu, darius,  darius,  dariusu, darius_state, empty_init, ROT0, "Taito America", "Darius (US, rev 2)",           MACHINE_SUPPORTS_SAVE )
+GAME( 1986, dariusj, darius,  darius,  dariusj, darius_state, empty_init, ROT0, "Taito",         "Darius (Japan, rev 1)",        MACHINE_SUPPORTS_SAVE )
+GAME( 1986, dariuso, darius,  darius,  dariusj, darius_state, empty_init, ROT0, "Taito",         "Darius (Japan)",               MACHINE_SUPPORTS_SAVE )
+GAME( 1986, dariuse, darius,  darius,  dariuse, darius_state, empty_init, ROT0, "Taito",         "Darius Extra Version (Japan)", MACHINE_SUPPORTS_SAVE )

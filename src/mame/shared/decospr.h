@@ -17,9 +17,15 @@ typedef device_delegate<uint16_t (uint16_t col, bool extcol)> decospr_col_cb_del
 class decospr_device : public device_t, public device_video_interface, public device_gfx_interface
 {
 public:
-	decospr_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	decospr_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 	template <typename T> decospr_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, T &&palette_tag, const gfx_decode_entry *gfxinfo)
 		: decospr_device(mconfig, tag, owner, clock)
+	{
+		set_info(gfxinfo);
+		set_palette(std::forward<T>(palette_tag));
+	}
+	template <typename T> decospr_device(const machine_config &mconfig, const char *tag, device_t *owner, T &&palette_tag, const gfx_decode_entry *gfxinfo)
+		: decospr_device(mconfig, tag, owner)
 	{
 		set_info(gfxinfo);
 		set_palette(std::forward<T>(palette_tag));
@@ -52,8 +58,8 @@ public:
 	DECOSPR_PRIORITY_CB_MEMBER(default_col_cb);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 	decospr_pri_cb_delegate m_pri_cb;
 	decospr_col_cb_delegate m_col_cb;
 	bitmap_ind16 m_sprite_bitmap;// optional sprite bitmap (should be INDEXED16)

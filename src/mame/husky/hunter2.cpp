@@ -70,7 +70,7 @@ public:
 	void init_hunter2();
 
 protected:
-	virtual void machine_reset() override;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	uint8_t keyboard_r();
@@ -91,8 +91,8 @@ private:
 	void cts_w(int state);
 	void rxd_w(int state);
 
-	void hunter2_io(address_map &map);
-	void hunter2_mem(address_map &map);
+	void hunter2_io(address_map &map) ATTR_COLD;
+	void hunter2_mem(address_map &map) ATTR_COLD;
 
 	uint8_t m_keydata = 0;
 	uint8_t m_irq_mask = 0;
@@ -442,7 +442,7 @@ void hunter2_state::hunter2(machine_config &config)
 	rtc.set_mode24(0); // 12 hour
 	rtc.set_day1(1);   // monday
 
-	nsc810_device &iotimer(NSC810(config, "iotimer", 0, 8_MHz_XTAL / 2, 8_MHz_XTAL / 2));
+	nsc810_device &iotimer(NSC810(config, "iotimer", 8_MHz_XTAL / 2, 8_MHz_XTAL / 2));
 	iotimer.portA_read_callback().set(FUNC(hunter2_state::keyboard_r));
 	iotimer.portB_read_callback().set(FUNC(hunter2_state::portb_r));
 	iotimer.portB_write_callback().set(FUNC(hunter2_state::keyboard_w));

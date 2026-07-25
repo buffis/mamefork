@@ -81,10 +81,10 @@ public:
 	void dblcrown(machine_config &config);
 
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<watchdog_timer_device> m_watchdog;
@@ -114,9 +114,9 @@ private:
 
 	TIMER_DEVICE_CALLBACK_MEMBER(scanline_cb);
 
-	void main_map(address_map &map);
-	void main_io(address_map &map);
-	void vram_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void main_io(address_map &map) ATTR_COLD;
+	void vram_map(address_map &map) ATTR_COLD;
 
 	uint8_t m_bank = 0;
 	uint8_t m_irq_src = 0;
@@ -470,7 +470,7 @@ static INPUT_PORTS_START( dblcrown )
 
 	PORT_START("DSWD")
 	PORT_DIPNAME( 0x0f, 0x0f, DEF_STR( Coin_A ) )
-	PORT_DIPSETTING(    0x00, "10 Coins/1 Credit" )
+	PORT_DIPSETTING(    0x00, DEF_STR( 10C_1C ) )
 	PORT_DIPSETTING(    0x02, DEF_STR( 5C_1C ) )
 	PORT_DIPSETTING(    0x03, DEF_STR( 4C_1C ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( 3C_1C ) )
@@ -482,18 +482,18 @@ static INPUT_PORTS_START( dblcrown )
 	PORT_DIPSETTING(    0x0e, DEF_STR( 1C_2C ) )
 	PORT_DIPSETTING(    0x0d, DEF_STR( 1C_3C ) )
 	PORT_DIPSETTING(    0x0c, DEF_STR( 1C_5C ) )
-	PORT_DIPSETTING(    0x0b, "1 Coin/10 Credits" )
-	PORT_DIPSETTING(    0x0a, "1 Coin/20 Credits" )
-	PORT_DIPSETTING(    0x09, "1 Coin/25 Credits" )
-	PORT_DIPSETTING(    0x08, "1 Coin/50 Credits" )
+	PORT_DIPSETTING(    0x0b, DEF_STR( 1C_10C ) )
+	PORT_DIPSETTING(    0x0a, DEF_STR( 1C_20C ) )
+	PORT_DIPSETTING(    0x09, DEF_STR( 1C_25C ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( 1C_50C ) )
 	PORT_DIPNAME( 0x70, 0x70, DEF_STR( Coin_B ) ) // Coinage for note in
 	PORT_DIPSETTING(    0x70, DEF_STR( 1C_1C ) )
 	PORT_DIPSETTING(    0x60, DEF_STR( 1C_2C ) )
 	PORT_DIPSETTING(    0x50, DEF_STR( 1C_3C ) )
-	PORT_DIPSETTING(    0x40, "1 Coin/10 Credits" )
-	PORT_DIPSETTING(    0x30, "1 Coin/25 Credits" )
-	PORT_DIPSETTING(    0x20, "1 Coin/50 Credits" )
-	PORT_DIPSETTING(    0x10, "1 Coin/100 Credits" )
+	PORT_DIPSETTING(    0x40, DEF_STR( 1C_10C ) )
+	PORT_DIPSETTING(    0x30, DEF_STR( 1C_25C ) )
+	PORT_DIPSETTING(    0x20, DEF_STR( 1C_50C ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( 1C_100C ) )
 	PORT_DIPSETTING(    0x00, "1 Coin/500 Credits" )
 	// TODO: game will error blink if On at payout time
 	PORT_DIPNAME( 0x80, 0x80, "Hopper Status?" )
@@ -501,21 +501,10 @@ static INPUT_PORTS_START( dblcrown )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 INPUT_PORTS_END
 
-static const gfx_layout char_16x16_layout =
-{
-	16,16,
-	RGN_FRAC(1,1),
-	4,
-	{ 0,1,2,3 },
-	{ 4,0, 12,8, 20,16, 28,24, 36,32, 44,40, 52,48, 60,56 },
-	{ STEP16(0,8*8) },
-	8*8*16
-};
-
 
 static GFXDECODE_START( gfx_dblcrown )
-	GFXDECODE_ENTRY( "gfx1", 0, char_16x16_layout, 0, 0x10 )
-	GFXDECODE_ENTRY( nullptr, 0, gfx_8x8x4_packed_lsb, 0, 0x10 )
+	GFXDECODE_ENTRY( "gfx1", 0, gfx_16x16x4_packed_lsb, 0, 0x10 )
+	GFXDECODE_RAM( nullptr, 0, gfx_8x8x4_packed_lsb, 0, 0x10 )
 GFXDECODE_END
 
 
@@ -524,8 +513,6 @@ void dblcrown_state::machine_start()
 {
 	uint8_t *ROM = memregion("maincpu")->base();
 	membank("rom_bank")->configure_entries(0, 0x20, &ROM[0], 0x2000);
-
-	m_lamps.resolve();
 }
 
 void dblcrown_state::machine_reset()
@@ -597,7 +584,7 @@ void dblcrown_state::dblcrown(machine_config &config)
 	ppi.out_pb_callback().set(FUNC(dblcrown_state::bank_w));
 	ppi.out_pc_callback().set(FUNC(dblcrown_state::key_select_w));
 
-	for (auto bank : m_vram_bank)
+	for (auto &bank : m_vram_bank)
 		ADDRESS_MAP_BANK(config, bank).set_map(&dblcrown_state::vram_map).set_options(ENDIANNESS_LITTLE, 8, 16, 0x1000);
 
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));

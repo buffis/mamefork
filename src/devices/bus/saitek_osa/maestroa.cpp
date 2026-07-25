@@ -3,7 +3,7 @@
 // thanks-to:Berger
 /*******************************************************************************
 
-Saitek OSA Module: Kasparov Maestro A (SciSys, 1986)
+Saitek OSA: Kasparov Maestro A Module (SciSys, 1986)
 
 The chess engine revision is in-between Kaplan's Stratos and Turbostar.
 
@@ -48,11 +48,11 @@ public:
 	virtual void ack_w(int state) override;
 
 protected:
-	virtual const tiny_rom_entry *device_rom_region() const override;
-	virtual ioport_constructor device_input_ports() const override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -60,7 +60,7 @@ private:
 	u8 m_latch = 0xff;
 	bool m_latch_enable = false;
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	u8 rts_r();
 	u8 xdata_r();
@@ -83,6 +83,7 @@ void saitekosa_maestroa_device::device_start()
 
 void saitekosa_maestroa_device::device_reset()
 {
+	m_expansion->rts_w(1);
 	control_w(0);
 }
 
@@ -104,7 +105,7 @@ u8 saitekosa_maestroa_device::data_r()
 
 void saitekosa_maestroa_device::nmi_w(int state)
 {
-	m_maincpu->set_input_line(INPUT_LINE_NMI, !state ? ASSERT_LINE : CLEAR_LINE);
+	m_maincpu->set_input_line(INPUT_LINE_NMI, state ? CLEAR_LINE : ASSERT_LINE);
 }
 
 void saitekosa_maestroa_device::ack_w(int state)
@@ -123,8 +124,8 @@ u8 saitekosa_maestroa_device::rts_r()
 	if (!machine().side_effects_disabled())
 	{
 		// strobe RTS-P
-		m_expansion->rts_w(1);
 		m_expansion->rts_w(0);
+		m_expansion->rts_w(1);
 	}
 
 	return 0xff;
@@ -153,7 +154,7 @@ void saitekosa_maestroa_device::control_w(u8 data)
 u8 saitekosa_maestroa_device::ack_r()
 {
 	// d7: ACK-P
-	return m_expansion->ack_state() ? 0x80 : 0;
+	return m_expansion->ack_state() ? 0 : 0x80;
 }
 
 void saitekosa_maestroa_device::main_map(address_map &map)
@@ -174,7 +175,7 @@ void saitekosa_maestroa_device::main_map(address_map &map)
 
 static INPUT_PORTS_START( maestroa )
 	PORT_START("CPU")
-	PORT_CONFNAME( 0x03, 0x02, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, saitekosa_maestroa_device, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x03, 0x02, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(saitekosa_maestroa_device::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x00, "4MHz" )
 	PORT_CONFSETTING(    0x01, "5.67MHz" )
 	PORT_CONFSETTING(    0x02, "6MHz" )
@@ -227,4 +228,4 @@ const tiny_rom_entry *saitekosa_maestroa_device::device_rom_region() const
 } // anonymous namespace
 
 
-DEFINE_DEVICE_TYPE_PRIVATE(OSA_MAESTROA, device_saitekosa_expansion_interface, saitekosa_maestroa_device, "osa_maestroa", "Saitek OSA Maestro A")
+DEFINE_DEVICE_TYPE_PRIVATE(OSA_MAESTROA, device_saitekosa_expansion_interface, saitekosa_maestroa_device, "osa_maestroa", "Saitek OSA: Kasparov Maestro A Module")

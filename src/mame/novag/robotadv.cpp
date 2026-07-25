@@ -45,6 +45,8 @@ TODO:
 
 #include "speaker.h"
 
+#include <numbers>
+
 // internal artwork
 #include "novag_robotadv.lh"
 
@@ -66,11 +68,11 @@ public:
 		m_out_pos(*this, "pos_%c", unsigned('x'))
 	{ }
 
-	void robotadv(machine_config &config);
+	void robotadv(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD { refresh(); }
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -93,8 +95,8 @@ private:
 	attotime m_pwm_last;
 	emu_timer *m_refresh_timer;
 
-	void main_map(address_map &map);
-	void io_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
 
 	void control1_w(u8 data);
 	void control2_w(u8 data);
@@ -122,11 +124,6 @@ void robotadv_state::machine_start()
 {
 	m_refresh_timer = timer_alloc(FUNC(robotadv_state::refresh), this);
 
-	// resolve outputs
-	m_piece_hand.resolve();
-	m_out_motor.resolve();
-	m_out_pos.resolve();
-
 	// register for savestates
 	save_item(NAME(m_control1));
 	save_item(NAME(m_control2));
@@ -137,11 +134,6 @@ void robotadv_state::machine_start()
 	save_item(NAME(m_counter));
 	save_item(NAME(m_pwm_accum));
 	save_item(NAME(m_pwm_last));
-}
-
-void robotadv_state::machine_reset()
-{
-	refresh();
 }
 
 void robotadv_state::init_board(u8 data)
@@ -224,25 +216,26 @@ void robotadv_state::update_limits()
 
 void robotadv_state::update_clawpos(double *x, double *y)
 {
+	constexpr double PI = std::numbers::pi;
 	double r, d, a;
 
 	// upper arm
 	r = 5.43;
 	d = m_counter[3] / 12670.0;
-	a = d * (M_PI / 180.0) + M_PI;
+	a = d * (PI / 180.0) + PI;
 	*x = r * cos(a);
 	*y = r * sin(a);
 
 	// elbow (home position is at a slight angle)
 	r = 1.07;
 	d = m_counter[2] / 14730.0 + 8.8;
-	a += d * (M_PI / 180.0) + (1.5 * M_PI);
+	a += d * (PI / 180.0) + (1.5 * PI);
 	*x += r * cos(a);
 	*y += r * sin(a);
 
 	// forearm is perpendicular to elbow
 	r = 5.62;
-	a += 1.5 * M_PI;
+	a += 1.5 * PI;
 	*x += r * cos(a);
 	*y += r * sin(a);
 }

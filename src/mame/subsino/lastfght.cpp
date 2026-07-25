@@ -64,6 +64,7 @@ Notes:
 
     TODO:
      - blitter timing is guessed, definitely expect non-instant transfers otherwise game is too fast
+     - no sound (custom SS9804 as per subsino_kr_h8.cpp and subsino2.cpp later games)
 
     The EEPROM protection method is the same as in the subsino2.cpp games.
 
@@ -97,9 +98,9 @@ public:
 	void lastfght(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	/* memory */
@@ -120,8 +121,8 @@ private:
 	void sound_w(offs_t offset, uint16_t data, uint16_t mem_mask = ~0);
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
-	void lastfght_map(address_map &map);
-	void ramdac_map(address_map &map);
+	void lastfght_map(address_map &map) ATTR_COLD;
+	void ramdac_map(address_map &map) ATTR_COLD;
 
 	/* video-related */
 	bitmap_ind16 m_bitmap[2];
@@ -422,8 +423,8 @@ void lastfght_state::lastfght_map(address_map &map)
 	map(0x600000, 0x600001).w(FUNC(lastfght_state::hi_w));
 	map(0x600002, 0x600003).rw(FUNC(lastfght_state::sound_r), FUNC(lastfght_state::sound_w));
 	map(0x600006, 0x600007).w(FUNC(lastfght_state::blit_w));
-	map(0x600009, 0x600009).w("ramdac", FUNC(ramdac_device::pal_w));
 	map(0x600008, 0x600008).w("ramdac", FUNC(ramdac_device::index_w));
+	map(0x600009, 0x600009).w("ramdac", FUNC(ramdac_device::pal_w));
 	map(0x60000a, 0x60000a).w("ramdac", FUNC(ramdac_device::mask_w));
 
 	map(0x800000, 0x800001).w(FUNC(lastfght_state::sx_w));
@@ -492,7 +493,7 @@ static INPUT_PORTS_START( lastfght )
 	PORT_START("PROT")
 	PORT_BIT( 0x005f, IP_ACTIVE_HIGH, IPT_UNUSED        ) // outputs
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_UNKNOWN        ) // blitter?
-	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM        ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", ds2430a_device, data_r)
+	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM        ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(ds2430a_device::data_r))
 INPUT_PORTS_END
 
 
@@ -559,7 +560,7 @@ void lastfght_state::lastfght(machine_config &config)
 	/* video hardware */
 	PALETTE(config, m_palette).set_entries(256);
 
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, m_palette)); // HMC HM86171 VGA 256 colour RAMDAC
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", m_palette)); // HMC HM86171 VGA 256 colour RAMDAC
 	ramdac.set_addrmap(0, &lastfght_state::ramdac_map);
 
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);

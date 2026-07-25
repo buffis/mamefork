@@ -51,11 +51,11 @@ public:
 	{
 	}
 
-	void pp(machine_config &config);
+	void pp(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	SCN2672_DRAW_CHARACTER_MEMBER(display_char);
@@ -77,9 +77,9 @@ private:
 	void hld_w(int state);
 	void mode_w(u8 data);
 
-	void mem_map(address_map &map);
-	void io_map(address_map &map);
-	void display_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
+	void display_map(address_map &map) ATTR_COLD;
 
 	required_device<z80_device> m_maincpu;
 	required_device<input_merger_device> m_int4;
@@ -108,7 +108,6 @@ private:
 
 void pp_state::machine_start()
 {
-	m_kbd_leds.resolve();
 	m_kbd_leds[0] = 1; // power LED (green) is always on
 
 	m_fdc->dden_w(0);

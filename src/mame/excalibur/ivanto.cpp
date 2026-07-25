@@ -8,14 +8,15 @@ Excalibur Ivan The Terrible (model 701E, H8/3256 version)
 This is the first version, see ivant.cpp for the newer version. It was produced
 in a factory owned by Eric White's company (ex-CXG), hence it's not that strange
 that the LCD is the same as the one in CXG Sphinx Legend and Krypton Challenge.
-Ron Nelson was reluctant about it, since it was the same person that bootlegged
-his Chess Challenger 10.
+
+Ron Nelson (Excalibur) was reluctant about letting Eric White manufacture it,
+since he was the same person that bootlegged Ron's Fidelity Chess Challenger 10.
 
 Hardware notes:
 - PCB label: EXCALIBUR ELECTRONICS, INC. 6/28/96, IVANT
 - Hitachi H8/3256 MCU (mode 1), 20MHz XTAL
 - 8-bit DAC (8L503 resistor array), KA8602 amplifier, 1MB ROM (custom label)
-- LCD with 5 7segs and custom segments
+- LCD with 5 7segs and custom segments (same as CXG Sphinx Legend)
 - no LEDs, button sensors chessboard
 
 The MCU used here is a HD6433256A33P from Excalibur Mirage, the internal ROM
@@ -66,8 +67,8 @@ public:
 	void ivanto(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override { m_dac->write(0x80); }
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD { m_dac->write(0x80); }
 
 private:
 	// devices/pointers
@@ -85,7 +86,7 @@ private:
 	u8 m_lcd_com = 0;
 	emu_timer *m_irqtimer;
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void lcd_pwm_w(offs_t offset, u8 data);
@@ -106,7 +107,6 @@ private:
 
 void ivanto_state::machine_start()
 {
-	m_out_lcd.resolve();
 	m_rombank->configure_entries(0, 64, memregion("rombank")->base(), 0x4000);
 
 	// periodically check for interrupts
@@ -333,7 +333,7 @@ ROM_START( ivanto )
 	ROM_LOAD("1996_701e_excalibur_ivan_t.ic2", 0x000000, 0x100000, CRC(f7c386a1) SHA1(357ca0b0c0b1409d33876b6fa00c5ad74b2643fc) )
 
 	ROM_REGION( 109652, "screen", 0 )
-	ROM_LOAD("regency.svg", 0, 109652, CRC(6840c49e) SHA1(a9c91143c5bea5ab41fe323e719da4a46ab9d631) )
+	ROM_LOAD("slegend.svg", 0, 109652, CRC(6840c49e) SHA1(a9c91143c5bea5ab41fe323e719da4a46ab9d631) )
 ROM_END
 
 } // anonymous namespace

@@ -24,11 +24,11 @@ namespace ui {
 class simple_menu_select_game : public menu
 {
 public:
-	simple_menu_select_game(mame_ui_manager &mui, render_container &container, const char *gamename);
+	simple_menu_select_game(mame_ui_manager &mui, render_target &target, const char *gamename);
 	virtual ~simple_menu_select_game();
 
 	// force game select menu
-	static void force_game_select(mame_ui_manager &mui, render_container &container);
+	static void force_game_select(mame_ui_manager &mui, render_target &target);
 
 protected:
 	virtual void recompute_metrics(uint32_t width, uint32_t height, float aspect) override;
@@ -59,7 +59,8 @@ private:
 
 	// cached driver flags
 	const game_driver *     m_cached_driver;
-	machine_flags::type     m_cached_flags;
+	machine_flags::type     m_cached_machine_flags;
+	device_t::flags_type    m_cached_emulation_flags;
 	device_t::feature_type  m_cached_unemulated;
 	device_t::feature_type  m_cached_imperfect;
 	rgb_t                   m_cached_color;

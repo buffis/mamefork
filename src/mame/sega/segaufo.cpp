@@ -64,6 +64,7 @@ TODO:
 
 #include "speaker.h"
 
+#include <bit>
 #include <iomanip>
 #include <sstream>
 
@@ -107,14 +108,14 @@ public:
 	{ }
 
 	// machine configs
-	void newufo(machine_config &config);
-	void ufomini(machine_config &config);
-	void ufo21(machine_config &config);
-	void ufoalac(machine_config &config);
-	void ufo800(machine_config &config);
+	void newufo(machine_config &config) ATTR_COLD;
+	void ufomini(machine_config &config) ATTR_COLD;
+	void ufo21(machine_config &config) ATTR_COLD;
+	void ufoalac(machine_config &config) ATTR_COLD;
+	void ufo800(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override { m_nmi_enable = false; }
 
 private:
@@ -148,9 +149,9 @@ private:
 	TIMER_CALLBACK_MEMBER(simulate_xyz);
 
 	// address maps
-	void ufo_map(address_map &map);
-	void ufo_portmap(address_map &map);
-	void ex_ufo21_portmap(address_map &map);
+	void ufo_map(address_map &map) ATTR_COLD;
+	void ufo_portmap(address_map &map) ATTR_COLD;
+	void ex_ufo21_portmap(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void pit_out0(int state);
@@ -182,11 +183,6 @@ private:
 
 void ufo_state::machine_start()
 {
-	// resolve outputs
-	m_counters.resolve();
-	m_digits.resolve();
-	m_lamps.resolve();
-
 	// register for savestates
 	save_item(NAME(m_stepper));
 	save_item(NAME(m_nmi_enable));
@@ -258,9 +254,10 @@ TIMER_CALLBACK_MEMBER(ufo_state::simulate_xyz)
 #if 0
 	// show io2 outputs
 	std::ostringstream msg;
+	msg << std::uppercase << std::hex << std::setfill('0');
 	for (int i = 0; i < 8; i++)
 	{
-		msg << std::uppercase << std::hex << std::setw(2) << std::setfill('0') << +m_io[1]->debug_peek_output(i);
+		msg << std::setw(2) << +m_io[1]->debug_peek_output(i);
 		if (i != 7) msg << " ";
 	}
 	popmessage("%s", std::move(msg).str());
@@ -515,8 +512,8 @@ void ufo_state::ex_crane_xyz_w(u8 data)
 	// d5: move up
 	for (int m = 0; m < 3; m++)
 	{
-		int bits = data >> (m * 2) & 3;
-		m_player[P].motor[m].running = population_count_32(bits) & 1;
+		unsigned bits = data >> (m * 2) & 3;
+		m_player[P].motor[m].running = std::popcount(bits) & 1;
 		m_player[P].motor[m].direction = bits & 2;
 	}
 }
@@ -533,8 +530,8 @@ void ufo_state::ex_ufoalac_xz_w(u8 data)
 	// d7: p2 move arm out
 	for (int i = 0; i < 4; i++)
 	{
-		int bits = data >> (i * 2) & 3;
-		m_player[i & 1].motor[i & 2].running = population_count_32(bits) & 1;
+		unsigned bits = data >> (i * 2) & 3;
+		m_player[i & 1].motor[i & 2].running = std::popcount(bits) & 1;
 		m_player[i & 1].motor[i & 2].direction = bits & 1;
 	}
 
@@ -547,7 +544,7 @@ void ufo_state::ex_ufoalac_y_w(u8 data)
 	// d0: y normal speed
 	// d1: y slow speed
 	// d2: y direction
-	m_player[P].motor[1].running = population_count_32(data & 3) & 1;
+	m_player[P].motor[1].running = std::popcount(data & 3U) & 1;
 	m_player[P].motor[1].direction = data & 4;
 
 	m_player[P].motor[1].speed = 1.0f / CABINET_DEPTH;
@@ -684,7 +681,7 @@ static INPUT_PORTS_START( newufo )
 	PORT_DIPSETTING(    0x0b, DEF_STR( 1C_5C ) )    PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0x0a, DEF_STR( 1C_6C ) )    PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0x09, DEF_STR( 1C_8C ) )    PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
-	PORT_DIPSETTING(    0x08, "1 Coin/10 Credits" ) PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
+	PORT_DIPSETTING(    0x08, DEF_STR( 1C_10C ) )   PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0x07, "1 Coin/11 Credits" ) PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0x06, "1 Coin/12 Credits" ) PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 
@@ -719,7 +716,7 @@ static INPUT_PORTS_START( newufo )
 	PORT_DIPSETTING(    0xb0, DEF_STR( 1C_5C ) )    PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0xa0, DEF_STR( 1C_6C ) )    PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0x90, DEF_STR( 1C_8C ) )    PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
-	PORT_DIPSETTING(    0x80, "1 Coin/10 Credits" ) PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
+	PORT_DIPSETTING(    0x80, DEF_STR( 1C_10C ) )   PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0x70, "1 Coin/11 Credits" ) PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 	PORT_DIPSETTING(    0x60, "1 Coin/12 Credits" ) PORT_CONDITION("DSW2", 0x08, EQUALS, 0x00)
 
@@ -775,31 +772,42 @@ static INPUT_PORTS_START( ufo21 )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
-	PORT_START("DSW1") // coinage
-	PORT_DIPNAME( 0x01, 0x01, "UNK1-01" )
-	PORT_DIPSETTING(    0x01, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x02, "UNK1-02" )
-	PORT_DIPSETTING(    0x02, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x04, "UNK1-04" )
-	PORT_DIPSETTING(    0x04, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x08, "UNK1-08" )
-	PORT_DIPSETTING(    0x08, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x10, "UNK1-10" )
-	PORT_DIPSETTING(    0x10, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x20, 0x20, "UNK1-20" )
-	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x40, 0x40, "UNK1-40" )
-	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x80, 0x80, "UNK1-80" )
-	PORT_DIPSETTING(    0x80, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
+	PORT_START("DSW1")
+	PORT_DIPNAME( 0x0f, 0x0f, DEF_STR( Coin_A ) )
+	PORT_DIPSETTING(    0x05, DEF_STR( 4C_1C ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( 3C_1C ) )
+	PORT_DIPSETTING(    0x03, "3 Coins/1 Credit, 5 Coins/2 Credits" )
+	PORT_DIPSETTING(    0x0a, DEF_STR( 2C_1C ) )
+	PORT_DIPSETTING(    0x02, "2 Coins/1 Credit, 5 Coins/3 Credits" )
+	PORT_DIPSETTING(    0x07, "2 Coins/1 Credit, 3 Coins/2 Credits" )
+	PORT_DIPSETTING(    0x0f, DEF_STR( 1C_1C ) )
+	PORT_DIPSETTING(    0x01, "1 Coin/1 Credit, 5 Coins/6 Credits" )
+	PORT_DIPSETTING(    0x04, "1 Coin/1 Credit, 4 Coins/5 Credits" )
+	PORT_DIPSETTING(    0x06, "1 Coin/1 Credit, 3 Coins/4 Credits" )
+	PORT_DIPSETTING(    0x09, "1 Coin/1 Credit, 2 Coins/3 Credits" )
+	PORT_DIPSETTING(    0x0e, DEF_STR( 1C_2C ) )
+	PORT_DIPSETTING(    0x0d, DEF_STR( 1C_3C ) )
+	PORT_DIPSETTING(    0x0c, DEF_STR( 1C_5C ) )
+	PORT_DIPSETTING(    0x0b, DEF_STR( 1C_6C ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( Free_Play ) )
+
+	PORT_DIPNAME( 0xf0, 0xf0, DEF_STR( Coin_B ) )
+	PORT_DIPSETTING(    0x50, DEF_STR( 4C_1C ) )
+	PORT_DIPSETTING(    0x80, DEF_STR( 3C_1C ) )
+	PORT_DIPSETTING(    0x30, "3 Coins/1 Credit, 5 Coins/2 Credits" )
+	PORT_DIPSETTING(    0xa0, DEF_STR( 2C_1C ) )
+	PORT_DIPSETTING(    0x20, "2 Coins/1 Credit, 5 Coins/3 Credits" )
+	PORT_DIPSETTING(    0x70, "2 Coins/1 Credit, 3 Coins/2 Credits" )
+	PORT_DIPSETTING(    0xf0, DEF_STR( 1C_1C ) )
+	PORT_DIPSETTING(    0x10, "1 Coin/1 Credit, 5 Coins/6 Credits" )
+	PORT_DIPSETTING(    0x40, "1 Coin/1 Credit, 4 Coins/5 Credits" )
+	PORT_DIPSETTING(    0x60, "1 Coin/1 Credit, 3 Coins/4 Credits" )
+	PORT_DIPSETTING(    0x90, "1 Coin/1 Credit, 2 Coins/3 Credits" )
+	PORT_DIPSETTING(    0xe0, DEF_STR( 1C_2C ) )
+	PORT_DIPSETTING(    0xd0, DEF_STR( 1C_3C ) )
+	PORT_DIPSETTING(    0xc0, DEF_STR( 1C_5C ) )
+	PORT_DIPSETTING(    0xb0, DEF_STR( 1C_6C ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( Free_Play ) )
 
 	PORT_START("DSW2")
 	PORT_DIPNAME( 0x01, 0x01, "UNK2-01" )
@@ -808,19 +816,19 @@ static INPUT_PORTS_START( ufo21 )
 	PORT_DIPNAME( 0x02, 0x02, "UNK2-02" )
 	PORT_DIPSETTING(    0x02, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x04, "UNK2-04" )
+	PORT_DIPNAME( 0x04, 0x04, "Advertise BGM CHRISTMAS" )
 	PORT_DIPSETTING(    0x04, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x08, "UNK2-08 Demo Music On" )
+	PORT_DIPNAME( 0x08, 0x08, "Advertise BGM NORMAL" )
 	PORT_DIPSETTING(    0x08, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x10, "UNK2-10" )
+	PORT_DIPNAME( 0x10, 0x10, "TIME ATTACK 1" )
 	PORT_DIPSETTING(    0x10, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x20, 0x20, "UNK2-20" )
+	PORT_DIPNAME( 0x20, 0x20, "TIME ATTACK 2" )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_DIPNAME( 0x40, 0x40, "UNK2-40" )
+	PORT_DIPNAME( 0x40, 0x40, "TIME ATTACK 3" )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_DIPNAME( 0x80, 0x80, "UNK2-80" )
@@ -1046,7 +1054,7 @@ void ufo_state::ufo21(machine_config &config)
 	m_io[1]->out_pf_callback().set(FUNC(ufo_state::ex_crane_xyz_w<1>));
 	m_io[1]->out_pg_callback().set_nop();
 
-	sega_315_5338a_device &io3(SEGA_315_5338A(config, "io3", 0));
+	sega_315_5338a_device &io3(SEGA_315_5338A(config, "io3"));
 	io3.out_pa_callback().set(FUNC(ufo_state::ex_upd_start_w));
 	io3.in_pb_callback().set(FUNC(ufo_state::ex_upd_busy_r));
 	io3.out_pe_callback().set(FUNC(ufo_state::ex_ufo21_lamps1_w));

@@ -164,11 +164,11 @@ public:
 	void sol20(machine_config &config);
 
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void mem_map(address_map &map);
-	void io_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
 
 	struct cass_data_t
 	{
@@ -779,7 +779,7 @@ void sol20_state::sol20(machine_config &config)
 	m_uart_s_clock->signal_handler().set(m_uart_s, FUNC(ay51013_device::write_rcp));
 	m_uart_s_clock->signal_handler().append(m_uart_s, FUNC(ay51013_device::write_tcp));
 
-	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard", 0));
+	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard"));
 	keyboard.set_keyboard_callback(FUNC(sol20_state::kbd_put));
 
 	SOFTWARE_LIST(config, "cass_list").set_original("sol20_cass");

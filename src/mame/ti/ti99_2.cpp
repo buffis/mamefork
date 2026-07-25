@@ -151,7 +151,8 @@
 
     The ROMs contain a stripped-down version of TI BASIC, but without
     the specific graphics subprograms. Programs written on the 99/2 should
-    run on the 99/4A, but the opposite is not true.
+    run on the 99/4A, but the opposite is not true. The 24K version is
+    buggy and incomplete: OPEN and SAVE cause the CPU to restart itself.
 
     Original implementation: Raphael Nabet; December 1999, 2000
 
@@ -224,8 +225,8 @@ private:
 
 	void rombank_set(int state);
 
-	void crumap(address_map &map);
-	void memmap(address_map &map);
+	void crumap(address_map &map) ATTR_COLD;
+	void memmap(address_map &map) ATTR_COLD;
 
 	required_device<tms9995_device> m_maincpu;
 	required_device<bus::ti99::internal::video992_device> m_videoctrl;
@@ -427,7 +428,7 @@ void ti99_2_state::ti99_224(machine_config& config)
 	screen.set_screen_update(TI992_VDC_TAG, FUNC(video992_device::screen_update));
 
 	// I/O interface circuit. No banking callback.
-	IO99224(config, m_io992, 0);
+	IO99224(config, m_io992);
 }
 
 void ti99_2_state::ti99_232(machine_config& config)
@@ -451,7 +452,7 @@ void ti99_2_state::ti99_232(machine_config& config)
 	screen.set_screen_update(TI992_VDC_TAG, FUNC(video992_device::screen_update));
 
 	// I/O interface circuit
-	IO99232(config, m_io992, 0).rombank_cb().set(FUNC(ti99_2_state::rombank_set));
+	IO99232(config, m_io992).rombank_cb().set(FUNC(ti99_2_state::rombank_set));
 }
 
 void ti99_2_state::ti99_2(machine_config& config)
@@ -473,13 +474,13 @@ void ti99_2_state::ti99_2(machine_config& config)
 	// Cassette drives
 	// There is no route from the cassette to some audio input,
 	// so we don't hear it.
-	CASSETTE(config, "cassette", 0);
+	CASSETTE(config, "cassette");
 
 	// Hexbus
-	HEXBUS(config, TI992_HEXBUS_TAG, 0, hexbus_options, nullptr);
+	HEXBUS(config, TI992_HEXBUS_TAG, hexbus_options, nullptr);
 
 	// Expansion port (backside)
-	TI992_EXPPORT(config, m_expport, 0, ti992_expport_options, nullptr);
+	TI992_EXPPORT(config, m_expport, ti992_expport_options, nullptr);
 }
 
 /*

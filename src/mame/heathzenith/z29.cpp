@@ -9,7 +9,7 @@
 #include "emu.h"
 //#include "bus/rs232/rs232.h"
 #include "bus/z29_kbd/keyboard.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "machine/x2212.h"
 #include "video/i8275.h"
 #include "screen.h"
@@ -37,7 +37,7 @@ public:
 	void z29(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void keyin_w(int state);
@@ -47,8 +47,8 @@ private:
 	void crtc_w(offs_t offset, u8 data);
 	void latch_12k_w(u8 data);
 
-	void prg_map(address_map &map);
-	void ext_map(address_map &map);
+	void prg_map(address_map &map) ATTR_COLD;
+	void ext_map(address_map &map) ATTR_COLD;
 
 	required_device<mcs51_cpu_device> m_maincpu;
 	required_device<z29_keyboard_port_device> m_keyboard;
@@ -161,7 +161,7 @@ void z29_state::z29(machine_config &config)
 {
 	I8031(config, m_maincpu, 14.784_MHz_XTAL / 2); // Intel P8031AH
 	m_maincpu->set_addrmap(AS_PROGRAM, &z29_state::prg_map);
-	m_maincpu->set_addrmap(AS_IO, &z29_state::ext_map);
+	m_maincpu->set_addrmap(AS_DATA, &z29_state::ext_map);
 	m_maincpu->port_in_cb<1>().set(FUNC(z29_state::p1_r));
 	m_maincpu->port_out_cb<1>().set(m_keyboard, FUNC(z29_keyboard_port_device::keyout_w)).bit(0).invert();
 	m_maincpu->port_out_cb<3>().set(FUNC(z29_state::p3_w));
@@ -196,4 +196,4 @@ ROM_END
 } // anonymous namespace
 
 //    year  name   parent compat  machine  input class      init        company                fullname          flags
-COMP( 1983, z29,   0,     0,      z29,     z29,  z29_state, empty_init, "Zenith Data Systems", "Z-29 Terminal",  MACHINE_IS_SKELETON)
+COMP( 1983, z29,   0,     0,      z29,     z29,  z29_state, empty_init, "Zenith Data Systems", "Z-29 Terminal",  MACHINE_NO_SOUND | MACHINE_NOT_WORKING)

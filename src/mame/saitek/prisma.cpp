@@ -10,8 +10,8 @@ NVRAM won't save properly. To force a cold boot, hold the PLAY button and trigge
 a power on/reset (F3).
 
 It's the 'sequel' to Simultano, and the first chess computer with a H8 CPU. Even
-though H8 is much faster than 6502, it plays weaker, probably due to less RAM.
-And/or it could also be due to the programmer(s) being unfamiliar with H8.
+though H8 is much faster than 6502, it plays weaker than Simultano, probably due to
+less RAM. And/or it could also be due to the programmer(s) unfamiliarity with H8.
 
 Hardware notes:
 - PCB label: ST9A-PE-001
@@ -59,13 +59,13 @@ public:
 		m_out_lcd(*this, "s%u.%u", 0U, 0U)
 	{ }
 
-	void prisma(machine_config &config);
+	void prisma(machine_config &config) ATTR_COLD;
 
 	DECLARE_INPUT_CHANGED_MEMBER(go_button);
 	DECLARE_INPUT_CHANGED_MEMBER(change_cpu_freq);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -84,6 +84,7 @@ private:
 	u8 m_inp_mux = 0;
 	u8 m_led_select = 0;
 	u8 m_led_direct = 0;
+	u8 m_port1 = 0xff;
 
 	// I/O handlers
 	void lcd_pwm_w(offs_t offset, u8 data);
@@ -105,8 +106,6 @@ private:
 
 void prisma_state::machine_start()
 {
-	m_out_lcd.resolve();
-
 	// register for savestates
 	save_item(NAME(m_lcd_data));
 	save_item(NAME(m_lcd_address));
@@ -114,6 +113,7 @@ void prisma_state::machine_start()
 	save_item(NAME(m_inp_mux));
 	save_item(NAME(m_led_select));
 	save_item(NAME(m_led_direct));
+	save_item(NAME(m_port1));
 }
 
 INPUT_CHANGED_MEMBER(prisma_state::change_cpu_freq)
@@ -146,7 +146,7 @@ void prisma_state::standby(int state)
 
 INPUT_CHANGED_MEMBER(prisma_state::go_button)
 {
-	if (newval && m_maincpu->standby())
+	if (newval && BIT(m_port1, 7))
 		m_maincpu->pulse_input_line(INPUT_LINE_RESET, attotime::zero);
 }
 
@@ -183,6 +183,8 @@ void prisma_state::p1_w(u8 data)
 	m_dac->write(BIT(data, 4));
 
 	// P16: ext power (no need to emulate it)
+	// P17: enable Go button
+	m_port1 = data;
 }
 
 void prisma_state::p2_w(u8 data)
@@ -269,7 +271,7 @@ static INPUT_PORTS_START( prisma )
 	PORT_BIT(0x10, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_4) PORT_NAME("Swap Side")
 	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_Q) PORT_NAME("New Game")
 	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_UNUSED)
-	PORT_CONFNAME( 0x81, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, prisma_state, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x81, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(prisma_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x81, "12MHz (unofficial)" )
 	PORT_CONFSETTING(    0x00, "16MHz (Chess Champion 2150L)" )
 	PORT_CONFSETTING(    0x01, "20MHz (Prisma)" )
@@ -301,7 +303,7 @@ static INPUT_PORTS_START( prisma )
 	PORT_CONFSETTING(    0x01, DEF_STR( Normal ) )
 
 	PORT_START("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_1) PORT_CHANGED_MEMBER(DEVICE_SELF, prisma_state, go_button, 0) PORT_NAME("Go")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(prisma_state::go_button), 0) PORT_NAME("Go")
 INPUT_PORTS_END
 
 

@@ -27,6 +27,7 @@
 #include "emu.h"
 #include "cc_fdc.h"
 #include "formats/ti99_dsk.h"
+#include "formats/hxchfe_dsk.h"
 #include "machine/rescap.h"
 
 // ----------------------------------
@@ -367,8 +368,10 @@ void corcomp_fdc_device::select_dsk(int state)
 		if (m_floppy[m_selected_drive-1]->get_device() != nullptr)
 		{
 			m_wdc->set_floppy(m_floppy[m_selected_drive-1]->get_device());
-			m_floppy[m_selected_drive-1]->get_device()->ss_w(m_tms9901->read_bit(tms9901_device::INT15_P7));
+			side_select(m_tms9901->read_bit(tms9901_device::INT15_P7));
 		}
+		else
+			LOGMASKED(LOG_WARN, "No drive connected as DSK%d\n", m_selected_drive);
 	}
 }
 
@@ -377,8 +380,13 @@ void corcomp_fdc_device::side_select(int state)
 	// Select side of disk (bit 7)
 	if (m_selected_drive != 0)
 	{
-		LOGMASKED(LOG_DRIVE, "Set side (bit 7) = %d on DSK%d\n", state, m_selected_drive);
-		m_floppy[m_selected_drive-1]->get_device()->ss_w(state);
+		if (m_floppy[m_selected_drive-1]->get_device() != nullptr)
+		{
+			LOGMASKED(LOG_DRIVE, "Set side (bit 7) = %d on DSK%d\n", state, m_selected_drive);
+			m_floppy[m_selected_drive-1]->get_device()->ss_w(state);
+		}
+		else
+			LOGMASKED(LOG_WARN, "No drive connected as DSK%d\n", m_selected_drive);
 	}
 }
 
@@ -471,6 +479,7 @@ void corcomp_fdc_device::floppy_formats(format_registration &fr)
 	fr.add_mfm_containers();
 	fr.add(FLOPPY_TI99_SDF_FORMAT);
 	fr.add(FLOPPY_TI99_TDF_FORMAT);
+	fr.add(FLOPPY_HFE_FORMAT);
 }
 
 static void ccfdc_floppies(device_slot_interface &device)
@@ -486,7 +495,7 @@ void corcomp_fdc_device::common_config(machine_config& config)
 	m_wdc->drq_wr_callback().set(FUNC(corcomp_fdc_device::fdc_drq_w));
 	m_wdc->hld_wr_callback().set(FUNC(corcomp_fdc_device::fdc_hld_w));
 
-	TMS9901(config, m_tms9901, 0);
+	TMS9901(config, m_tms9901);
 	m_tms9901->read_cb().set(FUNC(corcomp_fdc_device::tms9901_input));
 
 	// Outputs
@@ -515,7 +524,7 @@ void corcomp_fdc_device::common_config(machine_config& config)
 	m_tms9901->p_out_cb(11).set(FUNC(corcomp_fdc_device::select_bank));
 
 	// Motor monoflop
-	TTL74123(config, m_motormf, 0);
+	TTL74123(config, m_motormf);
 	m_motormf->set_connection_type(TTL74123_GROUNDED);
 	m_motormf->set_resistor_value(RES_K(100));
 	m_motormf->set_capacitor_value(CAP_U(47));

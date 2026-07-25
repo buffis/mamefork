@@ -60,12 +60,12 @@ protected:
 	nubus_mac8390_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// optional information overrides
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 	u8 asntm3b_ram_r(offs_t offset);
 	void asntm3b_ram_w(offs_t offset, u8 data);
@@ -93,32 +93,32 @@ class nubus_appleenet_device : public nubus_mac8390_device
 {
 public:
 	nubus_appleenet_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 };
 
 class pds030_ethermac30i_device : public nubus_mac8390_device
 {
 public:
 	pds030_ethermac30i_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 };
 
 class pdslc_macconilc_device : public nubus_mac8390_device
 {
 public:
 	pdslc_macconilc_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 };
 
 void nubus_mac8390_device::device_add_mconfig(machine_config &config)
 {
-	DP8390D(config, m_dp83902, 0);
+	DP8390D(config, m_dp83902);
 	m_dp83902->irq_callback().set(FUNC(nubus_mac8390_device::dp_irq_w));
 	m_dp83902->mem_read_callback().set(FUNC(nubus_mac8390_device::dp_mem_read));
 	m_dp83902->mem_write_callback().set(FUNC(nubus_mac8390_device::dp_mem_write));

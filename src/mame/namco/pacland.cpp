@@ -163,12 +163,6 @@ Notes:
 
 Notes:
 -----
-
-- Sprites cover the top and bottom non-scrolling portions of the fg. This
-  includes the cookie cut light in round 19, which makes text disappear from
-  those areas. This looks odd, but it's the correct behaviour verified on the
-  real hardware.
-
 - There is an Easter egg in the service mode:
   1) Go into the service mode
   2) Press left or right to change the sound effect until it's $18
@@ -187,6 +181,16 @@ Notes:
   YURI.
   NEGIE
   S#TOU (# is the small ghost sprite)
+
+
+BTANB:
+-----
+- Sprites cover the top and bottom non-scrolling portions of the fg. This
+  includes the cookie cut light in round 19, which makes text disappear from
+  those areas. This looks odd, but it's the correct behaviour verified on the
+  real hardware.
+
+- Jump sound effect is silent for a while after car horn sound effect.
 
 ***************************************************************************/
 
@@ -227,8 +231,8 @@ public:
 	void pacland(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -279,8 +283,8 @@ private:
 	void draw_sprites(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int flip, int whichmask);
 	void draw_fg(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int priority);
 
-	void main_map(address_map &map);
-	void mcu_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void mcu_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -673,8 +677,6 @@ uint32_t pacland_state::screen_update(screen_device &screen, bitmap_ind16 &bitma
 // machine
 void pacland_state::machine_start()
 {
-	m_leds.resolve();
-
 	m_mainbank->configure_entries(0, 8, memregion("maincpu")->base() + 0x10000, 0x2000);
 
 	save_item(NAME(m_main_irq_mask));
@@ -744,7 +746,7 @@ void pacland_state::main_map(address_map &map)
 	map(0x3a00, 0x3a01).w(FUNC(pacland_state::scroll_w<1>));
 	map(0x3c00, 0x3c00).w(FUNC(pacland_state::bankswitch_w));
 	map(0x4000, 0x5fff).bankr(m_mainbank);
-	map(0x6800, 0x6bff).rw(m_cus30, FUNC(namco_cus30_device::namcos1_cus30_r), FUNC(namco_cus30_device::namcos1_cus30_w));      // PSG device, shared RAM
+	map(0x6800, 0x6bff).m(m_cus30, FUNC(namco_cus30_device::amap));      // PSG device, shared RAM
 	map(0x7000, 0x7fff).w(FUNC(pacland_state::maincpu_irq_ctrl_w));
 	map(0x7800, 0x7fff).r("watchdog", FUNC(watchdog_timer_device::reset_r));
 	map(0x8000, 0xffff).rom();
@@ -754,7 +756,7 @@ void pacland_state::main_map(address_map &map)
 
 void pacland_state::mcu_map(address_map &map)
 {
-	map(0x1000, 0x13ff).rw(m_cus30, FUNC(namco_cus30_device::namcos1_cus30_r), FUNC(namco_cus30_device::namcos1_cus30_w));      // PSG device, shared RAM
+	map(0x1000, 0x13ff).m(m_cus30, FUNC(namco_cus30_device::amap));      // PSG device, shared RAM
 	map(0x2000, 0x3fff).w("watchdog", FUNC(watchdog_timer_device::reset_w));     // watchdog?
 	map(0x4000, 0x7fff).w(FUNC(pacland_state::mcu_irq_ctrl_w));
 	map(0x8000, 0x9fff).rom().region("mcusub", 0);
@@ -915,7 +917,6 @@ void pacland_state::pacland(machine_config &config)
 	SPEAKER(config, "mono").front_center();
 
 	NAMCO_CUS30(config, m_cus30, XTAL(49'152'000) / 2 / 1024);
-	m_cus30->set_voices(8);
 	m_cus30->add_route(ALL_OUTPUTS, "mono", 1.0);
 }
 

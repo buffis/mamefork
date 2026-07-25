@@ -38,7 +38,7 @@ Designer Mach IV Master 2325 (model 6129) overview:
 #include "emu.h"
 
 #include "cpu/m6502/r65c02.h"
-#include "cpu/m6502/m65sc02.h"
+#include "cpu/m6502/w65c02.h"
 #include "cpu/m68000/m68000.h"
 #include "cpu/m68000/m68020.h"
 #include "machine/clock.h"
@@ -78,7 +78,7 @@ public:
 	void init_fdes2100d();
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	// devices/pointers
 	required_device<cpu_device> m_maincpu;
@@ -92,7 +92,7 @@ protected:
 	u32 m_lcd_data = 0;
 
 	// address maps
-	void fdes2100d_map(address_map &map);
+	void fdes2100d_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void update_lcd();
@@ -131,8 +131,8 @@ public:
 
 private:
 	// address maps
-	void fdes2265_map(address_map &map);
-	void fdes2325_map(address_map &map);
+	void fdes2265_map(address_map &map) ATTR_COLD;
+	void fdes2325_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers, slightly different (control_w is d0 instead of d7)
 	virtual void control_w(offs_t offset, u8 data) override { desdis_state::control_w(offset, data << 7); }
@@ -286,7 +286,7 @@ INPUT_PORTS_END
 void desdis_state::fdes2100d(machine_config &config)
 {
 	// basic machine hardware
-	M65C02(config, m_maincpu, 6_MHz_XTAL); // W65C02P-6
+	W65C02(config, m_maincpu, 6_MHz_XTAL); // W65C02P-6
 	m_maincpu->set_addrmap(AS_PROGRAM, &desdis_state::fdes2100d_map);
 
 	auto &irq_clock(CLOCK(config, "irq_clock", 600)); // from 556 timer (22nF, 102K, 1K), ideal frequency is 600Hz

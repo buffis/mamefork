@@ -94,7 +94,7 @@ public:
 	void vvillage(machine_config &config);
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	void vram_w(offs_t offset, uint8_t data);
@@ -108,8 +108,8 @@ private:
 	void palette_init(palette_device &palette) const;
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
-	void main_io(address_map &map);
-	void main_map(address_map &map);
+	void main_io(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
 
 	tilemap_t *m_tilemap = nullptr;
 	bool m_window_enable = false;
@@ -140,7 +140,6 @@ TILE_GET_INFO_MEMBER(caswin_state::get_tile_info)
 
 void caswin_state::video_start()
 {
-	m_lamps.resolve();
 	m_tilemap = &machine().tilemap().create(*m_gfxdecode, tilemap_get_info_delegate(*this, FUNC(caswin_state::get_tile_info)), TILEMAP_SCAN_ROWS, 8, 8, 32, 32);
 	m_tilemap->set_transparent_pen(0);
 }

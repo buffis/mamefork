@@ -3,6 +3,7 @@
 
 #include "emu.h"
 
+#include "mks3.h"
 #include "bus/midi/midiinport.h"
 #include "bus/midi/midioutport.h"
 #include "cpu/sh/sh7042.h"
@@ -28,6 +29,7 @@ public:
 		m_floppy(*this, "fdc:0"),
 		m_fdc(*this, "fdc"),
 		m_nvram(*this, "ram"),
+		m_mks3(*this, "mks3"),
 		m_inputs(*this, "B%u", 1U),
 		m_outputs(*this, "%02d.%x.%x", 0U, 0U, 0U),
 		m_sustain(*this, "SUSTAIN"),
@@ -39,10 +41,11 @@ public:
 private:
 	required_device<sh7042_device> m_maincpu;
 	required_device<swx00_sound_device> m_swx00;
-	required_device<hd44780_device> m_lcdc;
+	required_device<ks0066_device> m_lcdc;
 	required_device<floppy_connector> m_floppy;
 	required_device<hd63266f_device> m_fdc;
 	required_device<nvram_device> m_nvram;
+	required_device<mks3_device> m_mks3;
 	required_ioport_array<8> m_inputs;
 	output_finder<80, 8, 5> m_outputs;
 	required_ioport m_sustain;
@@ -50,28 +53,26 @@ private:
 
 	u16 m_pe, m_led, m_scan;
 
-	void map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
 
-	void machine_start() override;
+	void machine_start() override ATTR_COLD;
 
 	u16 adc_sustain_r();
 	u16 adc_midisw_r();
 	u16 adc_battery_r();
 
+	void pa_w(u16 data);
 	u16 pe_r();
 	void pe_w(u16 data);
 	u8 pf_r();
 
 	void lcd_data_w(u8 data);
 	void led_data_w(offs_t, u16 data, u16 mem_mask);
-	void render_w(int state);
+	u32 screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 };
 
-void psr540_state::render_w(int state)
+u32 psr540_state::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
 {
-	if(!state)
-		return;
-
 	const u8 *render = m_lcdc->render();
 	for(int yy=0; yy != 8; yy++)
 		for(int x=0; x != 80; x++) {
@@ -79,12 +80,12 @@ void psr540_state::render_w(int state)
 			for(int xx=0; xx != 5; xx++)
 				m_outputs[x][yy][xx] = (v >> xx) & 1;
 		}
+
+	return 0;
 }
 
 void psr540_state::machine_start()
 {
-	m_outputs.resolve();
-
 	save_item(NAME(m_pe));
 	save_item(NAME(m_led));
 	save_item(NAME(m_scan));
@@ -125,13 +126,18 @@ void psr540_state::psr540(machine_config &config)
 	m_maincpu->read_adc<3>().set_constant(0);
 	m_maincpu->read_adc<4>().set_ioport(m_pitch_bend);
 	m_maincpu->read_adc<5>().set_constant(0); // Actually used as pf5
+	m_maincpu->write_porta().set(FUNC(psr540_state::pa_w));
 	m_maincpu->read_porte().set(FUNC(psr540_state::pe_r));
 	m_maincpu->write_porte().set(FUNC(psr540_state::pe_w));
 	m_maincpu->read_portf().set(FUNC(psr540_state::pf_r));
 
 	SWX00_SOUND(config, m_swx00);
-	m_swx00->add_route(0, "lspeaker", 1.0);
-	m_swx00->add_route(1, "rspeaker", 1.0);
+	m_swx00->add_route(0, "speaker", 1.0, 0);
+	m_swx00->add_route(1, "speaker", 1.0, 1);
+
+	MKS3(config, m_mks3);
+	m_mks3->write_da().set(m_maincpu, FUNC(sh7042_device::sci_rx_w<1>));
+	m_mks3->write_clk().set(m_maincpu, FUNC(sh7042_device::sci_clk_w<1>));
 
 	KS0066(config, m_lcdc, 270000); // OSC = 91K resistor, TODO: actually KS0066U-10B
 	m_lcdc->set_default_bios_tag("f00");
@@ -153,10 +159,9 @@ void psr540_state::psr540(machine_config &config)
 	screen.set_refresh_hz(60);
 	screen.set_size(1080, 360);
 	screen.set_visarea_full();
-	screen.screen_vblank().set(FUNC(psr540_state::render_w));
+	screen.set_screen_update(FUNC(psr540_state::screen_update));
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	auto &mdin(MIDI_PORT(config, "mdin"));
 	midiin_slot(mdin);
@@ -200,9 +205,15 @@ void psr540_state::pe_w(u16 data)
 	m_lcdc->rs_w(BIT(m_pe, 11));
 	m_lcdc->e_w(BIT(m_pe, 9));
 	m_fdc->rate_w(!BIT(m_pe, 8));
+	m_mks3->ic_w(BIT(m_pe, 4));
 
 	if(BIT(m_pe, 4))
 		m_scan = m_led & 7;
+}
+
+void psr540_state::pa_w(u16 data)
+{
+	m_mks3->req_w(BIT(data, 4));
 }
 
 void psr540_state::lcd_data_w(u8 data)
@@ -235,7 +246,7 @@ void psr540_state::map(address_map &map)
 	map(0x00400000, 0x007fffff).rom().region("program_rom", 0);
 
 	// c00000-ffffff: cs3 space, 8 bits, cs assert extension, 3 wait states
-	map(0x00c00000, 0x00c00fff).m(m_swx00, FUNC(swx00_sound_device::map));
+	map(0x00c00000, 0x00c007ff).m(m_swx00, FUNC(swx00_sound_device::map));
 
 	// Dedicated dram space, ras precharge = 1.5, ras-cas delay 2, cas-before-ras 2.5, dram write 4, read 3, idle 0, burst, ras down, 16bits, 9-bit address
 	// Automatic refresh every 436 cycles, cas-before-ras
@@ -250,7 +261,7 @@ static INPUT_PORTS_START( psr540 )
 	PORT_BIT(0x3ff, 0x200, IPT_PADDLE) PORT_NAME("Pitch Bend") PORT_SENSITIVITY(30)
 
 	PORT_START("B1")
-	PORT_BIT(0x001, IP_ACTIVE_LOW, IPT_UNUSED)
+	PORT_BIT(0x001, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("9") PORT_CODE(KEYCODE_9)
 	PORT_BIT(0x002, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Exit") PORT_CODE(KEYCODE_BACKSPACE)
 	PORT_BIT(0x004, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Utility") PORT_CODE(KEYCODE_Q)
 	PORT_BIT(0x008, IP_ACTIVE_LOW, IPT_OTHER) PORT_NAME("Save") PORT_CODE(KEYCODE_W)
@@ -364,4 +375,4 @@ ROM_END
 
 } // anonymous namespace
 
-SYST( 1999, psr540, 0, 0, psr540, psr540, psr540_state, empty_init, "Yamaha", "PSR540", MACHINE_IS_SKELETON )
+SYST( 1999, psr540, 0, 0, psr540, psr540, psr540_state, empty_init, "Yamaha", "PSR540", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

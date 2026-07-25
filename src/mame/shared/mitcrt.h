@@ -23,7 +23,7 @@
 class crt_device : public device_t
 {
 public:
-	crt_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	crt_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void set_num_levels(int levels) { m_num_intensity_levels = levels; }
 	void set_offsets(int x_offset, int y_offset)
@@ -43,7 +43,7 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 private:
 	struct crt_point

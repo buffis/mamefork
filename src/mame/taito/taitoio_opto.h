@@ -11,7 +11,7 @@ class taitoio_opto_device : public device_t
 {
 public:
 	// construction/destruction
-	taitoio_opto_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	taitoio_opto_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void coin_sense_w(int state);
 	int opto_h_r() const { return m_opto_h ? 1 : 0; }
@@ -19,7 +19,7 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 private:
 	emu_timer *m_opto_timer;

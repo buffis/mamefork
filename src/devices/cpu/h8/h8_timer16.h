@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "h8.h"
+#include "h8_cpu_base.h"
 #include "h8_intc.h"
 
 class h8_timer16_channel_device : public device_t {
@@ -98,8 +98,8 @@ public:
 	u8 tisr_r(int offset) const;
 
 protected:
-	required_device<h8_device> m_cpu;
-	required_device<h8_intc_device> m_intc;
+	required_device<h8_cpu_base> m_cpu;
+	required_device<h8_intc_base> m_intc;
 	optional_device<h8_timer16_channel_device> m_chained_timer;
 	int m_interrupt[6];
 	u8 m_tier_mask;
@@ -116,8 +116,8 @@ protected:
 
 	h8_timer16_channel_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	void update_counter(u64 cur_time = 0);
 	void recalc_event(u64 cur_time = 0);
@@ -158,8 +158,8 @@ protected:
 	virtual void isr_update(u8 value) override;
 	virtual u8 isr_to_sr() const override;
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	u8 m_tcsr;
@@ -265,13 +265,13 @@ public:
 	void tolr_w(u8 data);
 
 protected:
-	required_device<h8_device> m_cpu;
+	required_device<h8_cpu_base> m_cpu;
 	optional_device_array<h8_timer16_channel_device, 6> m_timer_channel;
 	int m_timer_count;
 	u8 m_default_tstr;
 	u8 m_tstr;
 
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset_after_children() override;
 };
 

@@ -354,8 +354,8 @@ public:
 	void init_welltris();
 
 protected:
-	virtual void machine_start() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -388,9 +388,9 @@ private:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void draw_background(bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void setbank(int num, int bank);
-	void main_map(address_map &map);
-	void sound_map(address_map &map);
-	void sound_port_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
+	void sound_port_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -555,7 +555,7 @@ static INPUT_PORTS_START( welltris )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_SERVICE2 )   // Test (used to go through tests in service mode)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_TILT )       // Tested at start of IRQ 1
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_SERVICE1 )   // Service (adds a coin)
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("soundlatch", generic_latch_8_device, pending_r) // pending sound command
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("soundlatch", FUNC(generic_latch_8_device::pending_r)) // pending sound command
 
 	PORT_START("P1")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_JOYSTICK_UP ) PORT_8WAY
@@ -849,7 +849,7 @@ void welltris_state::welltris(machine_config &config)
 
 	VSYSTEM_GGA(config, "gga", XTAL(14'318'181) / 2); // divider not verified
 
-	VSYSTEM_SPR2(config, m_spr_old, 0, "palette", gfx_welltris_spr);
+	VSYSTEM_SPR2(config, m_spr_old, "palette", gfx_welltris_spr);
 	m_spr_old->set_pritype(-1);
 
 	// sound hardware
@@ -861,7 +861,7 @@ void welltris_state::welltris(machine_config &config)
 
 	ym2610_device &ymsnd(YM2610(config, "ymsnd", 8000000));
 	ymsnd.irq_handler().set_inputline(m_audiocpu, 0);
-	ymsnd.add_route(0, "mono", 0.25);
+	ymsnd.add_route(0, "mono", 0.75);
 	ymsnd.add_route(1, "mono", 0.75);
 	ymsnd.add_route(2, "mono", 0.75);
 }

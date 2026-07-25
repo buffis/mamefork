@@ -21,10 +21,10 @@ Hardware notes:
 
 #include "emu.h"
 
-#include "mmboard.h"
+#include "mboard.h"
 
-#include "cpu/m6502/m65c02.h"
 #include "cpu/m6502/r65c02.h"
+#include "cpu/m6502/w65c02.h"
 #include "machine/74259.h"
 #include "machine/nvram.h"
 #include "sound/dac.h"
@@ -53,12 +53,9 @@ public:
 		m_digits(*this, "digit%u", 0U)
 	{ }
 
-	void montec(machine_config &config);
-	void montec4(machine_config &config);
-	void montec4le(machine_config &config);
-
-protected:
-	virtual void machine_start() override;
+	void montec(machine_config &config) ATTR_COLD;
+	void montec4(machine_config &config) ATTR_COLD;
+	void montec4le(machine_config &config) ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -69,7 +66,7 @@ private:
 	required_ioport_array<2> m_keys;
 	output_finder<8> m_digits;
 
-	void montec_mem(address_map &map);
+	void montec_mem(address_map &map) ATTR_COLD;
 
 	template<int N> void lcd_output_w(u32 data);
 	void led_w(u8 data);
@@ -77,11 +74,6 @@ private:
 	u8 irq_ack_r();
 	u8 input_r();
 };
-
-void montec_state::machine_start()
-{
-	m_digits.resolve();
-}
 
 
 
@@ -224,7 +216,7 @@ void montec_state::montec4le(machine_config &config)
 	montec4(config);
 
 	// basic machine hardware
-	M65C02(config.replace(), m_maincpu, 8_MHz_XTAL);
+	W65C02(config.replace(), m_maincpu, 8_MHz_XTAL);
 	m_maincpu->set_addrmap(AS_PROGRAM, &montec_state::montec_mem);
 
 	const attotime irq_period = attotime::from_hz(8_MHz_XTAL / 0x4000);

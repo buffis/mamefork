@@ -149,25 +149,24 @@ public:
 		, m_lamps(*this, "lamp%u", 0U)
 	{ }
 
-	void findout(machine_config &config);
-	void suprpokr(machine_config &config);
-	void gselect(machine_config &config);
-	void amuse1(machine_config &config);
-	void gepoker(machine_config &config);
-	void jokpokera(machine_config &config);
-	void quizvid(machine_config &config);
-	void getrivia(machine_config &config);
-	void amuse(machine_config &config);
-	void sprtauth(machine_config &config);
+	void findout(machine_config &config) ATTR_COLD;
+	void suprpokr(machine_config &config) ATTR_COLD;
+	void gselect(machine_config &config) ATTR_COLD;
+	void amuse1(machine_config &config) ATTR_COLD;
+	void gepoker(machine_config &config) ATTR_COLD;
+	void jokpokera(machine_config &config) ATTR_COLD;
+	void quizvid(machine_config &config) ATTR_COLD;
+	void getrivia(machine_config &config) ATTR_COLD;
+	void amuse(machine_config &config) ATTR_COLD;
+	void sprtauth(machine_config &config) ATTR_COLD;
 
-	void init_setbank();
-	void init_bank2k();
-	void init_bank8k();
-	void init_geimulti();
+	void init_setbank() ATTR_COLD;
+	void init_bank2k() ATTR_COLD;
+	void init_bank8k() ATTR_COLD;
+	void init_geimulti() ATTR_COLD;
 
 protected:
-	virtual void machine_start() override { m_lamps.resolve(); }
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
@@ -189,15 +188,15 @@ private:
 
 	INTERRUPT_GEN_MEMBER(vblank_irq);
 
-	void amuse1_map(address_map &map);
-	void amuse_map(address_map &map);
-	void findout_map(address_map &map);
-	void gepoker_map(address_map &map);
-	void getrivia_map(address_map &map);
-	void gselect_map(address_map &map);
-	void quizvid_map(address_map &map);
-	void sprtauth_map(address_map &map);
-	void suprpokr_map(address_map &map);
+	void amuse1_map(address_map &map) ATTR_COLD;
+	void amuse_map(address_map &map) ATTR_COLD;
+	void findout_map(address_map &map) ATTR_COLD;
+	void gepoker_map(address_map &map) ATTR_COLD;
+	void getrivia_map(address_map &map) ATTR_COLD;
+	void gselect_map(address_map &map) ATTR_COLD;
+	void quizvid_map(address_map &map) ATTR_COLD;
+	void sprtauth_map(address_map &map) ATTR_COLD;
+	void suprpokr_map(address_map &map) ATTR_COLD;
 
 	bitmap_ind16 m_bitmap;
 
@@ -591,7 +590,7 @@ static INPUT_PORTS_START(trivia_standard)
 	PORT_START("IN0")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_IMPULSE(2)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(2)
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ticket", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ticket", FUNC(ticket_dispenser_device::line_r))
 	PORT_SERVICE( 0x08, IP_ACTIVE_LOW )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -699,7 +698,7 @@ static INPUT_PORTS_START( getrivia )
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_IMPULSE(2) PORT_CONDITION("DSWA", 0x40, EQUALS, 0x00) PORT_NAME ("Start in no coins mode")
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(2) PORT_CONDITION("DSWA", 0x40, EQUALS, 0x40)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_UNKNOWN ) PORT_CONDITION("DSWA", 0x40, EQUALS, 0x00)
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ticket", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ticket", FUNC(ticket_dispenser_device::line_r))
 	PORT_SERVICE( 0x08, IP_ACTIVE_LOW )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -1471,14 +1470,58 @@ ROM_START( gepoker1 ) // v50.02 with ROMs for ICB dated 9-30-86
 	ROM_LOAD( "instantbingo_t24_10-07-86", 0x18000, 0x2000, CRC(de87ed0a) SHA1(4a26d93368c1a39dd38aabe450c34203101f0ef7) ) // Found with this set, is it compatible or an operator swap?
 ROM_END
 
-ROM_START( gepoker2 ) // v50.02 with control dated 9-30-84
+/*
+  GREYHOUND ELECTRONICS INC.
+  PCB: UV-1B
+  copyright GEI, 1982
+
+
+  ROM board:
+  .----------------+++++++++++++++++++++++++-------------------------.
+  | UVM10-C        |||||||||||||||||||||||||           .-----------. |
+  | G.E.I.              2x25 connector                 | PAL10L8xx | |
+  |                                                    '-----------' |
+  |        .----. .----. .----. .----. .----. .----. .----.          |
+  | .----. |    | |    | |    | |    | |    | |    | |    |   .--.   |
+  | | D  | | 27 | | 27 | | 27 | | 27 | | 27 | | 27 | | 27 |   |74|   |
+  | |449 | | 64 | | 64 | | 64 | | 64 | | 64 | | 64 | | 64 |   |LS|   |
+  | |C-2 | |    | |    | |    | |    | |    | |    | |    |   |37|   |
+  | |    | |    | |    | |    | |    | |    | |    | |    |   |4 |   |
+  | '----' '----' '----' '----' '----' '----' '----' '----'   '--'   |
+  |  RAM    HIGH  CONTROL ROM1   ROM2   ROM3   ROM4   ROM5           |
+  '------------------------------------------------------------------'
+
+
+  COPYRIGHT 1984 GREYHOUND ELECTRONICS INC.
+  CREDIT VERSION 50.02,ICB
+
+
+  RAM:     NEC D449C-2
+  HIGH:    HROM 6/25 M105 PTS.
+  CONTROL: CONT 9/30 M105 P.C.
+  ROM1:    JOKER POKER CB 10-19-88
+  ROM2:    BLACK JACK ICB 9-30-86
+  ROM3:    ROLLING BONES ICB 8-16-84
+  ROM4:    CASINO SLOTS ICB 9-30-86
+  ROM5:    HORSE RACE ICB 1-1-87
+
+  PLD:  PAL10L8xx
+
+NOTE: All EPROMs are 2764 type
+
+*/
+ROM_START( gepoker2 )  // v50.02 with control dated 9-30-84, 5 games.
 	ROM_REGION( 0x1b000, "maincpu", ROMREGION_ERASEFF )
-	ROM_LOAD( "control_icb_9-30",  0x00000, 0x2000, CRC(08b996f2) SHA1(5f5efb5015ec9571cc94734c18debfadaa28f585) )
-	ROM_LOAD( "high_icb_6-25a",    0x0e000, 0x2000, CRC(6ddc1750) SHA1(ee19206b7f4a98e3e7647414127f4e09b3e9134f) )
+	ROM_LOAD( "control_cont_9-30_m105_pts",  0x00000, 0x2000, CRC(08b996f2) SHA1(5f5efb5015ec9571cc94734c18debfadaa28f585) )
+	ROM_LOAD( "high_hrom_6-25_m105_pts",     0x0e000, 0x2000, CRC(6ddc1750) SHA1(ee19206b7f4a98e3e7647414127f4e09b3e9134f) )
 	// Banked ROMs
-	ROM_LOAD( "jokerpoker_cb_10-19-88",    0x10000, 0x2000, CRC(a590af75) SHA1(63bc64fbc9ac0c489b1f4894d77a4be13d7251e7) )
-	ROM_LOAD( "horserace_icb_1-1-87",      0x12000, 0x2000, CRC(6d5092e3) SHA1(ef99d1b858aef3c438c61c2b17e371dc6aca6623) )
+	ROM_LOAD( "rom1_pokr_w-r_1019_m105_pts", 0x10000, 0x2000, CRC(a590af75) SHA1(63bc64fbc9ac0c489b1f4894d77a4be13d7251e7) )
+	ROM_LOAD( "rom2_bljk_9-30_m105_pts",     0x12000, 0x2000, CRC(82804184) SHA1(2e2e6a80c99c8eb226dc54c1d32d0bf24de300a4) )
+	ROM_LOAD( "rom3_bone_8-16_m105_pts",     0x14000, 0x2000, CRC(52d66cb6) SHA1(57db34906fcafd37f3a361df209dafe080aeac16) )
+	ROM_LOAD( "rom4_slot_9-30_m105_pts",     0x16000, 0x2000, CRC(713c3963) SHA1(a9297c04fc44522ca6891516a2c744712132896a) )
+	ROM_LOAD( "rom5_hrse_1-1_87_m105_pts",   0x18000, 0x2000, CRC(6d5092e3) SHA1(ef99d1b858aef3c438c61c2b17e371dc6aca6623) )
 ROM_END
+
 
 ROM_START( gepoker3 ) // v50.02 with control dated 9-30-84
 	ROM_REGION( 0x1b000, "maincpu", ROMREGION_ERASEFF )
@@ -1834,11 +1877,27 @@ ROM_START( gtsers15 ) // v5.06, From a TRIV3D ROM board
 	ROM_REGION( 0x38000, "maincpu", 0 )
 	ROM_LOAD( "program_v5.06",   0x00000, 0x4000, CRC(e9d6226c) SHA1(42e62c5cafa3f051bf48c18c8c549ffcd4c766c5) )
 	ROM_LOAD( "entertainment_2", 0x10000, 0x8000, CRC(c75c2331) SHA1(9c5947616a4cba2623c599def6cf3b2b1981b681) )
+	ROM_LOAD( "the_seventies",   0x18000, 0x8000, CRC(1d000fe5) SHA1(43c704f90ffd0bc8622872f85a2e6b4db3b9f17c) )
+	ROM_LOAD( "facts_2_alt",     0x20000, 0x8000, CRC(5b64aacb) SHA1(75c2ed559e6b0fad1f825f309c58e39354981f01) ) // no label, might be FACTS 2*
+	ROM_LOAD( "new_science_3",   0x28000, 0x8000, CRC(fcbc3bc3) SHA1(2dbdd39dce9dbf53c0954dec44a4f5109243dc60) )
+	ROM_LOAD( "nfl_football",    0x30000, 0x8000, CRC(42eb2849) SHA1(c24e681a508ef8350f7e5d50aea2c31cf70ce5c9) )
+
+	ROM_REGION( 0x0400, "pld", 0 ) // probably one of the two GALs provides the "signature"
+	ROM_LOAD( "gal16v8",   0x0000, 0x0117, NO_DUMP ) // read protected
+	ROM_LOAD( "gal18v8",   0x0200, 0x0117, NO_DUMP ) // read protected
+
+	ROM_REGION( 0x0008, "signature", 0 ) // bytes 0x03 through 0x0a of each question ROM - to prevent ROM swaps
+	ROM_LOAD( "gtsers15.sig",   0x0000, 0x0008, CRC(c8e944a3) SHA1(d34de9e3163ba61fa4e4f2264caff40434fcc9b0) ) // Same signature for all T4 ROM sets?
+ROM_END
+
+ROM_START( gtsers15a ) // v5.06, From a TRIV3D ROM board
+	ROM_REGION( 0x38000, "maincpu", 0 )
+	ROM_LOAD( "program_v5.06",   0x00000, 0x4000, CRC(e9d6226c) SHA1(42e62c5cafa3f051bf48c18c8c549ffcd4c766c5) )
+	ROM_LOAD( "entertainment_2", 0x10000, 0x8000, CRC(c75c2331) SHA1(9c5947616a4cba2623c599def6cf3b2b1981b681) )
 	ROM_LOAD( "facts_2",         0x18000, 0x8000, CRC(7836ef31) SHA1(6a84cfa39de392eed46a4b37752e00b6d094bbd6) )
 	ROM_LOAD( "new_science_3",   0x20000, 0x8000, CRC(fcbc3bc3) SHA1(2dbdd39dce9dbf53c0954dec44a4f5109243dc60) )
 	ROM_LOAD( "nfl_football",    0x28000, 0x8000, CRC(42eb2849) SHA1(c24e681a508ef8350f7e5d50aea2c31cf70ce5c9) )
 	ROM_LOAD( "adult_sex_6",     0x30000, 0x8000, CRC(d66f35f7) SHA1(81b56756230b27b0903d0c5df30439726526afe2) ) // Listed as an alternate question set
-	/* Missing "the_seventies" */
 
 	ROM_REGION( 0x0400, "pld", 0 ) // probably one of the two GALs provides the "signature"
 	ROM_LOAD( "gal16v8",   0x0000, 0x0117, NO_DUMP ) // read protected
@@ -1940,7 +1999,7 @@ ROM_START( quizvid )
 	ROM_LOAD( "pal16l8cn.pal5", 0x0000, 0x0104, NO_DUMP )
 ROM_END
 
-ROM_START( quiz211 )
+ROM_START( quiz211 ) // code-wise, it's just a year hack of the set below. Different question ROMs, though.
 	ROM_REGION( 0x38000, "maincpu", 0 )
 	ROM_LOAD( "1a.bin",         0x000000, 0x4000, CRC(116de0ea) SHA1(9af97b100aa2c79a58de055abe726d6e2e00aab4) )
 	ROM_CONTINUE(               0x000000, 0x4000 ) // halves identical
@@ -1961,6 +2020,16 @@ ROM_START( quiz211 )
 
 	ROM_REGION( 0x0100, "plds", 0 )
 	ROM_LOAD( "pal10l8cn.bin",   0x0000, 0x002c, CRC(86095226) SHA1(e7496efbd5ca240f0df2dfa5627402342c7f5384) )
+ROM_END
+
+ROM_START( quiz211a )
+	ROM_REGION( 0x38000, "maincpu", 0 )
+	ROM_LOAD( "k1.01", 0x00000, 0x4000, CRC(19a7b1d0) SHA1(6fe0e7094c660a91534e2bcaee5c26bb7f0e1d1a) )
+	ROM_LOAD( "k1.02", 0x10000, 0x8000, CRC(ad50a89c) SHA1(96fb52871bcc4379060fe174044b19a19ff82867) ) // 'VARIE', 1xxxxxxxxxxxxxx = 0xFF
+	ROM_LOAD( "k1.03", 0x18000, 0x8000, CRC(f8eafe92) SHA1(5a8da108720b8aaad68d294b4b5cc5d1073545e0) ) // 'GUINNESS', 1xxxxxxxxxxxxxx = 0xFF
+	ROM_LOAD( "k1.04", 0x20000, 0x8000, CRC(2b39801c) SHA1(4265d981458bfb10137848f7aac17c78e956bcb4) ) // 'MUSICA II', 1xxxxxxxxxxxxxx = 0xFF
+	ROM_LOAD( "k1.05", 0x28000, 0x8000, CRC(56d62074) SHA1(979205b4098eb8fd5c8488072a3ce4efabf8a6a4) ) // 'OLIMPIADI', 1xxxxxxxxxxxxxx = 0xFF
+	ROM_LOAD( "k1.06", 0x30000, 0x8000, CRC(796b9474) SHA1(fbebb79a4b0dd4e3a69c0426e976cc075cb777de) ) // 'MONDIALI 1', 1xxxxxxxxxxxxxx = 0xFF
 ROM_END
 
 ROM_START( bigjoke ) // TRIV3D PCB, stickered THE JOKE 11/87
@@ -2180,6 +2249,7 @@ GAME( 1984, gtsers12a, gtsers8,  findout,   gt103,    gei_state, init_bank8k,   
 GAME( 1986, gtsers14,  gtsers8,  findout,   gt103,    gei_state, init_bank8k,   ROT0, "Greyhound Electronics", "Trivia (Questions Series 14)",            MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 GAME( 1984, gtsers14a, gtsers8,  findout,   gt103,    gei_state, init_bank8k,   ROT0, "Greyhound Electronics", "Trivia (Questions Series 14, alt question ROM)", MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 GAME( 1986, gtsers15,  gtsers8,  findout,   gt103,    gei_state, init_bank8k,   ROT0, "Greyhound Electronics", "Trivia (Questions Series 15)",            MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1986, gtsers15a, gtsers8,  findout,   gt103,    gei_state, init_bank8k,   ROT0, "Greyhound Electronics", "Trivia (Questions Series 15, alt question ROM)", MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 GAME( 1986, gtsers18,  gtsers8,  findout,   gt103,    gei_state, init_bank8k,   ROT0, "Greyhound Electronics", "Trivia (Questions Series 18)",            MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 GAME( 1984, gt103a1,   gtsers8,  findout,   getrivia, gei_state, init_bank8k,   ROT0, "Greyhound Electronics", "Trivia (Unsorted question ROMs)",         MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 GAME( 1984, gt103aa,   gtsers8,  findout,   getrivia, gei_state, init_bank8k,   ROT0, "Greyhound Electronics", "Trivia (Version 1.03a, alt questions 1)",  MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
@@ -2209,6 +2279,7 @@ GAME( 1986, suprpokrb, suprpokr, suprpokr,  suprpokr, gei_state, empty_init,    
 GAME( 1987, bigjoke,   0,        findout,   bigjoke,  gei_state, init_bank8k,   ROT0, "Grayhound Electronics",  "The Big Joke (Version 0.00)",            MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 
 GAME( 1991, quiz211,   0,        findout,   quiz,     gei_state, init_bank8k,   ROT0, "Elettronolo",            "Quiz (Revision 2.11)",                   MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1986, quiz211a,  quiz211,  findout,   quiz,     gei_state, init_bank8k,   ROT0, "Elettronolo",            "Quiz (Revision 2.11, alt questions)",    MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 
 GAME( 1992, sexappl,   0,        findout,   sexappl,  gei_state, init_bank8k,   ROT0, "Grayhound Electronics",  "Sex Appeal (Version 6.02)",              MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
 

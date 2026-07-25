@@ -8,7 +8,7 @@ license:CC0-1.0
 
 	<!-- Series MC -->
 
-	<software name="eros4" supported="no">
+	<software name="eros4">
 		<description>EROS Ver.4.0 (Licensed to The Yorkshire Post)</description>
 		<year>1995</year>
 		<publisher>Design Systems</publisher>
@@ -20,7 +20,7 @@ license:CC0-1.0
 		</part>
 	</software>
 
-	<software name="mcmissile" supported="no">
+	<software name="mcmissile">
 		<description>MC Missile</description>
 		<year>1990</year>
 		<publisher>&lt;homebrew&gt;</publisher>
@@ -33,7 +33,7 @@ license:CC0-1.0
 		</part>
 	</software>
 
-	<software name="ssheet" supported="no">
+	<software name="ssheet">
 		<description>Spreadsheet</description>
 		<year>1990</year>
 		<publisher>Psion</publisher>
@@ -45,7 +45,7 @@ license:CC0-1.0
 		</part>
 	</software>
 
-	<software name="sysdisk212" cloneof="sysdisk220" supported="no">
+	<software name="sysdisk212" cloneof="sysdisk220">
 		<description>System Disk V2.12</description>
 		<year>1989</year>
 		<publisher>Psion</publisher>
@@ -57,7 +57,7 @@ license:CC0-1.0
 		</part>
 	</software>
 
-	<software name="sysdisk220" supported="no">
+	<software name="sysdisk220">
 		<description>System Disk V2.20</description>
 		<year>1989</year>
 		<publisher>Psion</publisher>
@@ -69,7 +69,7 @@ license:CC0-1.0
 		</part>
 	</software>
 
-	<software name="sysdisk250" supported="no">
+	<software name="sysdisk250">
 		<description>System Disk (MC Word) V2.50</description>
 		<year>1992</year>
 		<publisher>Psion</publisher>
@@ -179,15 +179,40 @@ license:CC0-1.0
 		</part>
 	</software>
 
-	<software name="enroute">
+	<software name="enroute_b" cloneof="enroute">
 		<description>En Route: Belgium, Netherlands, Luxembourg</description>
 		<year>1997</year>
 		<publisher>Palmtop BV</publisher>
-		<info name="usage" value="Requires 512K" />
+		<info name="required_ram" value="512KB" />
 		<sharedfeat name="compatibility" value="S3A"/>
 		<part name="cart" interface="psion_ssd">
 			<dataarea name="rom" size="1048576">
-				<rom name="EnRoute.rom" size="1048576" crc="5af14e37" sha1="8ce7adfad71392a2d5854c5bb1e7724ac36ce1f6"/>
+				<rom name="EnRoute_B.rom" size="1048576" crc="5af14e37" sha1="8ce7adfad71392a2d5854c5bb1e7724ac36ce1f6"/>
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="enroute">
+		<description>En Route: United Kingdom, Eire</description>
+		<year>1997</year>
+		<publisher>Palmtop BV</publisher>
+		<info name="required_ram" value="512KB" />
+		<sharedfeat name="compatibility" value="S3A"/>
+		<part name="cart" interface="psion_ssd">
+			<dataarea name="rom" size="1048576">
+				<rom name="EnRoute_UK.rom" size="1048576" crc="e3baa9c2" sha1="dc8f28300961321bc5d7d382a25176a51a95263a"/>
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="finpack3">
+		<description>Finance Pack 3</description>
+		<year>1993</year>
+		<publisher>Widget Software</publisher>
+		<sharedfeat name="compatibility" value="S3"/>
+		<part name="cart" interface="psion_ssd">
+			<dataarea name="rom" size="131072">
+				<rom name="Finance_Pack_3.rom" size="131072" crc="cdc7f002" sha1="e02a5ece237d79e71c28a4cb7314ba4572ff4878"/>
 			</dataarea>
 		</part>
 	</software>
@@ -304,7 +329,7 @@ license:CC0-1.0
 		<description>Monopoly</description>
 		<year>1997</year>
 		<publisher>Psion</publisher>
-		<info name="usage" value="Requires 512K" />
+		<info name="required_ram" value="512KB" />
 		<sharedfeat name="compatibility" value="S3A"/>
 		<part name="cart" interface="psion_ssd">
 			<dataarea name="rom" size="262144">
@@ -361,15 +386,39 @@ license:CC0-1.0
 		</part>
 	</software>
 
+	<software name="s3cstart">
+		<description>Serie 3c Start Disk und Zusatzsoftware</description>
+		<year>1995</year>
+		<publisher>Psion</publisher>
+		<sharedfeat name="compatibility" value="S3A"/>
+		<part name="cart" interface="psion_ssd">
+			<dataarea name="rom" size="131072">
+				<rom name="S3c_Start_Disk_und_Zusatzsoftware.rom" size="131072" crc="8cef1e02" sha1="f1ce82dce8261700174e893fbe99ee28549ac6df"/>
+			</dataarea>
+		</part>
+	</software>
+
 	<software name="scrabble">
 		<description>Scrabble</description>
 		<year>1996</year>
 		<publisher>Psion</publisher>
-		<info name="usage" value="Requires 256K" />
+		<info name="required_ram" value="256KB" />
 		<sharedfeat name="compatibility" value="S3,S3A"/>
 		<part name="cart" interface="psion_ssd">
 			<dataarea name="rom" size="1048576">
 				<rom name="Scrabble.rom" size="1048576" crc="6e32cc02" sha1="5441d873f8a5ae95bd9085711d88fa41641321b2"/>
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="sienademo" supported="partial">
+		<description>Siena Demonstration</description>
+		<year>1996</year>
+		<publisher>Psion</publisher>
+		<sharedfeat name="compatibility" value="SIENA"/>
+		<part name="cart" interface="psion_ssd">
+			<dataarea name="rom" size="524288">
+				<rom name="Siena_Demonstration.rom" size="524288" crc="4f78069f" sha1="bf5e3c27ee71835414a5be87dc8f60b0573e2e38"/>
 			</dataarea>
 		</part>
 	</software>
@@ -394,6 +443,18 @@ license:CC0-1.0
 		<part name="cart" interface="psion_ssd">
 			<dataarea name="rom" size="131072">
 				<rom name="Spreadsheet_3.bin" size="131072" crc="23c22f01" sha1="c2edbbe958a3ed277335ae8f5c83df0afe023ad2"/>
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="telenote">
+		<description>Telenote Link</description>
+		<year>1995</year>
+		<publisher>Psion</publisher>
+		<sharedfeat name="compatibility" value="S3A"/>
+		<part name="cart" interface="psion_ssd">
+			<dataarea name="rom" size="131072">
+				<rom name="Telenote_Link.rom" size="131072" crc="d59111fb" sha1="cbb74fe07cf6580e67144459ee82e36eaed8bb59"/>
 			</dataarea>
 		</part>
 	</software>

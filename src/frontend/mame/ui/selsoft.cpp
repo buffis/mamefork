@@ -227,11 +227,15 @@ public:
 		std::locale const lcl;
 		std::collate<wchar_t> const &coll = std::use_facet<std::collate<wchar_t> >(lcl);
 		auto const compare_names =
-				[&coll] (std::string const &x, std::string const &y) -> bool
+				[&coll] (std::string const &xl, std::string const &xd, std::string const &yl, std::string const &yd) -> bool
 				{
-					std::wstring const wx = wstring_from_utf8(x);
-					std::wstring const wy = wstring_from_utf8(y);
-					return 0 > coll.compare(wx.data(), wx.data() + wx.size(), wy.data(), wy.data() + wy.size());
+					std::wstring const wx = wstring_from_utf8(xd);
+					std::wstring const wy = wstring_from_utf8(yd);
+					auto const cmp(coll.compare(wx.data(), wx.data() + wx.size(), wy.data(), wy.data() + wy.size()));
+					if (cmp)
+						return 0 > cmp;
+					else
+						return xl < yl;
 				};
 		std::stable_sort(
 				m_swinfo.begin() + 1,
@@ -243,29 +247,29 @@ public:
 
 					if (!clonex && !cloney)
 					{
-						return compare_names(a.longname, b.longname);
+						return compare_names(a.listname, a.longname, b.listname, b.longname);
 					}
 					else if (!clonex && cloney)
 					{
-						if ((a.shortname == b.parentname) && (a.instance == b.instance))
+						if ((a.shortname == b.parentname) && (a.listname == b.listname))
 							return true;
 						else
-							return compare_names(a.longname, b.parentlongname);
+							return compare_names(a.listname, a.longname, b.listname, b.parentlongname);
 					}
 					else if (clonex && !cloney)
 					{
-						if ((a.parentname == b.shortname) && (a.instance == b.instance))
+						if ((a.parentname == b.shortname) && (a.listname == b.listname))
 							return false;
 						else
-							return compare_names(a.parentlongname, b.longname);
+							return compare_names(a.listname, a.parentlongname, b.listname, b.longname);
 					}
-					else if ((a.parentname == b.parentname) && (a.instance == b.instance))
+					else if ((a.parentname == b.parentname) && (a.listname == b.listname))
 					{
-						return compare_names(a.longname, b.longname);
+						return compare_names(a.listname, a.longname, b.listname, b.longname);
 					}
 					else
 					{
-						return compare_names(a.parentlongname, b.parentlongname);
+						return compare_names(a.listname, a.parentlongname, b.listname, b.parentlongname);
 					}
 				});
 
@@ -376,8 +380,8 @@ private:
 //  ctor
 //-------------------------------------------------
 
-menu_select_software::menu_select_software(mame_ui_manager &mui, render_container &container, ui_system_info const &system)
-	: menu_select_launch(mui, container, true)
+menu_select_software::menu_select_software(mame_ui_manager &mui, render_target &target, ui_system_info const &system)
+	: menu_select_launch(mui, target, true)
 	, m_icon_paths()
 	, m_system(system)
 	, m_displaylist()
@@ -569,7 +573,7 @@ void menu_select_software::populate()
 
 		item_append(
 				m_displaylist[curitem].get().longname, m_displaylist[curitem].get().devicetype,
-				m_displaylist[curitem].get().parentname.empty() ? 0 : FLAG_INVERT, (void *)&m_displaylist[curitem].get());
+				m_displaylist[curitem].get().parentname.empty() ? 0 : FLAG_DEEMPHASIZE, (void *)&m_displaylist[curitem].get());
 	}
 
 	m_skip_main_items = 0;
@@ -710,7 +714,7 @@ void menu_select_software::get_selection(ui_software_info const *&software, ui_s
 
 void menu_select_software::show_config_menu(int index)
 {
-	menu::stack_push<menu_machine_configure>(ui(), container(), m_system, nullptr);
+	menu::stack_push<menu_machine_configure>(ui(), target(), m_system, nullptr);
 }
 
 
@@ -743,7 +747,7 @@ void menu_select_software::filter_selected(int index)
 
 	m_data->get_filter(software_filter::type(index)).show_ui(
 			ui(),
-			container(),
+			target(),
 			[this] (software_filter &filter)
 			{
 				software_filter::type const new_type(filter.get_type());

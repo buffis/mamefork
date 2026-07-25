@@ -144,9 +144,9 @@ public:
 	void init_atetris();
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<gfxdecode_device> m_gfxdecode;
@@ -168,9 +168,9 @@ protected:
 	TIMER_CALLBACK_MEMBER(interrupt_gen);
 	void reset_bank();
 
-	void atetrisb2_map(address_map &map);
-	void atetrisb5_map(address_map &map);
-	void main_map(address_map &map);
+	void atetrisb2_map(address_map &map) ATTR_COLD;
+	void atetrisb5_map(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
 };
 
 class atetris_bartop_state : public atetris_state
@@ -186,7 +186,7 @@ public:
 private:
 	void output_w(uint8_t data);
 
-	void atetrisbp_map(address_map &map);
+	void atetrisbp_map(address_map &map) ATTR_COLD;
 };
 
 class atetris_mcu_state : public atetris_state
@@ -209,7 +209,7 @@ protected:
 	void mcu_p2_w(uint8_t data);
 	void mcu_reg_w(offs_t offset, uint8_t data);
 
-	void atetrisb3_map(address_map &map);
+	void atetrisb3_map(address_map &map) ATTR_COLD;
 
 	required_device<i8749_device> m_mcu;
 	required_device_array<generic_latch_8_device, 2> m_soundlatch;
@@ -526,7 +526,7 @@ static INPUT_PORTS_START( atetris )
 	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
 	PORT_DIPUNUSED_DIPLOC( 0x10, 0x00, "50H:!2" )   // Listed As "SPARE2 (Unused)"
 	PORT_DIPUNUSED_DIPLOC( 0x20, 0x00, "50H:!1" )   // Listed As "SPARE1 (Unused)"
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank))
 	PORT_SERVICE( 0x80, IP_ACTIVE_HIGH )
 
 	// The control panel has a start and an action button for both players. The board has them connected together on the JAMMA connector.

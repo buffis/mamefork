@@ -92,8 +92,8 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(change_cpu_freq);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -114,7 +114,7 @@ private:
 	u32 m_prev_pc = 0;
 	u64 m_prev_cycle = 0;
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	u32 input_r();
@@ -135,8 +135,6 @@ private:
 
 void tasc_state::machine_start()
 {
-	m_out_leds.resolve();
-
 	m_boot_timer = timer_alloc(FUNC(tasc_state::disable_bootrom), this);
 	m_boot_view[1].install_ram(0, m_ram->size() - 1, m_ram->pointer());
 
@@ -195,7 +193,7 @@ void tasc_state::control_w(offs_t offset, u32 data, u32 mem_mask)
 {
 	if (ACCESSING_BITS_24_31)
 	{
-		if (BIT(data, 27))
+		if (BIT(~m_control & data, 27))
 			m_lcd->write(BIT(data, 26), data & 0xff);
 
 		m_smartboard->data0_w(BIT(data, 30));
@@ -283,7 +281,7 @@ static INPUT_PORTS_START( tasc )
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_R) PORT_NAME("Right Clock")
 
 	PORT_START("CPU")
-	PORT_CONFNAME( 0x01, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, tasc_state, change_cpu_freq, 0)
+	PORT_CONFNAME( 0x01, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(tasc_state::change_cpu_freq), 0)
 	PORT_CONFSETTING(    0x00, "30MHz (R30)" )
 	PORT_CONFSETTING(    0x01, "40MHz (R40)" )
 INPUT_PORTS_END
@@ -314,7 +312,7 @@ void tasc_state::tasc(machine_config &config)
 	subdevice<sensorboard_device>("smartboard:board")->set_nvram_enable(true);
 
 	// video hardware
-	LM24014H(config, m_lcd, 0);
+	LM24014H(config, m_lcd);
 	m_lcd->set_fs(1); // font size 6x8
 
 	config.set_default_layout(layout_tascr30);

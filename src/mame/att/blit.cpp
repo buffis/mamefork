@@ -80,11 +80,11 @@ public:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
 	void blit(machine_config &config);
-	void blit_mem(address_map &map);
+	void blit_mem(address_map &map) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -137,16 +137,14 @@ static DEVICE_INPUT_DEFAULTS_START( host_rs232_defaults )
 	DEVICE_INPUT_DEFAULTS( "RS232_DATABITS", 0xff, RS232_DATABITS_8 )
 	DEVICE_INPUT_DEFAULTS( "RS232_PARITY", 0xff, RS232_PARITY_NONE )
 	DEVICE_INPUT_DEFAULTS( "RS232_STOPBITS", 0xff, RS232_STOPBITS_2 )
-	DEVICE_INPUT_DEFAULTS( "FLOW_CONTROL", 0x01, 0x01 )
+	DEVICE_INPUT_DEFAULTS( "FLOW_CONTROL", 0x07, 0x01 )
 DEVICE_INPUT_DEFAULTS_END
 
 static DEVICE_INPUT_DEFAULTS_START( kbd_rs232_defaults )
 	DEVICE_INPUT_DEFAULTS( "RS232_TXBAUD", 0xff, RS232_BAUD_19200 )
-	DEVICE_INPUT_DEFAULTS( "RS232_RXBAUD", 0xff, RS232_BAUD_19200 )
 	DEVICE_INPUT_DEFAULTS( "RS232_DATABITS", 0xff, RS232_DATABITS_8 )
 	DEVICE_INPUT_DEFAULTS( "RS232_PARITY", 0xff, RS232_PARITY_NONE )
 	DEVICE_INPUT_DEFAULTS( "RS232_STOPBITS", 0xff, RS232_STOPBITS_2 )
-	DEVICE_INPUT_DEFAULTS( "FLOW_CONTROL", 0x01, 0x01 )
 DEVICE_INPUT_DEFAULTS_END
 
 
@@ -249,7 +247,7 @@ void blit_state::blit(machine_config &config)
 
 	CLOCK(config, "system_clock", 19200 * 16).signal_handler().set(FUNC(blit_state::system_clock_write));
 
-	ACIA6850(config, m_acia0, 0);
+	ACIA6850(config, m_acia0);
 	m_acia0->txd_handler().set(RS232_H_TAG, FUNC(rs232_port_device::write_txd));
 	m_acia0->rts_handler().set(RS232_H_TAG, FUNC(rs232_port_device::write_rts));
 	m_acia0->irq_handler().set_inputline(M68K_TAG, M68K_IRQ_5);
@@ -260,7 +258,7 @@ void blit_state::blit(machine_config &config)
 	rs232h.cts_handler().set(m_acia0, FUNC(acia6850_device::write_cts));
 	rs232h.set_option_device_input_defaults("null_modem", DEVICE_INPUT_DEFAULTS_NAME(host_rs232_defaults));
 
-	ACIA6850(config, m_acia1, 0);
+	ACIA6850(config, m_acia1);
 	m_acia1->txd_handler().set(RS232_K_TAG, FUNC(rs232_port_device::write_txd));
 	m_acia1->rts_handler().set(RS232_K_TAG, FUNC(rs232_port_device::write_rts));
 	m_acia1->irq_handler().set_inputline(M68K_TAG, M68K_IRQ_2);
@@ -291,4 +289,4 @@ ROM_END
 
 /* Driver */
 //    YEAR  NAME      PARENT  COMPAT  MACHINE   INPUT     CLASS        INIT           COMPANY  FULLNAME     FLAGS
-COMP( 1981, blit,     0,      0,      blit,     blit,     blit_state,  empty_init,    "AT&T",  "Blit",      MACHINE_IS_SKELETON )
+COMP( 1981, blit,     0,      0,      blit,     blit,     blit_state,  empty_init,    "AT&T",  "Blit",      MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "h8.h"
+#include "h8_cpu_base.h"
 #include "h8_intc.h"
 
 class h8_timer8_channel_device : public device_t {
@@ -84,8 +84,8 @@ protected:
 		CLEAR_EXTERNAL
 	};
 
-	required_device<h8_device> m_cpu;
-	required_device<h8_intc_device> m_intc;
+	required_device<h8_cpu_base> m_cpu;
+	required_device<h8_intc_base> m_intc;
 	optional_device<h8_timer8_channel_device> m_chained_timer;
 
 	int m_irq_ca, m_irq_cb, m_irq_v, m_chain_type;
@@ -98,8 +98,8 @@ protected:
 
 	h8_timer8_channel_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	void update_counter(u64 cur_time = 0, u64 delta = 0);
 	void recalc_event(u64 cur_time = 0);

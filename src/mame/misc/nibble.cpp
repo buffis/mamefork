@@ -75,9 +75,9 @@ public:
 	void nibble(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_shared_ptr<uint8_t> m_videoram;
@@ -92,9 +92,9 @@ private:
 	uint32_t screen_update_nibble(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	[[maybe_unused]] INTERRUPT_GEN_MEMBER(nibble_interrupt);
 
-	void nibble_map(address_map &map);
-	void ramdac1_map(address_map &map);
-	void ramdac2_map(address_map &map);
+	void nibble_map(address_map &map) ATTR_COLD;
+	void ramdac1_map(address_map &map) ATTR_COLD;
+	void ramdac2_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -352,11 +352,11 @@ void nibble_state::nibble(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, "palette", gfx_nibble);
 
-	ramdac_device &ramdac1(RAMDAC(config, "ramdac1", 0, "palette"));
+	ramdac_device &ramdac1(RAMDAC(config, "ramdac1", "palette"));
 	ramdac1.set_addrmap(0, &nibble_state::ramdac1_map);
 	ramdac1.set_color_base(0);
 
-	ramdac_device &ramdac2(RAMDAC(config, "ramdac2", 0, "palette"));
+	ramdac_device &ramdac2(RAMDAC(config, "ramdac2", "palette"));
 	ramdac2.set_addrmap(0, &nibble_state::ramdac2_map);
 	ramdac2.set_color_base(0x100);
 

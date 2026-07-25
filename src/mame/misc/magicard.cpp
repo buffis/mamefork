@@ -225,7 +225,7 @@ enum
 
 class magicard_base_state : public driver_device
 {
-public:
+protected:
 	magicard_base_state(const machine_config &mconfig, device_type type, const char *tag)
 		: driver_device(mconfig, type, tag)
 		, m_maincpu(*this, "maincpu")
@@ -237,15 +237,14 @@ public:
 
 	{ }
 
-	void magicard_base(machine_config &config);
+	void magicard_base(machine_config &config) ATTR_COLD;
 
-protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	uint32_t screen_update_magicard(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void ramdac_map(address_map &map);
+	void ramdac_map(address_map &map) ATTR_COLD;
 
 	void dram_w(offs_t offset, uint16_t data, uint16_t mem_mask);
 	uint16_t dram_r(offs_t offset, uint16_t mem_mask);
@@ -277,7 +276,7 @@ protected:
 private:
 	output_finder<8> m_lamps;
 
-	void scc66470_map(address_map &map);
+	void scc66470_map(address_map &map) ATTR_COLD;
 
 	std::unique_ptr<uint16_t []> m_dram;
 
@@ -292,17 +291,17 @@ public:
 		, m_ds1207(*this, "ds1207")
 	{ }
 
-	void magicard_pic54(machine_config &config);
-	void magicard(machine_config &config);
-	void magicard_pic56(machine_config &config);
+	void magicard_pic54(machine_config &config) ATTR_COLD;
+	void magicard(machine_config &config) ATTR_COLD;
+	void magicard_pic56(machine_config &config) ATTR_COLD;
 
-	void init_dallaspk();
+	void init_dallaspk() ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
-	void magicard_map(address_map &map);
+	void magicard_map(address_map &map) ATTR_COLD;
 	uint8_t nvram_r(offs_t offset);
 	void nvram_w(offs_t offset, uint8_t data);
 	uint8_t read_ds1207(offs_t offset);
@@ -324,18 +323,18 @@ public:
 		, m_rtc(*this, "rtc")
 	{ }
 
-	void hotslots_base(machine_config &config);
-	void hotslots(machine_config &config);
-	void hotslots_pic54(machine_config &config);
-	void magicle(machine_config &config);
-	void puzzleme(machine_config &config);
-	void simpbest(machine_config &config);
+	void hotslots_base(machine_config &config) ATTR_COLD;
+	void hotslots(machine_config &config) ATTR_COLD;
+	void hotslots_pic54(machine_config &config) ATTR_COLD;
+	void magicle(machine_config &config) ATTR_COLD;
+	void puzzleme(machine_config &config) ATTR_COLD;
+	void simpbest(machine_config &config) ATTR_COLD;
 
 private:
-	void hotslots_map_base(address_map &map);
-	void hotslots_map(address_map &map);
-	void puzzleme_map(address_map &map);
-	void simpbest_map(address_map &map);
+	void hotslots_map_base(address_map &map) ATTR_COLD;
+	void hotslots_map(address_map &map) ATTR_COLD;
+	void puzzleme_map(address_map &map) ATTR_COLD;
+	void simpbest_map(address_map &map) ATTR_COLD;
 
 	uint8_t read_ds1207_ds2401(offs_t offset);
 	void write_ds1207_ds2401(offs_t offset, uint8_t data);
@@ -351,7 +350,6 @@ private:
 
 void magicard_base_state::machine_start()
 {
-	m_lamps.resolve();
 	m_dram = make_unique_clear<uint16_t []>(0x80000 / 2);
 	save_pointer(NAME(m_dram), 0x80000 / 2);
 	save_item(NAME(m_sda_state));
@@ -648,13 +646,13 @@ static INPUT_PORTS_START( magicard )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_GAMBLE_KEYOUT )
-	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_GAMBLE_DOOR )  PORT_NAME("Door Switch")
-	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 5")    PORT_CODE(KEYCODE_A)
-	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 6")    PORT_CODE(KEYCODE_S)
-	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 7")    PORT_CODE(KEYCODE_D)
-	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 8")    PORT_CODE(KEYCODE_F)
-	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 9")    PORT_CODE(KEYCODE_G)
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Hopper Full")     PORT_CODE(KEYCODE_R)
+	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_DOOR )        PORT_NAME("Door Switch")
+	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER )       PORT_NAME("Reserve In 5")    PORT_CODE(KEYCODE_A)
+	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_OTHER )       PORT_NAME("Reserve In 6")    PORT_CODE(KEYCODE_S)
+	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_OTHER )       PORT_NAME("Reserve In 7")    PORT_CODE(KEYCODE_D)
+	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_OTHER )       PORT_NAME("Reserve In 8")    PORT_CODE(KEYCODE_F)
+	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_OTHER )       PORT_NAME("Reserve In 9")    PORT_CODE(KEYCODE_G)
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_OTHER )       PORT_NAME("Hopper Full")     PORT_CODE(KEYCODE_R)
 
 INPUT_PORTS_END
 
@@ -850,13 +848,13 @@ static INPUT_PORTS_START( pokeri )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_GAMBLE_KEYOUT )
-	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_GAMBLE_DOOR )  PORT_NAME("Door Switch")
-	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 5")    PORT_CODE(KEYCODE_A)
-	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 6")    PORT_CODE(KEYCODE_S)
-	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 7")    PORT_CODE(KEYCODE_D)
-	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 8")    PORT_CODE(KEYCODE_F)
-	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Reserve In 9")    PORT_CODE(KEYCODE_G)
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Hopper Full")     PORT_CODE(KEYCODE_R)
+	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_DOOR )  PORT_NAME("Door Switch")
+	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Reserve In 5")    PORT_CODE(KEYCODE_A)
+	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Reserve In 6")    PORT_CODE(KEYCODE_S)
+	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Reserve In 7")    PORT_CODE(KEYCODE_D)
+	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Reserve In 8")    PORT_CODE(KEYCODE_F)
+	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Reserve In 9")    PORT_CODE(KEYCODE_G)
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Hopper Full")     PORT_CODE(KEYCODE_R)
 
 INPUT_PORTS_END
 
@@ -909,13 +907,13 @@ static INPUT_PORTS_START( simpbest )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_GAMBLE_KEYOUT ) PORT_NAME("Clear Credits")
-	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_GAMBLE_DOOR )  PORT_NAME("Door Switch")
-	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Coin Card")      PORT_CODE(KEYCODE_A)
-	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Not used")       PORT_CODE(KEYCODE_S)
-	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Not used")       PORT_CODE(KEYCODE_D)
-	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Counter Check")  PORT_CODE(KEYCODE_F)
-	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Key Alarm")      PORT_CODE(KEYCODE_G)  // "A L A R A M" in the I/O test.
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_OTHER )        PORT_NAME("Hopper Full")    PORT_CODE(KEYCODE_R)
+	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_DOOR )          PORT_NAME("Door Switch")
+	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Coin Card")      PORT_CODE(KEYCODE_A)
+	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Not used")       PORT_CODE(KEYCODE_S)
+	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Not used")       PORT_CODE(KEYCODE_D)
+	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Counter Check")  PORT_CODE(KEYCODE_F)
+	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Key Alarm")      PORT_CODE(KEYCODE_G)  // "A L A R A M" in the I/O test.
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Hopper Full")    PORT_CODE(KEYCODE_R)
 
 INPUT_PORTS_END
 
@@ -1016,7 +1014,7 @@ void magicard_base_state::magicard_base(machine_config &config)
 	m_scc66470->irq().set(FUNC(magicard_base_state::scc66470_irq));
 
 	PALETTE(config, m_palette).set_entries(0x100);
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, m_palette));
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", m_palette));
 	ramdac.set_addrmap(0, &magicard_state::ramdac_map);
 
 	SPEAKER(config, "mono").front_center();

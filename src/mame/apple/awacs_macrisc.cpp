@@ -67,6 +67,7 @@ void awacs_macrisc_device::device_start()
 	save_item(NAME(m_phase));
 	save_item(NAME(m_active));
 	save_item(NAME(m_registers));
+	save_item(NAME(m_snd_control));
 }
 
 //-------------------------------------------------
@@ -78,6 +79,7 @@ void awacs_macrisc_device::device_reset()
 	m_phase = 0;
 	m_active = ACTIVE_OUT;      // AWACS is always running, Screamer has a real enable/disable bit
 	m_registers[1] = REGISTER_1_MUTE;
+	m_snd_control = 0;
 	m_stream->set_sample_rate(clock() / 1024);
 }
 
@@ -92,7 +94,7 @@ void screamer_device::device_reset()
 //  our sound stream
 //-------------------------------------------------
 
-void awacs_macrisc_device::sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs)
+void awacs_macrisc_device::sound_stream_update(sound_stream &stream)
 {
 	// if we're active and not muted
 	if ((m_active & ACTIVE_OUT) && !(m_registers[1] & REGISTER_1_MUTE))
@@ -106,13 +108,13 @@ void awacs_macrisc_device::sound_stream_update(sound_stream &stream, std::vector
 
 		const s32 left = ((s32)l_raw * atten_L) >> 4;
 		const s32 right = ((s32)r_raw * atten_R) >> 4;
-		outputs[0].put_int(0, left, 32768);
-		outputs[1].put_int(0, right, 32768);
+		stream.put_int(0, 0, left, 32768);
+		stream.put_int(1, 0, right, 32768);
 	}
 	else
 	{
-		outputs[0].put_int(0, 0, 32768);
-		outputs[1].put_int(0, 0, 32768);
+		stream.put_int(0, 0, 0, 32768);
+		stream.put_int(1, 0, 0, 32768);
 	}
 
 	m_phase = (m_phase + 1) & 0xfff;
@@ -124,7 +126,7 @@ uint32_t awacs_macrisc_device::read_macrisc(offs_t offset)
 	switch (offset)
 	{
 		case 0:     // Audio Control
-			return 0;
+			return swapendian_int32(m_snd_control);
 
 		case 4:     // Audio CODEC Control
 			return 0;
@@ -144,8 +146,10 @@ void awacs_macrisc_device::write_macrisc(offs_t offset, uint32_t data)
 	switch (offset)
 	{
 		case 0: // Audio Control
+			m_snd_control = data;
 			m_stream->set_sample_rate(clock() / rates[(data >> 8) & 7]);
 			LOG("%s: sample rate to %d Hz\n", tag(), clock() / rates[(data >> 8) & 7]);
+			m_registers[1] = 0;
 			break;
 
 		case 4: // Audio CODEC Control
@@ -164,7 +168,6 @@ void awacs_macrisc_device::write_macrisc(offs_t offset, uint32_t data)
 			break;
 
 		case 12: // Byte swap
-			printf("CODEC byte swap: %08x\n", data);
 			break;
 	}
 }

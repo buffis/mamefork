@@ -463,7 +463,7 @@ class jvs_master : public jvs_host
 {
 public:
 	// construction/destruction
-	jvs_master(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	jvs_master(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 	int get_sense_line();
 	void send_packet(int destination, int length, uint8_t *data);
 	int received_packet(uint8_t *buffer);
@@ -527,7 +527,7 @@ public:
 	void set_region(const char *_region_tag, int _region_offset);
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 private:
 	void process_jvs_packet();
 
@@ -585,7 +585,7 @@ public:
 	void set_region(const char *_region_tag, int _region_offset);
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 private:
 	void process_packet();
 
@@ -641,7 +641,7 @@ private:
 	uint32_t mediaboard_r(offs_t offset, uint32_t mem_mask = ~0);
 	void mediaboard_w(offs_t offset, uint32_t data, uint32_t mem_mask = ~0);
 
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 	void baseboard_ide_event(int type, uint8_t *read, uint8_t *write);
 	uint8_t *baseboard_ide_dimmboard(uint32_t lba);
 	void dword_write_le(uint8_t *addr, uint32_t d);
@@ -660,8 +660,8 @@ private:
 
 	static void an2131qc_configuration(device_t *device);
 	static void an2131sc_configuration(device_t *device);
-	void chihiro_map(address_map &map);
-	void chihiro_map_io(address_map &map);
+	void chihiro_map(address_map &map) ATTR_COLD;
+	void chihiro_map_io(address_map &map) ATTR_COLD;
 
 	void jamtable_disasm(address_space &space, uint32_t address, uint32_t size);
 	void jamtable_disasm_command(const std::vector<std::string_view> &params);
@@ -1509,8 +1509,14 @@ void ohci_hlean2131sc_device::device_start()
 class ide_baseboard_device : public ata_mass_storage_device_base, public device_ata_interface
 {
 public:
+	using ide_event_delegate = device_delegate<void (int, uint8_t *, uint8_t *)>;
+	using ide_dimmboard_delegate = device_delegate<uint8_t * (uint32_t)>;
+
 	// construction/destruction
 	ide_baseboard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+
+	template <typename... T> void set_ide_event(T &&... args) { ide_event_cb.set(std::forward<T>(args)...); }
+	template <typename... T> void set_ide_dimmboard(T &&... args) { ide_dimmboard_cb.set(std::forward<T>(args)...); }
 
 	// device_ata_interface implementation
 	virtual uint16_t read_dma() override { return dma_r(); }
@@ -1532,12 +1538,13 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
+	ide_event_delegate ide_event_cb;
+	ide_dimmboard_delegate ide_dimmboard_cb;
 	uint8_t read_buffer[0x20]{};
 	uint8_t write_buffer[0x20]{};
-	chihiro_state *chihirosystem{};
 	static const int size_factor = 2;
 
 private:
@@ -1562,6 +1569,8 @@ DEFINE_DEVICE_TYPE(IDE_BASEBOARD, ide_baseboard_device, "ide_baseboard", "IDE Ba
 ide_baseboard_device::ide_baseboard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: ata_mass_storage_device_base(mconfig, IDE_BASEBOARD, tag, owner, clock)
 	, device_ata_interface(mconfig, *this)
+	, ide_event_cb(*this)
+	, ide_dimmboard_cb(*this)
 {
 }
 
@@ -1572,7 +1581,10 @@ ide_baseboard_device::ide_baseboard_device(const machine_config &mconfig, const 
 void ide_baseboard_device::device_start()
 {
 	ata_mass_storage_device_base::device_start();
-	chihirosystem = machine().driver_data<chihiro_state>();
+
+	ide_event_cb.resolve();
+	ide_dimmboard_cb.resolve();
+
 	// savestates
 	save_item(NAME(read_buffer));
 	save_item(NAME(write_buffer));
@@ -1639,8 +1651,8 @@ int ide_baseboard_device::read_sector(uint32_t lba, void *buffer)
 			memcpy(buffer, write_buffer, 0x20);
 		return 1;
 	}
-	// in a type 1 chihiro this gets data from the dimm board memory
-	data = chihirosystem->baseboard_ide_dimmboard(lba);
+	// in a type 1 chihiro this gets data from the DIMM board memory
+	data = ide_dimmboard_cb(lba);
 	if (data != nullptr)
 		memcpy(buffer, data, 512);
 	return 1;
@@ -1656,7 +1668,7 @@ int ide_baseboard_device::write_sector(uint32_t lba, const void *buffer)
 		else if (lba == 0x4801) {
 			memcpy(write_buffer, buffer, 0x20);
 			// call chihiro driver
-			chihirosystem->baseboard_ide_event(3, read_buffer, write_buffer);
+			ide_event_cb(3, read_buffer, write_buffer);
 		}
 	}
 	return 1;
@@ -1864,12 +1876,12 @@ void chihiro_state::machine_start()
 class sega_network_board : public device_t
 {
 public:
-	sega_network_board(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	sega_network_board(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 };
 
 DEFINE_DEVICE_TYPE(SEGA_NETWORK_BOARD, sega_network_board, "seganetw", "Sega Network Board")
@@ -1922,14 +1934,21 @@ void chihiro_state::chihiro_base(machine_config &config)
 	m_maincpu->set_addrmap(AS_IO, &chihiro_state::chihiro_map_io);
 
 	subdevice<ide_controller_32_device>("pci:09.0:ide1")->options(ide_baseboard, nullptr, "bb", true);
+	subdevice<device_slot_interface>("pci:09.0:ide1:1")->set_option_machine_config("bb",
+			[this] (device_t *device)
+			{
+				auto &baseboard(downcast<ide_baseboard_device &>(*device));
+				baseboard.set_ide_event(*this, FUNC(chihiro_state::baseboard_ide_event));
+				baseboard.set_ide_dimmboard(*this, FUNC(chihiro_state::baseboard_ide_dimmboard));
+			});
 
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port1", usb_baseboard, "an2131qc", true).set_option_machine_config("an2131qc", an2131qc_configuration);
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port2", usb_baseboard, "an2131sc", true).set_option_machine_config("an2131sc", an2131sc_configuration);
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port3", usb_baseboard, nullptr, false);
 	OHCI_USB_CONNECTOR(config, "pci:02.0:port4", usb_baseboard, nullptr, false);
 
-	JVS_MASTER(config, "jvs_master", 0);
-	sega_837_13551_device &sega837(SEGA_837_13551(config, "837_13551", 0, "jvs_master"));
+	JVS_MASTER(config, "jvs_master");
+	sega_837_13551_device &sega837(SEGA_837_13551(config, "837_13551", "jvs_master"));
 	sega837.set_port_tag<0>("TILT");
 	sega837.set_port_tag<1>("P1");
 	sega837.set_port_tag<2>("P2");
@@ -1949,7 +1968,7 @@ void chihiro_state::chihirogd(machine_config &config)
 	chihiro_base(config);
 	NAOMI_GDROM_BOARD(config, m_dimmboard, 0, ":gdrom", "pic");
 	m_dimmboard->irq_callback().set_nop();
-	SEGA_NETWORK_BOARD(config, "network", 0);
+	SEGA_NETWORK_BOARD(config, "network");
 }
 
 #define ROM_LOAD16_WORD_SWAP_BIOS(bios,name,offset,length,hash) \

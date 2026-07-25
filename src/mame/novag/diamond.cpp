@@ -48,6 +48,8 @@ BTANB:
 #include "screen.h"
 #include "speaker.h"
 
+#include <bit>
+
 // internal artwork
 #include "novag_diamond.lh"
 #include "novag_diamond2.lh"
@@ -80,8 +82,8 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(power_switch);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override { set_power(true); }
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD { set_power(true); }
 
 private:
 	// devices/pointers
@@ -105,8 +107,8 @@ private:
 	u32 m_lcd_data = 0;
 	u8 m_lcd_segs2 = 0;
 
-	void diamond_map(address_map &map);
-	void diamond2_map(address_map &map);
+	void diamond_map(address_map &map) ATTR_COLD;
+	void diamond2_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void standby(int state);
@@ -132,8 +134,6 @@ private:
 
 void diamond_state::machine_start()
 {
-	m_out_lcd.resolve();
-
 	if (m_rombank)
 		m_rombank->configure_entries(0, 4, memregion("eprom")->base(), 0x8000);
 
@@ -201,7 +201,7 @@ void diamond_state::update_lcd()
 		const u8 shift = m_lcd_pwm->width() & 0x18;
 
 		// LCD common is analog (voltage level)
-		const u8 com = population_count_32(m_lcd_data >> (shift + (i * 2)) & 3);
+		const u8 com = std::popcount(m_lcd_data >> (shift + (i * 2)) & 3U);
 		u16 segs = m_lcd_data & ((1 << shift) - 1);
 		segs |= m_lcd_segs2 << shift; // diamond
 
@@ -256,7 +256,7 @@ u8 diamond_state::read_board()
 	// priority encoded (either a 74148 on d1, or 2*7421 on d2)
 	for (int i = 0; i < 8; i++)
 		if (BIT(m_inp_mux, i))
-			data |= (count_leading_zeros_32(m_board->read_rank(i)) - 24) ^ 8;
+			data |= std::countl_zero(u8(m_board->read_rank(i))) ^ 8;
 
 	return ~data;
 }
@@ -383,8 +383,8 @@ static INPUT_PORTS_START( diamond )
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_I) PORT_NAME("Save Game / Pawn")
 
 	PORT_START("POWER")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_ON) PORT_CHANGED_MEMBER(DEVICE_SELF, diamond_state, power_switch, 1)
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, diamond_state, power_switch, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_ON) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(diamond_state::power_switch), 1)
+	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(diamond_state::power_switch), 0)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( diamond2 )
@@ -453,7 +453,7 @@ void diamond_state::diamond(machine_config &config)
 
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));
 	screen.set_refresh_hz(60);
-	screen.set_size(1920/3, 606/3);
+	screen.set_size(1920/5, 606/5);
 	screen.set_visarea_full();
 
 	PWM_DISPLAY(config, m_led_pwm).set_size(2, 8);
@@ -490,7 +490,7 @@ void diamond_state::diamond2(machine_config &config)
 	m_lcd_pwm->set_width(16);
 
 	screen_device &screen(*subdevice<screen_device>("screen"));
-	screen.set_size(1920/3, 671/3);
+	screen.set_size(1920/5, 671/5);
 	screen.set_visarea_full();
 
 	config.set_default_layout(layout_novag_diamond2);

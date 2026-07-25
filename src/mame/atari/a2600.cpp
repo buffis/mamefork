@@ -137,9 +137,9 @@ protected:
 		m_xtal(xtal)
 	{ }
 
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
-	void a2600_mem(address_map &map);
+	void a2600_mem(address_map &map) ATTR_COLD;
 
 	void a2600_base_ntsc(machine_config &config);
 	void a2600_base_pal(machine_config &config);
@@ -217,11 +217,11 @@ public:
 	void a2600_pop(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
-	void memory_map(address_map &map);
+	void memory_map(address_map &map) ATTR_COLD;
 
 	uint8_t rom_switch_r(offs_t offset);
 	void rom_switch_w(offs_t offset, uint8_t data);
@@ -248,13 +248,13 @@ public:
 	void tvboyn(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	void bank_write(offs_t offset, uint8_t data);
 
-	void tvboy_mem(address_map &map);
+	void tvboy_mem(address_map &map) ATTR_COLD;
 
 	required_memory_bank m_crom;
 	required_region_ptr<uint8_t> m_rom;
@@ -587,6 +587,7 @@ static void a2600_cart(device_slot_interface &device)
 	device.option_add("a26_32in1", A26_ROM_32IN1);
 	device.option_add("a26_x07",   A26_ROM_X07);
 	device.option_add("a26_harmony",   A26_ROM_HARMONY);
+	device.option_add("a26_f0",    A26_ROM_F0);
 }
 
 void a2600_cons_state::a2600_cartslot(machine_config &config)
@@ -606,7 +607,7 @@ void a2600_base_state::a2600_base_ntsc(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &a2600_base_state::a2600_mem);
 
 	/* video hardware */
-	TIA_NTSC_VIDEO(config, m_tia, 0, "tia");
+	TIA_NTSC_VIDEO(config, m_tia, "tia");
 	m_tia->read_input_port_callback().set(FUNC(a2600_state::a2600_read_input_port));
 	m_tia->databus_contents_callback().set(FUNC(a2600_state::a2600_get_databus_contents));
 	m_tia->vsync_callback().set(FUNC(a2600_state::a2600_tia_vsync_callback));
@@ -639,7 +640,7 @@ void a2600_base_state::a2600_base_pal(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &a2600_state::a2600_mem);
 
 	/* video hardware */
-	TIA_PAL_VIDEO(config, m_tia, 0, "tia");
+	TIA_PAL_VIDEO(config, m_tia, "tia");
 	m_tia->read_input_port_callback().set(FUNC(a2600_state::a2600_read_input_port));
 	m_tia->databus_contents_callback().set(FUNC(a2600_state::a2600_get_databus_contents));
 	m_tia->vsync_callback().set(FUNC(a2600_state::a2600_tia_vsync_callback));

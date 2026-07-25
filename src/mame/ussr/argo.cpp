@@ -65,8 +65,8 @@ public:
 	void argo(machine_config &config);
 
 private:
-	virtual void machine_reset() override;
-	virtual void machine_start() override;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void machine_start() override ATTR_COLD;
 	void argo_videoram_w(offs_t offset, u8 data);
 	u8 argo_io_r(offs_t offset);
 	void argo_io_w(offs_t offset, u8 data);
@@ -77,8 +77,8 @@ private:
 	I8275_DRAW_CHARACTER_MEMBER(display_pixels);
 	TIMER_DEVICE_CALLBACK_MEMBER(kansas_r);
 
-	void io_map(address_map &map);
-	void mem_map(address_map &map);
+	void io_map(address_map &map) ATTR_COLD;
+	void mem_map(address_map &map) ATTR_COLD;
 
 	memory_passthrough_handler m_rom_shadow_tap;
 	required_device<z80_device> m_maincpu;
@@ -494,12 +494,12 @@ void argo_state::argo(machine_config &config)
 	TIMER(config, "kansas_r").configure_periodic(FUNC(argo_state::kansas_r), attotime::from_hz(38400));
 
 	/* Devices */
-	I8251(config, m_uart, 0);
+	I8251(config, m_uart);
 	m_uart->txd_handler().set([this] (bool state) { m_txd = state; });
 	m_uart->txempty_handler().set([this] (bool state) { m_txe = state; });
 	m_uart->rts_handler().set([this] (bool state) { m_rts = state; });
 
-	PIT8253(config, m_pit, 0);
+	PIT8253(config, m_pit);
 	m_pit->set_clk<0>(1689600); // this gives the 2400Hz required by the cassette
 	m_pit->out_handler<0>().set(FUNC(argo_state::z0_w));
 	m_pit->set_clk<1>(0);

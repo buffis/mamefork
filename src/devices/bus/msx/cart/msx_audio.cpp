@@ -87,9 +87,9 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 private:
 	required_device<y8950_device> m_y8950;
@@ -162,9 +162,9 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 private:
 	void midi_in(int state);
@@ -189,7 +189,7 @@ void msx_cart_msx_audio_nms1205_device::device_add_mconfig(machine_config &confi
 	MSX_AUDIO_KBDC_PORT(config, "kbdc", msx_audio_keyboards, nullptr);
 
 	// There is a 2 MHz crystal on the PCB, the 6850 TX and RX clocks are derived from it
-	ACIA6850(config, m_acia6850, 0);
+	ACIA6850(config, m_acia6850);
 	m_acia6850->txd_handler().set("mdout", FUNC(midi_port_device::write_txd));
 
 	MIDI_PORT(config, "mdin", midiin_slot, "midiin").rxd_handler().set(FUNC(msx_cart_msx_audio_nms1205_device::midi_in));
@@ -275,11 +275,11 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual ioport_constructor device_input_ports() const override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 private:
 	void write_y8950(offs_t offset, u8 data);

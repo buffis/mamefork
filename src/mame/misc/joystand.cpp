@@ -94,6 +94,7 @@ TODO:
 ***************************************************************************/
 
 #include "emu.h"
+
 #include "cpu/m68000/tmp68301.h"
 #include "machine/bankdev.h"
 #include "machine/eepromser.h"
@@ -102,7 +103,9 @@ TODO:
 #include "machine/msm6242.h"
 #include "sound/okim6295.h"
 #include "sound/ymopl.h"
+
 #include "emupal.h"
+#include "input.h" // for video debug keys
 #include "screen.h"
 #include "speaker.h"
 #include "tilemap.h"
@@ -141,8 +144,7 @@ public:
 	void x180ii(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	// devices
@@ -210,9 +212,9 @@ private:
 
 	// machine
 	INTERRUPT_GEN_MEMBER(joystand_interrupt);
-	void joystand_map(address_map &map);
-	void x180ii_map(address_map &map);
-	void cart_map(address_map &map);
+	void joystand_map(address_map &map) ATTR_COLD;
+	void x180ii_map(address_map &map) ATTR_COLD;
+	void cart_map(address_map &map) ATTR_COLD;
 };
 
 const rgb_t joystand_state::BG15_TRANSPARENT = 0x99999999;
@@ -638,16 +640,6 @@ static GFXDECODE_START( gfx_x180ii )
 GFXDECODE_END
 
 
-void joystand_state::machine_start()
-{
-	m_blocker.resolve();
-	m_error_lamp.resolve();
-	m_photo_lamp.resolve();
-	m_ok_button_led.resolve();
-	m_cancel_button_led.resolve();
-}
-
-
 void joystand_state::joystand(machine_config &config)
 {
 	// basic machine hardware
@@ -782,9 +774,9 @@ ROM_START( x180 ) // YUVO PCC180C PCB + JSR-1A REV.B riser PCB. Similar to the j
 	ROM_LOAD16_BYTE( "msvol1b.odd.u6",  0x00001, 0x80000, CRC(dd46fd51) SHA1(60832cb90d5335cd55422e56c8482ac7c88f70ff) )
 
 	ROM_REGION( 0x600000, "tiles", 0 ) // on riser PCB
-	ROM_LOAD( "e28f016sa.u1", 0x000000, 0x200000, NO_DUMP )
-	ROM_LOAD( "e28f016sa.u2", 0x200000, 0x200000, NO_DUMP )
-	ROM_LOAD( "e28f016sa.u3", 0x400000, 0x200000, NO_DUMP )
+	ROM_LOAD( "e28f016sa.u3", 0x000000, 0x200000, CRC(cbb9ca7f) SHA1(3e7679142ce9c87d654f3fb2b53c560a145d2150) )
+	ROM_LOAD( "e28f016sa.u2", 0x200000, 0x200000, CRC(308666c1) SHA1(68c8617b5c0514bc57d1c98a9d73bc310542bf8b) )
+	ROM_LOAD( "e28f016sa.u1", 0x400000, 0x200000, CRC(4e478f0a) SHA1(627947a6c26a9ab61bb1f61389e8ba1ce64b3d56) )
 
 	ROM_REGION( 0x100000, "oki", 0 )
 	ROM_LOAD( "x180-sej1.ver1.00.ic14", 0x00000, 0x80000, CRC(86a0801b) SHA1(a252ed786bf51b963feb6ff253303ea3b67d8fcf) )

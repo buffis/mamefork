@@ -2,11 +2,11 @@
 // copyright-holders: Tomasz Slanina, Pierpaolo Prazzoli
 
 /****************************************************
-   Pit&Run - Taito 1984
 
- driver by  Tomasz Slanina and  Pierpaolo Prazzoli
+Pit & Run - Taito 1984
+driver by Tomasz Slanina and  Pierpaolo Prazzoli
 
- hardware is very similar to suprridr.cpp, thepit.cpp, timelimt.cpp
+hardware is very similar to roundup.cpp, suprridr.cpp, misc/timelimt.cpp
 
 TODO:
 
@@ -105,14 +105,14 @@ public:
 	void tilt_w(int state); // TODO: privatize eventually
 
 protected:
-	virtual void machine_start() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 	uint8_t inputs_r();
 
 	required_device<cpu_device> m_maincpu;
 
-	void base_map(address_map &map);
+	void base_map(address_map &map) ATTR_COLD;
 
 private:
 	required_device<watchdog_timer_device> m_watchdog;
@@ -152,15 +152,15 @@ private:
 
 	void vbl_w(int state);
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	void palette(palette_device &palette) const;
 
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void spotlights();
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect);
-	void sound_io_map(address_map &map);
-	void sound_prg_map(address_map &map);
+	void sound_io_map(address_map &map) ATTR_COLD;
+	void sound_prg_map(address_map &map) ATTR_COLD;
 };
 
 class pitnrun_mcu_state : public pitnrun_state
@@ -174,8 +174,8 @@ public:
 	void pitnrun_mcu(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<m68705p5_device> m_mcu;
@@ -201,7 +201,7 @@ private:
 	TIMER_CALLBACK_MEMBER(mcu_data_real_r);
 	TIMER_CALLBACK_MEMBER(mcu_status_real_w);
 
-	void mcu_map(address_map &map);
+	void mcu_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -360,7 +360,6 @@ void pitnrun_state::palette(palette_device &palette) const
 		b /= 3;
 
 		palette.set_pen_color(i + 16, (r > 0xff) ? 0xff : r, (g > 0xff) ? 0xff : g, (b > 0xff) ? 0xff : b);
-
 	}
 }
 
@@ -418,31 +417,12 @@ uint32_t pitnrun_state::screen_update(screen_device &screen, bitmap_ind16 &bitma
 	int dx = 0, dy = 0;
 	rectangle myclip = cliprect;
 
-#ifdef MAME_DEBUG
-	if (machine().input().code_pressed_once(KEYCODE_Q))
-	{
-		uint8_t *ROM = memregion("maincpu")->base();
-		ROM[0x84f6] = 0; // lap 0 - normal
-	}
-
-	if (machine().input().code_pressed_once(KEYCODE_W))
-	{
-		uint8_t *ROM = memregion("maincpu")->base();
-		ROM[0x84f6] = 6; // lap 6 = spotlight
-	}
-
-	if (machine().input().code_pressed_once(KEYCODE_E))
-	{
-		uint8_t *ROM = memregion("maincpu")->base();
-		ROM[0x84f6] = 2; // lap 3 (trial 2)= lightnings
-		ROM[0x8102] = 1;
-	}
-#endif
-
 	bitmap.fill(0, cliprect);
 
 	if (!(m_ha & 4))
+	{
 		m_bg->draw(screen, bitmap, cliprect, 0, 0);
+	}
 	else
 	{
 		dx = 128 - m_h_heed + ((m_ha & 8) << 5) + 3;
@@ -767,7 +747,7 @@ static INPUT_PORTS_START( pitnrun )
 	PORT_DIPSETTING(    0x80, DEF_STR( On ) )       // also enables bootup test
 
 	PORT_START("TILT")
-	PORT_BIT( 1, IP_ACTIVE_HIGH, IPT_TILT ) PORT_WRITE_LINE_MEMBER(pitnrun_state, tilt_w)
+	PORT_BIT( 1, IP_ACTIVE_HIGH, IPT_TILT ) PORT_WRITE_LINE_MEMBER(FUNC(pitnrun_state::tilt_w))
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( jumpkun )
@@ -1041,7 +1021,7 @@ ROM_END
 } // anonymous namespace
 
 
-GAME( 1984, pitnrun,  0,       pitnrun_mcu, pitnrun, pitnrun_mcu_state, empty_init, ROT90, "Taito Corporation", "Pit & Run - F-1 Race (rev 1)",          MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-GAME( 1984, pitnruna, pitnrun, pitnrun_mcu, pitnrun, pitnrun_mcu_state, empty_init, ROT90, "Taito Corporation", "Pit & Run - F-1 Race",                  MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-GAME( 1984, pitnrunb, pitnrun, pitnrun_mcu, pitnrun, pitnrun_mcu_state, empty_init, ROT90, "Taito Corporation", "Pit & Run - F-1 Race (location test?)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-GAME( 1984, jumpkun,  0,       pitnrun,     jumpkun, pitnrun_state,     empty_init, ROT90, "Kaneko",            "Jump Kun (prototype)",                  MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE ) // no copyright message
+GAME( 1984, pitnrun,  0,       pitnrun_mcu, pitnrun, pitnrun_mcu_state, empty_init, ROT90, "Taito",  "Pit & Run - F-1 Race (rev 1)",          MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1984, pitnruna, pitnrun, pitnrun_mcu, pitnrun, pitnrun_mcu_state, empty_init, ROT90, "Taito",  "Pit & Run - F-1 Race",                  MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1984, pitnrunb, pitnrun, pitnrun_mcu, pitnrun, pitnrun_mcu_state, empty_init, ROT90, "Taito",  "Pit & Run - F-1 Race (location test?)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1984, jumpkun,  0,       pitnrun,     jumpkun, pitnrun_state,     empty_init, ROT90, "Kaneko", "Jump Kun (prototype)",                  MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE ) // no copyright message

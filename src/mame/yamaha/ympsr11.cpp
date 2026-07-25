@@ -22,13 +22,13 @@ public:
 	{
 	}
 
-	void psr11(machine_config &config);
+	void psr11(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
-	void map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
 
 	u8 p2_r();
 
@@ -42,8 +42,6 @@ private:
 
 void yamaha_psr11_state::machine_start()
 {
-	m_tempo_led.resolve();
-
 	save_item(NAME(m_p5));
 	save_item(NAME(m_p6));
 }

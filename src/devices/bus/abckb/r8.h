@@ -23,17 +23,17 @@ class luxor_r8_device :  public device_t
 {
 public:
 	// construction/destruction
-	luxor_r8_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	luxor_r8_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	u8 read();
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// optional information overrides
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 private:
 	TIMER_CALLBACK_MEMBER(scan_mouse);

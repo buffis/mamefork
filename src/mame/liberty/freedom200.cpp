@@ -83,8 +83,8 @@ public:
 	void freedom200(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<z80_device> m_maincpu;
@@ -107,11 +107,11 @@ private:
 	bool m_dw_blink;
 	bool m_dw_cursor;
 
-	void mem_map(address_map &map);
-	void io_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
 
-	void char_map(address_map &map);
-	void attr_map(address_map &map);
+	void char_map(address_map &map) ATTR_COLD;
+	void attr_map(address_map &map) ATTR_COLD;
 	void avdc_intr_w(int state);
 	void video_ctrl_w(uint8_t data);
 	SCN2674_DRAW_CHARACTER_MEMBER(draw_character);
@@ -341,7 +341,7 @@ void freedom200_state::freedom200(machine_config &config)
 	m_avdc->set_addrmap(1, &freedom200_state::attr_map);
 	m_avdc->set_display_callback(FUNC(freedom200_state::draw_character));
 
-	pit8253_device &pit(PIT8253(config, "pit", 0));
+	pit8253_device &pit(PIT8253(config, "pit"));
 	pit.set_clk<0>(18.432_MHz_XTAL / 10);
 	pit.set_clk<1>(18.432_MHz_XTAL / 10);
 	pit.set_clk<2>(18.432_MHz_XTAL / 10);
@@ -352,19 +352,19 @@ void freedom200_state::freedom200(machine_config &config)
 	pit.out_handler<2>().set(m_usart[0], FUNC(i8251_device::write_txc));
 	pit.out_handler<2>().append(m_usart[0], FUNC(i8251_device::write_rxc));
 
-	I8251(config, m_usart[0], 0); // unknown clock
+	I8251(config, m_usart[0]); // unknown clock
 	m_usart[0]->rxrdy_handler().set("irq", FUNC(input_merger_device::in_w<0>));
 	m_usart[0]->txrdy_handler().set("irq", FUNC(input_merger_device::in_w<1>));
 	m_usart[0]->txd_handler().set("mainport", FUNC(rs232_port_device::write_txd));
 	m_usart[0]->rts_handler().set("mainport", FUNC(rs232_port_device::write_rts));
 
-	I8251(config, m_usart[1], 0); // unknown clock
+	I8251(config, m_usart[1]); // unknown clock
 	m_usart[1]->rxrdy_handler().set("irq", FUNC(input_merger_device::in_w<2>));
 	m_usart[1]->txrdy_handler().set("irq", FUNC(input_merger_device::in_w<3>));
 	m_usart[1]->txd_handler().set("auxport", FUNC(rs232_port_device::write_txd));
 	m_usart[1]->rts_handler().set("auxport", FUNC(rs232_port_device::write_rts));
 
-	I8251(config, m_usart[2], 0); // unknown clock
+	I8251(config, m_usart[2]); // unknown clock
 	m_usart[2]->rxrdy_handler().set("irq", FUNC(input_merger_device::in_w<4>));
 	m_usart[2]->txd_handler().set("kbd", FUNC(freedom220_kbd_device::rxd_w));
 

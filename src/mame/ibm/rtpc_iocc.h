@@ -14,7 +14,7 @@ class rtpc_iocc_device
 	, public rsc_bus_interface
 {
 public:
-	rtpc_iocc_device(machine_config const &mconfig, char const *tag, device_t *owner, u32 clock);
+	rtpc_iocc_device(machine_config const &mconfig, char const *tag, device_t *owner, u32 clock = 0);
 
 	auto out_int() { return m_out_int.bind(); }
 	auto out_rst() { return m_out_rst.bind(); }
@@ -116,8 +116,8 @@ public:
 
 protected:
 	// device_t overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_memory_interface overrides
 	virtual space_config_vector memory_space_config() const override;

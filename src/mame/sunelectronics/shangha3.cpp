@@ -76,7 +76,7 @@ public:
 	void init_shangha3();
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 protected:
 	required_device<cpu_device> m_maincpu;
@@ -107,7 +107,7 @@ private:
 	uint16_t prot_r();
 	void prot_w(uint16_t data);
 
-	void program_map(address_map &map);
+	void program_map(address_map &map) ATTR_COLD;
 };
 
 class heberpop_state : public shangha3_state
@@ -127,13 +127,13 @@ protected:
 	required_device<cpu_device> m_audiocpu;
 	required_device<generic_latch_8_device> m_soundlatch;
 
-	void sound_program_map(address_map &map);
-	void sound_io_map(address_map &map);
+	void sound_program_map(address_map &map) ATTR_COLD;
+	void sound_io_map(address_map &map) ATTR_COLD;
 
 private:
 	void coinctrl_w(uint8_t data);
 
-	void program_map(address_map &map);
+	void program_map(address_map &map) ATTR_COLD;
 };
 
 class blocken_state : public heberpop_state
@@ -153,8 +153,8 @@ private:
 
 	void coinctrl_w(uint8_t data);
 
-	void program_map(address_map &map);
-	void oki_map(address_map &map);
+	void program_map(address_map &map) ATTR_COLD;
+	void oki_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -560,7 +560,7 @@ static INPUT_PORTS_START( shangha3 )
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_START2 )
 	PORT_SERVICE_NO_TOGGLE(0x0020, IP_ACTIVE_LOW)
 	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
+	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank))
 
 	PORT_START("DSW1") // DIP switch locations assigned as per service mode
 	PORT_DIPNAME( 0x07, 0x07, DEF_STR( Coin_A ) )       PORT_DIPLOCATION("SWA:1,2,3")
@@ -621,7 +621,7 @@ static INPUT_PORTS_START( heberpop )
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1)
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(1)
 	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // vblank?? has to toggle
+	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // vblank?? has to toggle
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_8WAY PORT_PLAYER(2)
 	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_8WAY PORT_PLAYER(2)
 	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY PORT_PLAYER(2)
@@ -629,7 +629,7 @@ static INPUT_PORTS_START( heberpop )
 	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2)
 	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(2)
 	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // vblank?? has to toggle
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // vblank?? has to toggle
 
 	PORT_START("SYSTEM")
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_COIN1 )
@@ -700,7 +700,7 @@ static INPUT_PORTS_START( blocken )
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1)
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(1)
 	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(1)
-	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // vblank?? has to toggle
+	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // vblank?? has to toggle
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_JOYSTICK_RIGHT ) PORT_8WAY PORT_PLAYER(2)
 	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_8WAY PORT_PLAYER(2)
 	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY PORT_PLAYER(2)
@@ -708,7 +708,7 @@ static INPUT_PORTS_START( blocken )
 	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(2)
 	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_PLAYER(2)
 	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(2)
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // vblank?? has to toggle
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // vblank?? has to toggle
 
 	PORT_START("SYSTEM")
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_COIN1 )
@@ -1025,23 +1025,59 @@ ROM_START( heberpop ) // PCB labeled SUN-06
 	ROM_LOAD( "hbp_ic53_v1.0.ic53",  0x00000, 0x80000, CRC(a4483aa0) SHA1(be301d8ac6d69f5c3fdbcb85bd557090e46da1ff) )
 ROM_END
 
+/*
+
+Blocken  (c)  1994 Visco / KID
+
+KID-07
++-------------------------------------+
+|    VOL           IC34       Z80     |
+|         YM3438    M6295    IC53     |
+|                  1.056MHz           |
+|                                     |
+|           M2            +------+    |
+|           M2            |GA9201|    |
+|J                        | KA01 |    |
+|A                        | 0249 |    |
+|M                        +------+    |
+|M                        M3          |
+|A                        M3          |
+|                         M3          |
+|        M1               M3          |
+|        M1               M3          |
+| SW2  IC31                      IC98 |
+|      IC32                      IC99 |
+| SW1 68000      48MHz           IC100|
++-------------------------------------+
+
+   CPU: TMP68HC000-16, Z80B
+ Sound: YM3438, OKI M6295
+ Video: GA9201 KA01-0249 (QFP120)
+   OSC: 48MHz, 1.056MHz (resonator)
+Memory: M1 = TMM2018AP-45 (2K x 8 SRAM)
+        M2 = LH52B256D-70LL (32K x 8 SRAM)
+        M3 = 514256A7L-70 ZIP-20 (256K x 4 DRAM)
+ Other: SW1 & SW2 - 8-position dipswitch
+        VOL - Volume pot
+*/
+
 ROM_START( blocken ) // PCB labeled KID-07
 	ROM_REGION( 0x100000, "maincpu", ROMREGION_ERASEFF )
-	ROM_LOAD16_BYTE( "ic31j.bin",    0x00000, 0x20000, CRC(ec8de2a3) SHA1(09a6b8c1b656b17ab3d1fc057902487e4f94cf02) )
-	ROM_LOAD16_BYTE( "ic32j.bin",    0x00001, 0x20000, CRC(79b96240) SHA1(c1246bd4b91fa45c581a8fdf90cc6beb85adf8ec) )
+	ROM_LOAD16_BYTE( "ic31j.ic31", 0x00000, 0x20000, CRC(ec8de2a3) SHA1(09a6b8c1b656b17ab3d1fc057902487e4f94cf02) )
+	ROM_LOAD16_BYTE( "ic32j.ic32", 0x00001, 0x20000, CRC(79b96240) SHA1(c1246bd4b91fa45c581a8fdf90cc6beb85adf8ec) )
 
 	ROM_REGION( 0x10000, "audiocpu", 0 )
-	ROM_LOAD( "ic34.bin",     0x00000, 0x10000, CRC(23e446ff) SHA1(82c03b45b337696b0f8293c446544d7ee080d415) )
+	ROM_LOAD( "ic34.ic34", 0x00000, 0x10000, CRC(23e446ff) SHA1(82c03b45b337696b0f8293c446544d7ee080d415) )
 
 	ROM_REGION16_BE( 0x380000, "blitter", ROMREGION_ERASEFF )
-	ROM_LOAD( "ic98j.bin",    0x000000, 0x80000, CRC(35dda273) SHA1(95850d12ca1557c14bc471ddf925aaf423313ff0) )
-	ROM_LOAD( "ic99j.bin",    0x080000, 0x80000, CRC(ce43762b) SHA1(e1c51ea0b54b5febdee127619e15f1cda650cb4c) )
+	ROM_LOAD( "ic98j.ic98",   0x000000, 0x80000, CRC(35dda273) SHA1(95850d12ca1557c14bc471ddf925aaf423313ff0) )
+	ROM_LOAD( "ic99j.ic99",   0x080000, 0x80000, CRC(ce43762b) SHA1(e1c51ea0b54b5febdee127619e15f1cda650cb4c) )
 	// 100000-1fffff empty
-	ROM_LOAD( "ic100j.bin",   0x200000, 0x80000, CRC(a34786fd) SHA1(7d4879cbaa055c2ddbe6d20dd946bf0e3e069d4d) )
+	ROM_LOAD( "ic100j.ic100", 0x200000, 0x80000, CRC(a34786fd) SHA1(7d4879cbaa055c2ddbe6d20dd946bf0e3e069d4d) )
 	// 280000-37ffff empty
 
 	ROM_REGION( 0x80000, "oki", 0 )
-	ROM_LOAD( "ic53.bin",     0x00000, 0x80000, CRC(86108c56) SHA1(aa405fa2eec5cc178ef6226f229a12dac09504f0) )
+	ROM_LOAD( "ic53.ic53", 0x00000, 0x80000, CRC(86108c56) SHA1(aa405fa2eec5cc178ef6226f229a12dac09504f0) )
 ROM_END
 
 

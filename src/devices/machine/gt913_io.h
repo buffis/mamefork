@@ -11,6 +11,8 @@
 
 #include "cpu/h8/h8_intc.h"
 
+class h8_cpu_base;
+
 //**************************************************************************
 //  TYPE DEFINITIONS
 //**************************************************************************
@@ -45,14 +47,14 @@ protected:
 	void timer_check_irq(offs_t num);
 
 	// device_t overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(irq_timer_tick);
 
 private:
-	required_device<h8_device> m_cpu;
-	required_device<h8_intc_device> m_intc;
+	required_device<h8_cpu_base> m_cpu;
+	required_device<h8_intc_base> m_intc;
 
 	/* timers */
 	uint8_t m_timer_control[2];

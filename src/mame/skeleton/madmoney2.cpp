@@ -60,7 +60,7 @@ public:
 	void madmoney2(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<m68705p3_device> m_maincpu;
@@ -90,8 +90,8 @@ void madmoney2_state::madmoney2(machine_config &config)
 
 	// Sound hardware
 
-	NSC810(config, "iotimer1", 0, 3.579'545_MHz_XTAL, 3.579'545_MHz_XTAL); // NSC810AN-3I
-	NSC810(config, "iotimer2", 0, 3.579'545_MHz_XTAL, 3.579'545_MHz_XTAL); // NSC810AN-3I
+	NSC810(config, "iotimer1", 3.579'545_MHz_XTAL, 3.579'545_MHz_XTAL); // NSC810AN-3I
+	NSC810(config, "iotimer2", 3.579'545_MHz_XTAL, 3.579'545_MHz_XTAL); // NSC810AN-3I
 
 	SPEAKER(config, "mono").front_center();
 
@@ -117,4 +117,4 @@ ROM_END
 
 } // anonymous namespace
 
-GAME(1988, madmoney2, 0, madmoney2, madmoney2, madmoney2_state, empty_init, ROT0, "Picmatic", "Mad Money 2", MACHINE_IS_SKELETON_MECHANICAL) // String "(C) PICMATIC S.A. 1988 BY B.MEITINER VER 0.0 09.09.88" on ROM
+GAME(1988, madmoney2, 0, madmoney2, madmoney2, madmoney2_state, empty_init, ROT0, "Picmatic", "Mad Money 2", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK) // String "(C) PICMATIC S.A. 1988 BY B.MEITINER VER 0.0 09.09.88" on ROM

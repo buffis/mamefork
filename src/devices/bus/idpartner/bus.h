@@ -61,21 +61,18 @@ public:
 	// construction/destruction
 	template <typename T, typename U>
 	bus_connector_device(const machine_config &mconfig, const char *tag, device_t *owner, T &&bus_tag, U &&opts, const char *dflt)
-		: bus_connector_device(mconfig, tag, owner)
+		: bus_connector_device(mconfig, tag, owner, 0U)
 	{
-		option_reset();
-		opts(*this);
-		set_default_option(dflt);
-		set_fixed(false);
+		set_options(std::forward<U>(opts), dflt, false);
 		m_bus.set_tag(std::forward<T>(bus_tag));
 	}
 
-	bus_connector_device(machine_config const &mconfig, char const *tag, device_t *owner, uint32_t clock = 0);
+	bus_connector_device(machine_config const &mconfig, char const *tag, device_t *owner, uint32_t clock);
 
 protected:
 	// device_t implementation
-	virtual void device_resolve_objects() override;
-	virtual void device_start() override;
+	virtual void device_resolve_objects() override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
 
 	// configuration
 	required_device<bus_device> m_bus;
@@ -85,7 +82,7 @@ class bus_device : public device_t
 {
 public:
 	// construction/destruction
-	bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	// inline configuration
 	template <typename T> void set_io_space(T &&tag, int spacenum) { m_io.set_tag(std::forward<T>(tag), spacenum); }
@@ -104,8 +101,8 @@ public:
 
 private:
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// internal state
 	required_address_space m_io;

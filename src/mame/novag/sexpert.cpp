@@ -39,7 +39,7 @@ TODO:
 #include "emu.h"
 
 #include "bus/rs232/rs232.h"
-#include "cpu/m6502/m65c02.h"
+#include "cpu/m6502/w65c02.h"
 #include "machine/clock.h"
 #include "machine/mos6551.h"
 #include "machine/nvram.h"
@@ -87,8 +87,8 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(change_cpu_freq);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	// devices/pointers
 	required_device<cpu_device> m_maincpu;
@@ -107,7 +107,7 @@ protected:
 	u8 m_lcd_data = 0;
 
 	// address maps
-	void sexpert_map(address_map &map);
+	void sexpert_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	virtual void lcd_control_w(u8 data);
@@ -160,13 +160,13 @@ public:
 	void sforteb(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	emu_timer *m_beeptimer = nullptr;
 
 	// address maps
-	void sforte_map(address_map &map);
+	void sforte_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	virtual void lcd_control_w(u8 data) override;
@@ -382,7 +382,7 @@ static INPUT_PORTS_START( sexpert )
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_8) PORT_NAME("Print Board / Interface")
 
 	PORT_START("CPU")
-	PORT_CONFNAME( 0x01, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, sexpert_state, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x01, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(sexpert_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x00, "5MHz" )
 	PORT_CONFSETTING(    0x01, "6MHz" )
 INPUT_PORTS_END
@@ -391,7 +391,7 @@ static INPUT_PORTS_START( sexpertb )
 	PORT_INCLUDE( sexpert )
 
 	PORT_MODIFY("CPU") // default CPU for B/C is W65C802P-6 @ 6MHz
-	PORT_CONFNAME( 0x01, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, sexpert_state, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x01, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(sexpert_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x00, "5MHz" )
 	PORT_CONFSETTING(    0x01, "6MHz" )
 INPUT_PORTS_END
@@ -405,7 +405,7 @@ INPUT_PORTS_END
 void sexpert_state::sexpert(machine_config &config)
 {
 	// basic machine hardware
-	M65C02(config, m_maincpu, 10_MHz_XTAL/2); // or 12_MHz_XTAL/2, also seen with R65C02
+	W65C02(config, m_maincpu, 10_MHz_XTAL/2); // or 12_MHz_XTAL/2, also seen with R65C02
 	m_maincpu->set_addrmap(AS_PROGRAM, &sexpert_state::sexpert_map);
 
 	auto &irq_clock(CLOCK(config, "irq_clock", 32.768_kHz_XTAL/128)); // 256Hz
@@ -444,7 +444,7 @@ void sexpert_state::sexpert(machine_config &config)
 
 	// uart (configure after video)
 	MOS6551(config, m_acia).set_xtal(1.8432_MHz_XTAL); // R65C51P2 - RTS to CTS, DCD to GND
-	m_acia->irq_handler().set_inputline("maincpu", m65c02_device::NMI_LINE);
+	m_acia->irq_handler().set_inputline("maincpu", w65c02_device::NMI_LINE);
 	m_acia->rts_handler().set("acia", FUNC(mos6551_device::write_cts));
 	m_acia->txd_handler().set("rs232", FUNC(rs232_port_device::write_txd));
 	m_acia->dtr_handler().set("rs232", FUNC(rs232_port_device::write_dtr));

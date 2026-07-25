@@ -84,7 +84,7 @@ private:
 	required_device<palette_device> m_palette;
 	required_device<cassette_image_device> m_cass;
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void seg_w(u8 data);
@@ -197,12 +197,13 @@ TIMER_DEVICE_CALLBACK_MEMBER(intchess_state::cass_input)
 
 void intchess_state::main_map(address_map &map)
 {
+	map.global_mask(0x7fff);
 	map(0x0000, 0x03ff).mirror(0x0400).ram();
 	map(0x0800, 0x0bff).mirror(0x0400).ram();
 	map(0x1000, 0x1000).r(m_encoder, FUNC(mm74c923_device::read));
 	map(0x1800, 0x18ff).ram().w(FUNC(intchess_state::vram_w)).share("vram");
-	map(0xa800, 0xa80f).m(m_via, FUNC(via6522_device::map));
-	map(0xc000, 0xdfff).mirror(0x2000).rom();
+	map(0x2800, 0x280f).m(m_via, FUNC(via6522_device::map));
+	map(0x4000, 0x5fff).mirror(0x2000).rom().region("maincpu", 0);
 }
 
 
@@ -241,7 +242,7 @@ static INPUT_PORTS_START( intchess ) // see comments for German version labels
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_S) PORT_NAME("Step")      // Vor
 
 	PORT_START("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_F1) PORT_CHANGED_MEMBER(DEVICE_SELF, intchess_state, reset_button, 0) PORT_NAME("Reset") // Start
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_F1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(intchess_state::reset_button), 0) PORT_NAME("Reset") // Start
 INPUT_PORTS_END
 
 
@@ -283,7 +284,7 @@ void intchess_state::intchess(machine_config &config)
 	m_via->readpb_handler().set(FUNC(intchess_state::control_r));
 	m_via->irq_handler().set_inputline(m_maincpu, M6502_IRQ_LINE);
 
-	MM74C923(config, m_encoder, 0); // timing parameters unknown
+	MM74C923(config, m_encoder); // timing parameters unknown
 	m_encoder->da_wr_callback().set(m_via, FUNC(via6522_device::write_ca2));
 	m_encoder->x1_rd_callback().set_ioport("X1");
 	m_encoder->x2_rd_callback().set_ioport("X2");
@@ -325,9 +326,9 @@ void intchess_state::intchess(machine_config &config)
 *******************************************************************************/
 
 ROM_START( intchess )
-	ROM_REGION( 0x10000, "maincpu", 0 )
-	ROM_LOAD("c45015_ytv-lrom.u9", 0xc000, 0x1000, CRC(eef04467) SHA1(5bdcb8d596b91aa06c6ef1ed53ef14d0d13f4194) ) // 2332
-	ROM_LOAD("c45016_ytv-hrom.u8", 0xd000, 0x1000, CRC(7e6f85b4) SHA1(4cd15257eae04067160026f9a062a28581f46227) ) // "
+	ROM_REGION( 0x2000, "maincpu", 0 )
+	ROM_LOAD("c45015_ytv-lrom.u9", 0x0000, 0x1000, CRC(eef04467) SHA1(5bdcb8d596b91aa06c6ef1ed53ef14d0d13f4194) ) // 2332
+	ROM_LOAD("c45016_ytv-hrom.u8", 0x1000, 0x1000, CRC(7e6f85b4) SHA1(4cd15257eae04067160026f9a062a28581f46227) ) // "
 
 	ROM_REGION( 0x100, "sprites", 0 )
 	ROM_LOAD("igp.u15", 0x000, 0x100, CRC(bf8358e0) SHA1(880e0d9bd8a75874ba9e51dfb5999b8fcd321a4f) ) // 6336-1

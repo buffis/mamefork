@@ -50,7 +50,7 @@
   Fujitsu MB624018 CMOS GATE ARRAY
   Fujitsu MB624019 CMOS GATE ARRAY
   Atmel AT28C16 16K (2K x 8) Parallel EEPROM
-  Fujitsu 29F017A-90PFTR 16M (2M x 8) BIT Flash Memory Reverse Pinout (Gachaga Champ card used 29F017-12PFTR instead)
+  Fujitsu 29F017A-90PFTR 16M (2M x 8) BIT Flash Memory Reverse Pinout (Gacha Gachamp card used 29F017-12PFTR instead)
   Fujitsu 29F017A-90PFTN 16M (2M x 8) BIT Flash Memory Standard Pinout
 
 */
@@ -81,7 +81,7 @@ namespace {
 
 static INPUT_PORTS_START(linflash)
 	PORT_START("CONF")
-	PORT_CONFNAME(0x01, 0x00, "Write Protect")  PORT_WRITE_LINE_DEVICE_MEMBER(DEVICE_SELF, linear_flash_pccard_device, update_wp)
+	PORT_CONFNAME(0x01, 0x00, "Write Protect")  PORT_WRITE_LINE_DEVICE_MEMBER(DEVICE_SELF, FUNC(linear_flash_pccard_device::update_wp))
 	PORT_CONFSETTING(   0x01, DEF_STR(Yes))
 	PORT_CONFSETTING(   0x00, DEF_STR(No))
 INPUT_PORTS_END

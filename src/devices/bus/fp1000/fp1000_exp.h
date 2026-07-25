@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:Angelo Salese
 
-#ifndef MAME_BUS_FP1000_EXP_H
-#define MAME_BUS_FP1000_EXP_H
+#ifndef MAME_BUS_FP1000_FP1000_EXP_H
+#define MAME_BUS_FP1000_FP1000_EXP_H
 
 #pragma once
 
@@ -18,10 +18,7 @@ public:
 	fp1000_exp_slot_device(machine_config const &mconfig, char const *tag, device_t *owner, T &&opts, char const *dflt)
 		: fp1000_exp_slot_device(mconfig, tag, owner, (uint32_t)0)
 	{
-		option_reset();
-		opts(*this);
-		set_default_option(dflt);
-		set_fixed(false);
+		set_options(std::forward<T>(opts), dflt, false);
 	}
 	fp1000_exp_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 	virtual ~fp1000_exp_slot_device();
@@ -38,7 +35,7 @@ public:
 	auto intd_callback() { return m_intd_cb.bind(); }
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	virtual void device_config_complete() override;
 
 private:
@@ -89,13 +86,13 @@ public:
 
 
 protected:
-//  virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
+//  virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
 };
 
-// device type definition
+// device type declaration
 DECLARE_DEVICE_TYPE(FP1000_EXP_SLOT, fp1000_exp_slot_device)
 
 void fp1000_exp_devices(device_slot_interface &device);
 
-#endif // MAME_MACHINE_FP1000_EXP_H
+#endif // MAME_BUS_FP1000_FP1000_EXP_H

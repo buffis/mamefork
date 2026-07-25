@@ -46,20 +46,19 @@ public:
 	void dyna_d0404(machine_config &config);
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
 
 	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void program_map(address_map &map);
+	void program_map(address_map &map) ATTR_COLD;
 };
 
 
 uint32_t dyna_d0404_state::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
 {
-
 	return 0;
 }
 
@@ -71,6 +70,9 @@ void dyna_d0404_state::video_start()
 void dyna_d0404_state::program_map(address_map &map)
 {
 	map(0x00000000, 0x000fffff).rom();
+	map(0x00200000, 0x0020bfff).ram();
+	map(0x00240000, 0x0024ffff).ram();
+	map(0xffff0000, 0xffffffff).ram();
 }
 
 
@@ -172,7 +174,7 @@ ROM_START( cm2005 ) // DYNA CM2005 VER. 1.10U at 0xc0000 in ROM
 	ROM_LOAD( "gal16v8.10b", 0x40000, 0x40000, CRC(d8320940) SHA1(a65973fefaff03696cdbb60a02bfb5e352254951) )
 ROM_END
 
-ROM_START( cm2005a ) // DYNA CM2005 VER. 1.02U at 0xc0000 in ROM
+ROM_START( cm2005_102u ) // DYNA CM2005 VER. 1.02U at 0xc0000 in ROM
 	ROM_REGION( 0x100000, "maincpu", 0 )
 	ROM_LOAD( "lh28f800.11b", 0x000000, 0x100000, CRC(f567782c) SHA1(6138d3170dc4505e1ab2444f26e76e56d5393444) )
 
@@ -184,21 +186,51 @@ ROM_START( cm2005a ) // DYNA CM2005 VER. 1.02U at 0xc0000 in ROM
 	ROM_LOAD( "gal16v8.10b", 0x40000, 0x40000, CRC(d8320940) SHA1(a65973fefaff03696cdbb60a02bfb5e352254951) )
 ROM_END
 
-ROM_START( cm2005b ) // DYNA CM2005 VER. 0.14H at 0xc0000 in ROM
+ROM_START( cm2005_100h ) // DYNA CM2005 VER. 1.00H at 0xc0000 in ROM
 	ROM_REGION( 0x100000, "maincpu", 0 )
-	ROM_LOAD( "lh28f800.11b", 0x000000, 0x100000, CRC(1af9c956) SHA1(77daffbb8279098218e8401260363af9de4b1d7f) ) // SLDH
+	ROM_LOAD( "lh28f800.11b", 0x000000, 0x100000, CRC(f1c68268) SHA1(e23d3fbb43bdcc226209aec1b65215cc572ef575) ) // SLDH
 
 	ROM_REGION( 0x100000, "gfx", 0 )
-	ROM_LOAD( "lh28f800.12b", 0x000000, 0x100000, CRC(74163225) SHA1(14853e347e4e439166e218cd2713e372c871a984) ) // SLDH
+	ROM_LOAD( "lh28f800.12b", 0x000000, 0x100000, CRC(d6ecf6a4) SHA1(1db677e4537c9011a49a4c831d729d856d90846a) ) // SLDH
 
 	ROM_REGION( 0x80000, "plds", 0 ) // read as 27C020, need reduction
 	ROM_LOAD( "gal16v8.10a", 0x00000, 0x40000, CRC(a9f2655a) SHA1(07d9b767b5929bbeac917697ac618c293206bf72) )
 	ROM_LOAD( "gal16v8.10b", 0x40000, 0x40000, CRC(d8320940) SHA1(a65973fefaff03696cdbb60a02bfb5e352254951) )
 ROM_END
 
+ROM_START( cm2005_014h ) // DYNA CM2005 VER. 0.14H at 0xc0000 in ROM
+	ROM_REGION( 0x100000, "maincpu", 0 )
+	// these are the same version, with few bytes changed. Possibly configuration written to flash? Verify once emulated and if so discard two of them
+	ROM_LOAD( "lh28f800.11b",      0x000000, 0x100000, CRC(1af9c956) SHA1(77daffbb8279098218e8401260363af9de4b1d7f) ) // SLDH
+	ROM_LOAD( "lh28f800_alt.11b",  0x000000, 0x100000, CRC(74274026) SHA1(16758a9755ec788f0fa1bbf09a35961b58615527) )
+	ROM_LOAD( "lh28f800_alt2.11b", 0x000000, 0x100000, CRC(d9b12191) SHA1(b97da8aea434e7ff1ad8bcd3b27a236580f33ccb) )
+
+	ROM_REGION( 0x100000, "gfx", 0 )
+	ROM_LOAD( "lh28f800.12b",     0x000000, 0x100000, CRC(74163225) SHA1(14853e347e4e439166e218cd2713e372c871a984) ) // SLDH (this was found on PCBs with the 2 first programs above)
+	ROM_LOAD( "lh28f800_alt.12b", 0x000000, 0x100000, CRC(004d93c6) SHA1(ba286ce85825cb48134ca81a0ac56b4628f6bcb1) ) // this was found on a PCB with the 3rd program above. Seems to have some problems with bit 7.
+
+	ROM_REGION( 0x80000, "plds", 0 ) // read as 27C020, need reduction
+	ROM_LOAD( "gal16v8.10a", 0x00000, 0x40000, CRC(a9f2655a) SHA1(07d9b767b5929bbeac917697ac618c293206bf72) )
+	ROM_LOAD( "gal16v8.10b", 0x40000, 0x40000, CRC(d8320940) SHA1(a65973fefaff03696cdbb60a02bfb5e352254951) )
+ROM_END
+
+ROM_START( supereld ) // DYNA SUPER EL DORADO Ver.1.04H at 0xc0000 in ROM
+	ROM_REGION( 0x100000, "maincpu", 0 )
+	ROM_LOAD( "a29800uv-70f.11b", 0x000000, 0x100000, CRC(d142d7b2) SHA1(33b02a9e9ebc21bda0f262d921388c9f5edf256e) )
+
+	ROM_REGION( 0x100000, "gfx", 0 )
+	ROM_LOAD( "a29800uv-70f.12b", 0x000000, 0x100000, CRC(080f5212) SHA1(b76041ec24cc4e3d4694b94977ead282feaaa772) )
+
+	ROM_REGION( 0x400, "plds", ROMREGION_ERASE00 )
+	ROM_LOAD( "gal16v8d.10a", 0x000, 0x117, NO_DUMP )
+	ROM_LOAD( "gal16v8d.10b", 0x200, 0x117, NO_DUMP )
+ROM_END
+
 } // anonymous namespace
 
 
-GAME( 2005, cm2005,  0,      dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Cherry Master 2005 (Ver. 1.10U)", MACHINE_IS_SKELETON )
-GAME( 2005, cm2005a, cm2005, dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Cherry Master 2005 (Ver. 1.02U)", MACHINE_IS_SKELETON )
-GAME( 2005, cm2005b, cm2005, dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Cherry Master 2005 (Ver. 0.14H)", MACHINE_IS_SKELETON )
+GAME( 2005, cm2005,       0,      dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Cherry Master 2005 (Ver. 1.10U)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2005, cm2005_102u,  cm2005, dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Cherry Master 2005 (Ver. 1.02U)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2005, cm2005_100h,  cm2005, dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Cherry Master 2005 (Ver. 1.00H)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2005, cm2005_014h,  cm2005, dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Cherry Master 2005 (Ver. 0.14H)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2008, supereld,     0,      dyna_d0404, cm2005, dyna_d0404_state, empty_init, ROT0, "Dyna",  "Super El Dorado (Ver. 1.04H)",    MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

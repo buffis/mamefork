@@ -54,13 +54,11 @@ public:
 		, m_player_lamps(*this, "player_lamp%u", 1U)
 	{ }
 
-	void timetrv(machine_config &config);
+	void timetrv(machine_config &config) ATTR_COLD;
 
 private:
-	virtual void machine_start() override;
-
-	void timetrv_map(address_map &map);
-	void timetrv_io(address_map &map);
+	void timetrv_map(address_map &map) ATTR_COLD;
+	void timetrv_io(address_map &map) ATTR_COLD;
 
 	void ppi1_pc_w(uint8_t data);
 
@@ -80,14 +78,6 @@ private:
 	output_finder<> m_cube_lamp;
 	output_finder<2> m_player_lamps;
 };
-
-void timetrv_state::machine_start()
-{
-	m_digits.resolve();
-	m_decimals.resolve();
-	m_cube_lamp.resolve();
-	m_player_lamps.resolve();
-}
 
 void timetrv_state::ppi1_pc_w(uint8_t data)
 {
@@ -128,7 +118,7 @@ void timetrv_state::led_w(offs_t offset, uint8_t data)
 	06: 0000 0000 0111 0001 0x0071 F
 	07: 0000 0000 1011 1101 0x00bd G
 	08: 0000 0000 1111 0110 0x00f6 H
-	09: 0000 0011 0000 0000 0x0300 I
+	09: 0000 0011 0000 1001 0x0309 I
 	0A: 0000 0000 0001 1110 0x001e J
 	0B: 0011 0000 0111 0000 0x3070 K
 	0C: 0000 0000 0011 1000 0x0038 L
@@ -187,7 +177,7 @@ void timetrv_state::led_w(offs_t offset, uint8_t data)
 
 	static uint16_t const s_digit_data[0x40] =
 	{
-		0x01bb, 0x00f7, 0x038f, 0x0039, 0x030f, 0x0079, 0x0071, 0x00bd, 0x00f6, 0x0300, 0x001e, 0x3070, 0x0038, 0x1836, 0x2836, 0x003f,
+		0x01bb, 0x00f7, 0x038f, 0x0039, 0x030f, 0x0079, 0x0071, 0x00bd, 0x00f6, 0x0309, 0x001e, 0x3070, 0x0038, 0x1836, 0x2836, 0x003f,
 		0x00f3, 0x203f, 0x20f3, 0x00ed, 0x0301, 0x003e, 0x1430, 0x2436, 0x3c00, 0x1a00, 0x1409, 0x3080, 0x2800, 0x0c40, 0x1403, 0x0008,
 		0x0000, 0x4100, 0x0022, 0x03ce, 0x03ed, 0x3ce4, 0x3c0d, 0x0100, 0x3000, 0x0c00, 0x3fc0, 0x03c0, 0x0400, 0x00c0, 0x4000, 0x1400,
 		0x143f, 0x0300, 0x00db, 0x00cf, 0x00e6, 0x2069, 0x00fd, 0x0007, 0x00ff, 0x00ef, 0x4000, 0x0400, 0x0408, 0x00c8, 0x2008, 0x0283
@@ -320,7 +310,7 @@ void timetrv_state::timetrv(machine_config &config)
 	m_uart->out_tx_callback().set(m_laserdisc, FUNC(pioneer_ldv4200hle_device::rx_w));
 
 	/* video hardware */
-	PIONEER_LDV4200HLE(config, m_laserdisc, 0);
+	PIONEER_LDV4200HLE(config, m_laserdisc);
 	m_laserdisc->set_overlay(256, 256, FUNC(timetrv_state::screen_update));
 	m_laserdisc->add_route(0, "mono", 0.4);
 	m_laserdisc->add_route(1, "mono", 0.4);

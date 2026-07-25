@@ -14,8 +14,8 @@
 #include "bus/ata/ataintf.h"
 #include "cpu/sh/sh7014.h"
 #include "machine/icd2061a.h"
-#include "machine/mb87078.h"
 #include "sound/lc78836m.h"
+#include "sound/mb87077.h"
 
 
 class namcos12_cdxa_device : public device_t
@@ -27,10 +27,10 @@ public:
 
 	auto psx_int10_callback() { return m_psx_int10_cb.bind(); }
 
-	void psx_map(address_map &map);
+	void amap(address_map &map) ATTR_COLD;
 
-	uint32_t sh2_ram_r(offs_t offset);
-	void sh2_ram_w(offs_t offset, uint32_t data, uint32_t mem_mask = ~0);
+	uint16_t sh2_ram_r(offs_t offset);
+	void sh2_ram_w(offs_t offset, uint16_t data, uint16_t mem_mask = ~0);
 
 	void reset_sh2_w(uint16_t data);
 
@@ -50,12 +50,12 @@ public:
 	void cdrom_cs0_w(offs_t offset, uint16_t data, uint16_t mem_mask = ~0);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 private:
-	void sh7014_map(address_map &map);
+	void sh7014_map(address_map &map) ATTR_COLD;
 
 	void audio_dac_w(int state);
 
@@ -74,8 +74,8 @@ private:
 	required_shared_ptr<uint32_t> m_sram;
 	required_device<ata_interface_device> m_ata;
 	required_device<lc78836m_device> m_lc78836m;
-	required_device <mb87078_device> m_mb87078;
-	required_device <icd2061a_device> m_icd2061a;
+	required_device<mb87078_device> m_mb87078;
+	required_device<icd2061a_device> m_icd2061a;
 	devcb_write_line m_psx_int10_cb;
 
 	bool m_ide_sh2_enabled, m_ide_ps1_enabled;

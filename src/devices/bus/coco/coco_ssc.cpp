@@ -88,9 +88,9 @@ namespace
 		coco_ssc_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
 
 		// optional information overrides
-		virtual const tiny_rom_entry *device_rom_region() const override;
-		virtual void device_add_mconfig(machine_config &config) override;
-		virtual void device_reset() override;
+		virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
+		virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+		virtual void device_reset() override ATTR_COLD;
 
 		u8 ssc_port_a_r();
 		void ssc_port_b_w(u8 data);
@@ -101,7 +101,7 @@ namespace
 
 	protected:
 		// device-level overrides
-		virtual void device_start() override;
+		virtual void device_start() override ATTR_COLD;
 		u8 ff7d_read(offs_t offset);
 		void ff7d_write(offs_t offset, u8 data);
 		virtual void set_sound_enable(bool sound_enable) override;
@@ -132,17 +132,23 @@ namespace
 
 	protected:
 		// device-level overrides
-		virtual void device_start() override;
+		virtual void device_start() override ATTR_COLD;
 
 		// sound stream update overrides
-		virtual void sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs) override;
+		virtual void sound_stream_update(sound_stream &stream) override;
 
-		// Power of 2
-		static constexpr int BUFFER_SIZE = 4;
+		static constexpr float HPF_ALPHA    = 0.99f;
+		static constexpr float ATTACK_COEFF = 0.0026f;  // fast charge
+		static constexpr float DECAY_COEFF  = 0.0003f; // slow drain
+		static constexpr float THRESH_ON    = 0.05f;
+		static constexpr float THRESH_OFF   = 0.01f;
+
 	private:
 		sound_stream*  m_stream;
-		float m_rms[BUFFER_SIZE];
-		int m_index;
+		bool m_sound_active;
+		float m_envelope;
+		float m_hpf_prev_in;
+		float m_hpf_prev_out;
 	};
 };
 
@@ -476,14 +482,15 @@ void coco_ssc_device::ssc_port_d_w(u8 data)
 //-------------------------------------------------
 
 cocossc_sac_device::cocossc_sac_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)
-	: device_t(mconfig, COCOSSC_SAC, tag, owner, clock),
-		device_sound_interface(mconfig, *this),
-		m_stream(nullptr),
-		m_index(0)
+	: device_t(mconfig, COCOSSC_SAC, tag, owner, clock)
+		, device_sound_interface(mconfig, *this)
+		, m_stream(nullptr)
+		, m_sound_active(false)
+		, m_envelope(0.0f)
+		, m_hpf_prev_in(0.0f)
+		, m_hpf_prev_out(0.0f)
 {
-	std::fill(std::begin(m_rms), std::end(m_rms), 0.0f);
 }
-
 
 //-------------------------------------------------
 //  device_start - device-specific startup
@@ -492,38 +499,40 @@ cocossc_sac_device::cocossc_sac_device(const machine_config &mconfig, const char
 void cocossc_sac_device::device_start()
 {
 	m_stream = stream_alloc(1, 1, machine().sample_rate());
-}
 
+	save_item(NAME(m_sound_active));
+	save_item(NAME(m_envelope));
+	save_item(NAME(m_hpf_prev_in));
+	save_item(NAME(m_hpf_prev_out));
+}
 
 //-------------------------------------------------
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void cocossc_sac_device::sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs)
+void cocossc_sac_device::sound_stream_update(sound_stream &stream)
 {
-	auto &src = inputs[0];
-	auto &dst = outputs[0];
+	int count = stream.samples();
 
-	int count = dst.samples();
-	m_rms[m_index] = 0;
-
-	if( count > 0 )
+	for (int sampindex = 0; sampindex < count; sampindex++)
 	{
-		for( int sampindex = 0; sampindex < count; sampindex++ )
-		{
-			auto source_sample = src.get(sampindex);
-			m_rms[m_index] += source_sample * source_sample;
-			dst.put(sampindex, source_sample);
-		}
+		float x = stream.get(0, sampindex);
 
-		m_rms[m_index] = m_rms[m_index] / count;
-		m_rms[m_index] = sqrt(m_rms[m_index]);
+		// High pass filter to remove DC offset
+		float y = HPF_ALPHA * (m_hpf_prev_out + x - m_hpf_prev_in);
+		m_hpf_prev_in = x;
+		m_hpf_prev_out = y;
+
+		// Envelope follower, asymmetric attack/decay
+		float rect = std::abs(y);
+		if (rect > m_envelope)
+			m_envelope += (rect - m_envelope) * ATTACK_COEFF;
+		else
+			m_envelope += (rect - m_envelope) * DECAY_COEFF;
+
+		stream.put(0, sampindex, x);
 	}
-
-	m_index++;
-	m_index &= (BUFFER_SIZE-1);
 }
-
 
 //-------------------------------------------------
 //  sound_activity_circuit_output - making sound
@@ -531,8 +540,12 @@ void cocossc_sac_device::sound_stream_update(sound_stream &stream, std::vector<r
 
 bool cocossc_sac_device::sound_activity_circuit_output()
 {
-	float sum = std::accumulate(std::begin(m_rms), std::end(m_rms), 0.0f);
-	float average = (sum / BUFFER_SIZE);
+	m_stream->update();
 
-	return average < 0.317f;
+	if (m_sound_active && m_envelope < THRESH_OFF)
+		m_sound_active = false;
+	else if (m_envelope > THRESH_ON)
+		m_sound_active = true;
+
+	return !m_sound_active;
 }

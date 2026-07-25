@@ -94,6 +94,7 @@
 #include "emu.h"
 #include "pgm2.h"
 
+
 // checked on startup, or doesn't boot
 u32 pgm2_state::unk_startup_r()
 {
@@ -683,8 +684,8 @@ INPUT_PORTS_END
 void pgm2_state::irq(int state)
 {
 //  logerror("irq\n");
-	if (state == ASSERT_LINE) m_maincpu->set_input_line(ARM7_IRQ_LINE, ASSERT_LINE);
-	else m_maincpu->set_input_line(ARM7_IRQ_LINE, CLEAR_LINE);
+	if (state == ASSERT_LINE) m_maincpu->set_input_line(arm7_cpu_device::ARM7_IRQ_LINE, ASSERT_LINE);
+	else m_maincpu->set_input_line(arm7_cpu_device::ARM7_IRQ_LINE, CLEAR_LINE);
 }
 
 void pgm2_state::machine_start()
@@ -754,9 +755,9 @@ void pgm2_state::pgm2(machine_config &config)
 	IGS036(config, m_maincpu, 100000000); // Unknown clock / divider
 	m_maincpu->set_addrmap(AS_PROGRAM, &pgm2_state::pgm2_rom_map);
 
-	TIMER(config, m_mcu_timer, 0).configure_generic(FUNC(pgm2_state::mcu_interrupt));
+	TIMER(config, m_mcu_timer).configure_generic(FUNC(pgm2_state::mcu_interrupt));
 
-	ARM_AIC(config, m_arm_aic, 0).irq_callback().set(FUNC(pgm2_state::irq));
+	ARM_AIC(config, m_arm_aic).irq_callback().set(FUNC(pgm2_state::irq));
 
 	// video hardware
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
@@ -776,17 +777,16 @@ void pgm2_state::pgm2(machine_config &config)
 
 	NVRAM(config, "sram", nvram_device::DEFAULT_ALL_0);
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
-	ymz774_device &ymz774(YMZ774(config, "ymz774", 16384000)); // is clock correct ?
-	ymz774.add_route(0, "lspeaker", 1.0);
-	ymz774.add_route(1, "rspeaker", 1.0);
+	ymz774_device &ymz774(YMZ774(config, "ymz774", 22.5792_MHz_XTAL));
+	ymz774.add_route(0, "speaker", 1.0, 0);
+	ymz774.add_route(1, "speaker", 1.0, 1);
 
-	PGM2_MEMCARD(config, m_memcard[0], 0);
-	PGM2_MEMCARD(config, m_memcard[1], 0);
-	PGM2_MEMCARD(config, m_memcard[2], 0);
-	PGM2_MEMCARD(config, m_memcard[3], 0);
+	PGM2_MEMCARD(config, m_memcard[0]);
+	PGM2_MEMCARD(config, m_memcard[1]);
+	PGM2_MEMCARD(config, m_memcard[2]);
+	PGM2_MEMCARD(config, m_memcard[3]);
 }
 
 // not strictly needed as the video code supports changing on the fly, but makes recording easier etc.
@@ -1444,10 +1444,6 @@ void pgm2_state::init_ddpdojt()
 }
 
 // currently we don't know how to derive address/data xor values from real keys, so we need both
-static const kov3_module_key kov3_104_key = { { 0x40,0xac,0x30,0x00,0x47,0x49,0x00,0x00 } ,{ 0xeb,0x7d,0x8d,0x90,0x2c,0xf4,0x09,0x82 }, 0x18ec71, 0xb89d }; // fake zero-key
-static const kov3_module_key kov3_102_key = { { 0x49,0xac,0xb0,0xec,0x47,0x49,0x95,0x38 } ,{ 0x09,0xbd,0xf1,0x31,0xe6,0xf0,0x65,0x2b }, 0x021d37, 0x81d0 };
-static const kov3_module_key kov3_101_key = { { 0xc1,0x2c,0xc1,0xe5,0x3c,0xc1,0x59,0x9e } ,{ 0xf2,0xb2,0xf0,0x89,0x37,0xf2,0xc7,0x0b }, 0, 0xffff }; // real xor values is unknown
-static const kov3_module_key kov3_100_key = { { 0x40,0xac,0x30,0x00,0x47,0x49,0x00,0x00 } ,{ 0x96,0xf0,0x91,0xe1,0xb3,0xf1,0xef,0x90 }, 0x3e8aa8, 0xc530 }; // fake zero-key
 
 void pgm2_state::init_kov3()
 {
@@ -1472,24 +1468,40 @@ void pgm2_state::decrypt_kov3_module(u32 addrxor, u16 dataxor)
 
 void pgm2_state::init_kov3_104()
 {
+	static const kov3_module_key kov3_104_key = {
+			{ 0x40,0xac,0x30,0x00,0x47,0x49,0x00,0x00 },
+			{ 0xeb,0x7d,0x8d,0x90,0x2c,0xf4,0x09,0x82 },
+			0x18ec71, 0xb89d }; // fake zero-key
 	module_key = &kov3_104_key;
 	init_kov3();
 }
 
 void pgm2_state::init_kov3_102()
 {
+	static const kov3_module_key kov3_102_key = {
+			{ 0x49,0xac,0xb0,0xec,0x47,0x49,0x95,0x38 },
+			{ 0x09,0xbd,0xf1,0x31,0xe6,0xf0,0x65,0x2b },
+			0x021d37, 0x81d0 };
 	module_key = &kov3_102_key;
 	init_kov3();
 }
 
 void pgm2_state::init_kov3_101()
 {
+	static const kov3_module_key kov3_101_key = {
+			{ 0xc1,0x2c,0xc1,0xe5,0x3c,0xc1,0x59,0x9e },
+			{ 0xf2,0xb2,0xf0,0x89,0x37,0xf2,0xc7,0x0b },
+			0, 0xffff }; // real xor values is unknown
 	module_key = &kov3_101_key;
 	init_kov3();
 }
 
 void pgm2_state::init_kov3_100()
 {
+	static const kov3_module_key kov3_100_key = {
+			{ 0x40,0xac,0x30,0x00,0x47,0x49,0x00,0x00 },
+			{ 0x96,0xf0,0x91,0xe1,0xb3,0xf1,0xef,0x90 },
+			0x3e8aa8, 0xc530 }; // fake zero-key
 	module_key = &kov3_100_key;
 	init_kov3();
 }
@@ -1556,7 +1568,7 @@ GAME( 2011, kov3_100,     kov3,   pgm2_hires,  pgm2, pgm2_state, init_kov3_100, 
 // King of Fighters '98: Ultimate Match Hero
 GAME( 2009, kof98umh,     0,      pgm2_lores,  pgm2, pgm2_state, init_kof98umh, ROT0, "IGS / SNK Playmore / New Channel", "The King of Fighters '98: Ultimate Match HERO (China, V100, 09-08-23)", MACHINE_SUPPORTS_SAVE )
 
-GAME( 2009, bubucar,      0,      pgm2,        pgm2, pgm2_state, init_bubucar,  ROT0, "IGS", "Bu Bu Car (English)", MACHINE_IS_SKELETON ) // Only the program ROM is dumped
+GAME( 2009, bubucar,      0,      pgm2,        pgm2, pgm2_state, init_bubucar,  ROT0, "IGS", "Bu Bu Car (English)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
 
 // ジグソーワールドアリーナ/Jigsaw World Arena
 

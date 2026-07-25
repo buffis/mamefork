@@ -1,7 +1,7 @@
 // license:BSD-3-Clause
 // copyright-holders:
-#ifndef MAME_BUS_SUPERACAN_ROM_H
-#define MAME_BUS_SUPERACAN_ROM_H
+#ifndef MAME_BUS_SUPRACAN_ROM_H
+#define MAME_BUS_SUPRACAN_ROM_H
 
 #pragma once
 
@@ -29,9 +29,9 @@ public:
 protected:
 	superacan_rom_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 private:
 	const u16 *m_rom_base;
@@ -43,4 +43,4 @@ private:
 
 DECLARE_DEVICE_TYPE(SUPERACAN_ROM_STD,   superacan_rom_device)
 
-#endif // MAME_BUS_SUPERACAN_ROM_H
+#endif // MAME_BUS_SUPRACAN_ROM_H

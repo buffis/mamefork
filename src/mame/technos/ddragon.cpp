@@ -672,8 +672,8 @@ static INPUT_PORTS_START( ddragon )
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_SERVICE1 )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_BUTTON3 )
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(2)
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_VBLANK("screen")
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(ddragon_state, subcpu_bus_free_r)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank))
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(ddragon_state::subcpu_bus_free_r))
 	PORT_BIT( 0xe0, IP_ACTIVE_HIGH, IPT_UNUSED )
 INPUT_PORTS_END
 
@@ -843,10 +843,10 @@ static INPUT_PORTS_START( toffy )
 	PORT_DIPSETTING(    0x05, DEF_STR( 2C_2C ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( 1C_1C ) )
 	PORT_DIPSETTING(    0x0b, DEF_STR( 4C_5C ) )
-	PORT_DIPSETTING(    0x0f, "4 Coin/6 Credits" )
-	PORT_DIPSETTING(    0x0a, "3 Coin/5 Credits" )
+	PORT_DIPSETTING(    0x0f, "4 Coins/6 Credits" )
+	PORT_DIPSETTING(    0x0a, DEF_STR( 3C_5C ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( 1C_2C ) )
-	PORT_DIPSETTING(    0x0e, "3 Coin/6 Credits" )
+	PORT_DIPSETTING(    0x0e, "3 Coins/6 Credits" )
 	PORT_DIPSETTING(    0x09, DEF_STR( 2C_5C ) )
 	PORT_DIPSETTING(    0x0d, DEF_STR( 2C_6C ) )
 	PORT_DIPSETTING(    0x08, DEF_STR( 1C_5C ) )
@@ -860,10 +860,10 @@ static INPUT_PORTS_START( toffy )
 	PORT_DIPSETTING(    0x50, DEF_STR( 2C_2C ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( 1C_1C ) )
 	PORT_DIPSETTING(    0xb0, DEF_STR( 4C_5C ) )
-	PORT_DIPSETTING(    0xf0, "4 Coin/6 Credits" )
-	PORT_DIPSETTING(    0xa0, "3 Coin/5 Credits" )
+	PORT_DIPSETTING(    0xf0, "4 Coins/6 Credits" )
+	PORT_DIPSETTING(    0xa0, DEF_STR( 3C_5C ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( 1C_2C ) )
-	PORT_DIPSETTING(    0xe0, "3 Coin/6 Credits" )
+	PORT_DIPSETTING(    0xe0, "3 Coins/6 Credits" )
 	PORT_DIPSETTING(    0x90, DEF_STR( 2C_5C ) )
 	PORT_DIPSETTING(    0xd0, DEF_STR( 2C_6C ) )
 	PORT_DIPSETTING(    0x80, DEF_STR( 1C_5C ) )
@@ -897,7 +897,6 @@ INPUT_PORTS_END
  *
  *************************************/
 
-
 static const gfx_layout char_layout =
 {
 	8,8,
@@ -928,6 +927,7 @@ static GFXDECODE_START( gfx_ddragon )
 	GFXDECODE_ENTRY( "tiles",   0, tile_layout, 256, 8 )   // colors 256-383
 GFXDECODE_END
 
+
 /*************************************
  *
  *  Machine drivers
@@ -936,7 +936,6 @@ GFXDECODE_END
 
 static constexpr XTAL MAIN_CLOCK = 12_MHz_XTAL;
 static constexpr XTAL SOUND_CLOCK = 3.579545_MHz_XTAL;
-static constexpr XTAL MCU_CLOCK = MAIN_CLOCK / 3;
 static constexpr XTAL PIXEL_CLOCK = MAIN_CLOCK / 2;
 
 void ddragon_state::ddragon(machine_config &config)
@@ -946,7 +945,7 @@ void ddragon_state::ddragon(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &ddragon_state::ddragon_main_map);
 	TIMER(config, "scantimer").configure_scanline(FUNC(ddragon_state::scanline), "screen", 0, 1);
 
-	hd63701y0_cpu_device &subcpu(HD63701Y0(config, m_subcpu, MAIN_CLOCK / 2));  // HD63701Y0P, 6 MHz / 4 internally
+	hd63701y0_cpu_device &subcpu(HD63701Y0(config, m_subcpu, MAIN_CLOCK / 2)); // HD63701Y0P, 6 MHz / 4 internally
 	subcpu.set_addrmap(AS_PROGRAM, &ddragon_state::ddragon_sub_map);
 	subcpu.out_p6_cb().set(FUNC(ddragon_state::sub_port6_w));
 
@@ -972,18 +971,18 @@ void ddragon_state::ddragon(machine_config &config)
 
 	ym2151_device &fmsnd(YM2151(config, "fmsnd", SOUND_CLOCK));
 	fmsnd.irq_handler().set_inputline(m_soundcpu, M6809_FIRQ_LINE);
-	fmsnd.add_route(0, "mono", 0.60);
-	fmsnd.add_route(1, "mono", 0.60);
+	fmsnd.add_route(0, "mono", 0.35);
+	fmsnd.add_route(1, "mono", 0.35);
 
 	MSM5205(config, m_adpcm[0], MAIN_CLOCK / 32);
-	m_adpcm[0]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<0>));   // interrupt function
-	m_adpcm[0]->set_prescaler_selector(msm5205_device::S48_4B);  // 8kHz
-	m_adpcm[0]->add_route(ALL_OUTPUTS, "mono", 0.50);
+	m_adpcm[0]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<0>));
+	m_adpcm[0]->set_prescaler_selector(msm5205_device::S48_4B); // 8kHz
+	m_adpcm[0]->add_route(ALL_OUTPUTS, "mono", 1.0);
 
 	MSM5205(config, m_adpcm[1], MAIN_CLOCK / 32);
-	m_adpcm[1]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<1>));   // interrupt function
-	m_adpcm[1]->set_prescaler_selector(msm5205_device::S48_4B);  // 8kHz
-	m_adpcm[1]->add_route(ALL_OUTPUTS, "mono", 0.50);
+	m_adpcm[1]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<1>));
+	m_adpcm[1]->set_prescaler_selector(msm5205_device::S48_4B); // 8kHz
+	m_adpcm[1]->add_route(ALL_OUTPUTS, "mono", 1.0);
 }
 
 void ddragon_state::ddragonbl(machine_config &config)
@@ -991,7 +990,7 @@ void ddragon_state::ddragonbl(machine_config &config)
 	ddragon(config);
 
 	// basic machine hardware
-	HD6309E(config.replace(), m_subcpu, MAIN_CLOCK / 8);  // 1.5MHz; labeled "ENC EL1200AR" on one PCB
+	HD6309E(config.replace(), m_subcpu, MAIN_CLOCK / 8); // 1.5MHz; labeled "ENC EL1200AR" on one PCB
 	m_subcpu->set_addrmap(AS_PROGRAM, &ddragon_state::sub_6309_map);
 }
 
@@ -1000,7 +999,7 @@ void ddragon_state::ddragonbla(machine_config &config)
 	ddragon(config);
 
 	// basic machine hardware
-	m6803_cpu_device &sub(M6803(config.replace(), "sub", MAIN_CLOCK / 2));  // 6MHz / 4 internally
+	m6803_cpu_device &sub(M6803(config.replace(), "sub", MAIN_CLOCK / 2)); // 6MHz / 4 internally
 	sub.set_addrmap(AS_PROGRAM, &ddragon_state::ddragonbla_sub_map);
 	sub.out_p2_cb().set(FUNC(ddragon_state::ddragonbla_port_w));
 }
@@ -1048,20 +1047,20 @@ void ddragon_state::ddragon6809(machine_config &config)
 	m_soundlatch->data_pending_callback().set_inputline(m_soundcpu, M6809_IRQ_LINE);
 
 	ym2203_device &ym1(YM2203(config, "ym1", 20_MHz_XTAL / 6)); // divisor not verified
-	ym1.add_route(ALL_OUTPUTS, "mono", 0.60);
+	ym1.add_route(ALL_OUTPUTS, "mono", 0.35);
 
 	ym2203_device &ym2(YM2203(config, "ym2", 20_MHz_XTAL / 6)); // divisor not verified
-	ym2.add_route(ALL_OUTPUTS, "mono", 0.60);
+	ym2.add_route(ALL_OUTPUTS, "mono", 0.35);
 
 	MSM5205(config, m_adpcm[0], 500_kHz_XTAL);
-	m_adpcm[0]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<0>));   // interrupt function
-	m_adpcm[0]->set_prescaler_selector(msm5205_device::S48_4B);  // 8kHz
-	m_adpcm[0]->add_route(ALL_OUTPUTS, "mono", 0.50);
+	m_adpcm[0]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<0>));
+	m_adpcm[0]->set_prescaler_selector(msm5205_device::S48_4B); // 8kHz
+	m_adpcm[0]->add_route(ALL_OUTPUTS, "mono", 1.0);
 
 	MSM5205(config, m_adpcm[1], 500_kHz_XTAL);
-	m_adpcm[1]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<1>));   // interrupt function
-	m_adpcm[1]->set_prescaler_selector(msm5205_device::S48_4B);  // 8kHz
-	m_adpcm[1]->add_route(ALL_OUTPUTS, "mono", 0.50);
+	m_adpcm[1]->vck_legacy_callback().set(FUNC(ddragon_state::ddragon_adpcm_int<1>));
+	m_adpcm[1]->set_prescaler_selector(msm5205_device::S48_4B); // 8kHz
+	m_adpcm[1]->add_route(ALL_OUTPUTS, "mono", 1.0);
 }
 
 void ddragon_state::ddragon2(machine_config &config)
@@ -1096,8 +1095,8 @@ void ddragon_state::ddragon2(machine_config &config)
 
 	ym2151_device &fmsnd(YM2151(config, "fmsnd", SOUND_CLOCK));
 	fmsnd.irq_handler().set_inputline(m_soundcpu, 0);
-	fmsnd.add_route(0, "mono", 0.60);
-	fmsnd.add_route(1, "mono", 0.60);
+	fmsnd.add_route(0, "mono", 0.35);
+	fmsnd.add_route(1, "mono", 0.35);
 
 	okim6295_device &oki(OKIM6295(config, "oki", 1'056'000, okim6295_device::PIN7_HIGH)); // clock frequency & pin 7 verified on bootleg PCB by Jose Tejada
 	oki.add_route(ALL_OUTPUTS, "mono", 0.20);
@@ -1129,6 +1128,7 @@ void toffy_state::toffy(machine_config &config)
 	config.device_remove("adpcm1");
 	config.device_remove("adpcm2");
 }
+
 
 /*************************************
  *
@@ -1707,6 +1707,178 @@ ROM_START( ddragon6809a )
 	ROM_LOAD( "pal16r6.2f",        0x00000, 0x104, CRC(bd76fb53) SHA1(2d0634e8edb3289a103719466465e9777606086e) )
 ROM_END
 
+/*
+  Double Dragon
+  Single bootleg board from Argentina
+
+  PCB etched 10-07-87
+
+  CPU:
+  3x EF68B09EP
+
+  RAM:
+  2x TMM2016BP (1-1)
+  7x AM2148/49 (3-2-2)
+  1x TMM2064
+
+  Audio:
+  2x YM2203
+  2x OKI 5205
+  2x Y3014
+  1x TDA2002 (8W audio amplifier)
+
+  Other:
+  1x 24.576 MHz crystal
+  1x 20.000 MHz crystal
+  1x 3.579545 MHz crystal (for audio)
+  2x 8 DIP switches banks
+  1x Jamma edge connector
+
+*/
+ROM_START( ddragon6809b )
+	ROM_REGION( 0x30000, "maincpu", 0 )
+	ROM_LOAD( "20.7e",   0x08000, 0x08000, CRC(5002d27d) SHA1(719dabbd5bf38a647a09296daba76b3e928f3d7b) ) // lot of differences
+	ROM_LOAD( "19.7g",   0x10000, 0x08000, CRC(398e950d) SHA1(b090f0ef9cc616c507a7ab3f80413dd0dc4d3655) ) // banked at 0x4000-0x8000, 4 bytes different
+	ROM_LOAD( "18.7h",   0x18000, 0x08000, CRC(154d50c4) SHA1(4ffdd29406b6c6b552344f820f83715b1c7727d1) ) // banked at 0x4000-0x8000
+	ROM_LOAD( "17.7i",   0x20000, 0x08000, CRC(6489d637) SHA1(fd17fd870e9386a3e3bdd56c8d731c73d8c70b88) ) // banked at 0x4000-0x8000, removed copyright
+
+	ROM_REGION( 0x8000, "sub", 0 ) // sprite CPU
+	ROM_LOAD( "21.7d",   0x00000, 0x8000, CRC(4437fc51) SHA1(fffcf2bec50d0b79861904b4abc607206b7794e6) )
+
+	ROM_REGION( 0x10000, "soundcpu", 0 )
+	ROM_LOAD( "16.7n",   0x08000, 0x08000, CRC(f4c72690) SHA1(c70d032355acf3f7f6586b6e57a94f80e099bf1a) )
+
+	// all the gfx roms are scrambled on this set
+	ROM_REGION( 0x08000, "chars", ROMREGION_ERASEFF )
+
+	ROM_REGION( 0x08000, "enc_chars", 0 )
+	ROM_LOAD( "13.5f",   0x00000, 0x08000, CRC(b5a54537) SHA1(a6157cde4f9738565008d11a4a6d8576ae3abfef) )
+
+	ROM_REGION( 0x80000, "sprites", 0 )
+	ROM_LOAD( "1.1t",         0x00000, 0x10000, CRC(5e810a6d) SHA1(5eba3e982b271bc284ca333429cd0b3759c9c8d1) )
+	ROM_LOAD( "2.1r",         0x10000, 0x10000, CRC(7300b785) SHA1(6d3b72bd7208e2bd790517a753c9d5192c88d20f) )
+	ROM_LOAD( "3.1q",         0x20000, 0x10000, CRC(19405de8) SHA1(ac1aa40478b92af5ccdde89812be78b7c9f7d20d) )
+	ROM_LOAD( "4.1p",         0x30000, 0x10000, CRC(4b10defd) SHA1(fb43eba7c8a7f77f0fdd6253d51b40b0e64598f5) )
+	ROM_LOAD( "5.1n",         0x40000, 0x10000, CRC(5b1bb493) SHA1(dd947d7d381af5952acece4b2cefc9fc4847ec68) )
+	ROM_LOAD( "6.1m",         0x50000, 0x10000, CRC(e8a2d2e7) SHA1(abc871e57a5280728b9f90625fb91011b848a4d8) )
+	ROM_LOAD( "7.1l",         0x60000, 0x10000, CRC(8010fcca) SHA1(9401c41088776beea91c32aaff8eb2fbe92b5e37) )
+	ROM_LOAD( "8.1j",         0x70000, 0x10000, CRC(bfa4da27) SHA1(68a649aec43e18dc79b4690c1dff2e2a6fc0065a) )
+
+	ROM_REGION( 0x40000, "tiles", 0 )
+	ROM_LOAD( "9.2e",         0x00000, 0x10000, CRC(736eff0f) SHA1(ae2ec2d5c8ab1db579a08256d874426dc5d889c6) )
+	ROM_LOAD( "10.2d",        0x10000, 0x10000, CRC(a670d088) SHA1(27e7b49645753dd039f104c3e0a7e6513a98710d) )
+	ROM_LOAD( "11.2c",        0x20000, 0x10000, CRC(4171b70d) SHA1(dc300c9bca6481417e97ad03c973e47389f261c1) )
+	ROM_LOAD( "12.2a",        0x30000, 0x10000, CRC(5f6a6d6f) SHA1(7d546a226cda81c28e7ccfb4c5daebc65072198d) )
+
+	ROM_REGION( 0x10000, "adpcm1", 0 ) // yes these really are smaller than the original game..
+	ROM_LOAD( "14.7q",        0x00000, 0x08000, CRC(678f8657) SHA1(2652fdc6719d2c889ca87802f6e2cefae59fc2eb) )
+
+	ROM_REGION( 0x10000, "adpcm2", 0 )
+	ROM_LOAD( "15.7o",        0x00000, 0x08000, CRC(10f21dea) SHA1(739cf649f91490384297a81a2cc9855acb58a1c0) )
+
+	ROM_REGION( 0x20000, "proms", 0 )
+	ROM_LOAD( "27s21.5o",        0x00000, 0x100, CRC(673f68c3) SHA1(9381453e8f868d80b6069264509a339e20e2b6b1) )
+	ROM_LOAD( "27s21.5p",        0x00000, 0x100, CRC(2dc270f2) SHA1(9f124ab2c98680bcc249218ee0de09ba49c09a84) )
+	ROM_LOAD( "27s29.6g",        0x00000, 0x200, CRC(095fb461) SHA1(7fd213fd8b8bbe30334523ccf06d4606c67b472e) )
+	ROM_LOAD( "82s129.4h",       0x00000, 0x100, CRC(7683cadd) SHA1(ff6fecf273c1d8812814cacc72fb71642ec32b6d) )
+ROM_END
+
+/*
+
+  Double Dragon bootleg (3x6809)
+  (all devices are dumped)
+
+  CPUs
+  2x MC68B09EP  (7a, 7c)    8-bit Microprocessor - main.
+  1x EF68A09EP  (7m)        8-bit Microprocessor - sound.
+  2x YM2203C    (7r, 7t)    FM Operator Type-N (OPM) - sound.
+  2x YM3014     (10q, 10r)  D/A Converter (DAC) - sound.
+  2x OKI M5205  (9s, 9t)    ADPCM Speech Syntesis IC - sound.
+  2x LM324N     (11r, 11s)  Quad Operational Amplifier - sound.
+  1x TDA2003    (10o)       Audio Amplifier - sound.
+
+  1x oscillator  20.000 MHz (5t)
+  1x oscillator  24.000 MHz (8a)
+
+  ROMs
+  7x  TMM24256A  (2-8)
+  13x M27512ZB   (1, 9-20)
+  3x  N82S129N   (4h, 5o, 5p)
+  1x  N82S147N   (6g)
+
+  RAMs
+  4x  AM2149-35DC  (2i, 2j, 4k, 4l)
+  3x  UM2148-1     (11a, 11b, 11c)
+  2x  UM6114       (4q, 4r)
+  2x  TMM2016BP-10 (5i, 8q)
+  1x  TMM2064P-10  (7k)
+  1x  D4364C-15L   (3a)
+
+  PLDs
+  1x  PAL16R4A-2   (8g)
+  1x  PAL16R6A-2CN (2f)
+
+  Others
+  1x 28x2 JAMMA edge connector
+  1x trimmer (11o)(volume)
+  2x 8 DIP switches banks (10h, 10m)
+
+*/
+ROM_START( ddragon6809c )
+	ROM_REGION( 0x30000, "maincpu", 0 )
+	ROM_LOAD( "6.7f",   0x08000, 0x08000, CRC(67e3b4f1) SHA1(4945d76b0694299f2f4739ebfba98da6d96fe4cb) ) // identical to ddragon6809
+	ROM_LOAD( "5.7g",   0x10000, 0x08000, CRC(090e2baf) SHA1(29b775c59c7a4d30a33e3d10e736cd1a83baf3bb) ) // banked at 0x4000-0x8000, identical to ddragon6809, 2 bytes different (bit4)
+	ROM_LOAD( "4.7h",   0x18000, 0x08000, CRC(154d50c4) SHA1(4ffdd29406b6c6b552344f820f83715b1c7727d1) ) // banked at 0x4000-0x8000, identical to ddragon6809b
+	ROM_LOAD( "3.7j",   0x20000, 0x08000, CRC(4052f37a) SHA1(9444a30ce32a2d35c601324d79c0ba602be4f288) ) // banked at 0x4000-0x8000, identical to ddragon6809a
+
+	ROM_REGION( 0x8000, "sub", 0 ) // sprite CPU
+	ROM_LOAD( "7.7d",   0x00000, 0x8000,  CRC(4437fc51) SHA1(fffcf2bec50d0b79861904b4abc607206b7794e6) )  // identical to ddragon6809b
+
+	ROM_REGION( 0x10000, "soundcpu", 0 )
+	ROM_LOAD( "2.7n",   0x08000, 0x08000, CRC(d68b5fe7) SHA1(b9b67ef40abb5b92978fe41c4002dd577fe60828) )  // a lot of differences
+
+	// all the gfx roms are scrambled on this set
+	ROM_REGION( 0x08000, "chars", ROMREGION_ERASEFF )
+
+	ROM_REGION( 0x08000, "enc_chars", 0 )
+	ROM_LOAD( "8.5f",   0x00000, 0x08000, CRC(b5a54537) SHA1(a6157cde4f9738565008d11a4a6d8576ae3abfef) )  // identical to ddragon6809b
+
+	ROM_REGION( 0x80000, "sprites", 0 )  // different ROMs have 4 bytes at 64ec and other 4 bytes at e4ec
+	ROM_LOAD( "9.1t",         0x00000, 0x10000, CRC(a4baa5ba) SHA1(25a7434a0a3ea33faa0881e6a372b1ee50b19cdd) )  // different, identical to ddragonm
+	ROM_LOAD( "10.1r",        0x10000, 0x10000, CRC(7300b785) SHA1(6d3b72bd7208e2bd790517a753c9d5192c88d20f) )  // identical to ddragon6809b
+	ROM_LOAD( "11.1q",        0x20000, 0x10000, CRC(6248bcc4) SHA1(27d160ad489ea32f4bda652f7f8f5e32257f34a1) )  // different, identical to ddragonm
+	ROM_LOAD( "12.1p",        0x30000, 0x10000, CRC(4b10defd) SHA1(fb43eba7c8a7f77f0fdd6253d51b40b0e64598f5) )  // identical to ddragon6809b
+	ROM_LOAD( "13.1n",        0x40000, 0x10000, CRC(15b86326) SHA1(5da97dc3ac500a4ee38ee625a14e9efc1ca6bb5b) )  // different, identical to ddragonm
+	ROM_LOAD( "14.1m",        0x50000, 0x10000, CRC(a73bc8f5) SHA1(286cd04dfc8b6bfc26faf8ec246ffe9e7bfe87a4) )  // different, identical to ddragonm
+	ROM_LOAD( "15.1l",        0x60000, 0x10000, CRC(f80e81a6) SHA1(e74768d47985f59b9eb45013127f26ea8e0ddc28) )  // different, identical to ddragonm
+	ROM_LOAD( "16.1j",        0x70000, 0x10000, CRC(bfa4da27) SHA1(68a649aec43e18dc79b4690c1dff2e2a6fc0065a) )  // identical to ddragon6809b
+
+	ROM_REGION( 0x40000, "tiles", 0 )
+	ROM_LOAD( "17.2e",        0x00000, 0x10000, CRC(736eff0f) SHA1(ae2ec2d5c8ab1db579a08256d874426dc5d889c6) )  // identical to ddragon6809b
+	ROM_LOAD( "18.2d",        0x10000, 0x10000, CRC(a670d088) SHA1(27e7b49645753dd039f104c3e0a7e6513a98710d) )  // identical to ddragon6809b
+	ROM_LOAD( "19.2b",        0x20000, 0x10000, CRC(4171b70d) SHA1(dc300c9bca6481417e97ad03c973e47389f261c1) )  // identical to ddragon6809b
+	ROM_LOAD( "20.2a",        0x30000, 0x10000, CRC(5f6a6d6f) SHA1(7d546a226cda81c28e7ccfb4c5daebc65072198d) )  // identical to ddragon6809b
+
+	ROM_REGION( 0x10000, "adpcm_rom", 0 )
+	ROM_LOAD( "1.7o",         0x0000, 0x10000, CRC(9b490076) SHA1(ec962b0ab95c0679d0258a269dcc6896286231b4) )
+
+	ROM_REGION( 0x10000, "adpcm1", 0 ) // smaller than the original game, and using 2nd half of the 01.7o ROM
+	ROM_COPY( "adpcm_rom",    0x8000, 0x0000, 0x8000 )
+
+	ROM_REGION( 0x10000, "adpcm2", 0 ) // smaller than the original game, and using 1st half of the 01.7o ROM
+	ROM_COPY( "adpcm_rom",    0x0000, 0x0000, 0x8000 )
+
+	ROM_REGION( 0x20000, "proms", 0 )
+	ROM_LOAD( "n82s129n_4.5o",  0x00000, 0x100, CRC(673f68c3) SHA1(9381453e8f868d80b6069264509a339e20e2b6b1) )  // identical to ddragon6809b
+	ROM_LOAD( "n82s129n_3.5p",  0x00000, 0x100, CRC(2dc270f2) SHA1(9f124ab2c98680bcc249218ee0de09ba49c09a84) )  // identical to ddragon6809b
+	ROM_LOAD( "n82s147n_5.6g",  0x00000, 0x200, CRC(095fb461) SHA1(7fd213fd8b8bbe30334523ccf06d4606c67b472e) )  // identical to ddragon6809b
+	ROM_LOAD( "n82s129n_2.4h",  0x00000, 0x100, CRC(2078871e) SHA1(04f48bb795a54491a06cbd1d32de921668bf2ee8) )  // only first half with data
+
+	ROM_REGION( 0x300, "plds", 0 )
+	ROM_LOAD( "pal16r4a-2_dd.8g",   0x000, 0x104, CRC(0089e05e) SHA1(bd43d03d1d8371cac3cd76b187114ed1f3b58cd1) )
+	ROM_LOAD( "pal16r6a-2cn_1.2f",  0x000, 0x104, CRC(faae3e9e) SHA1(3bbb5e159672dc1cf71166257c72905a842570ab) )
+ROM_END
+
 
 ROM_START( ddragon2 )
 	ROM_REGION( 0x30000, "maincpu", 0 )
@@ -2107,6 +2279,27 @@ ROM_START( toffy )
 	ROM_LOAD( "5-27512.rom", 0x10000, 0x10000, CRC(4f91eec6) SHA1(18a5f98dfba33837b73d032a6153eeb03263684b) )
 ROM_END
 
+ROM_START( toffya ) // original Midas board with original ROM stickers
+	ROM_REGION( 0x30000, "maincpu", 0 )
+	ROM_LOAD( "mde2.u70", 0x00000, 0x10000, CRC(a27f1b49) SHA1(26aa1bc5af09f22207d764a598d99fa9218608e9) )
+	ROM_RELOAD(           0x10000, 0x10000 )
+
+	ROM_REGION( 0x10000, "soundcpu", 0 )
+	ROM_LOAD( "mde1.u142", 0x00000, 0x10000, CRC(541bd7f0) SHA1(3f0097f5877eae50651f94d46d7dd9127037eb6e) ) // 1ST AND 2ND HALF IDENTICAL
+
+	ROM_REGION( 0x10000, "chars", 0 )
+	ROM_LOAD( "mde7.u35", 0x00000, 0x10000, CRC(6ddc2867) SHA1(9b3c053048efea768651633a76cb636f40289b79) ) // 1xxxxxxxxxxxxxxx = 0xFF
+
+	ROM_REGION( 0x20000, "tiles", 0 )
+	// the same as 'Dangerous Dungeons' once decrypted
+	ROM_LOAD( "mde4.u78", 0x00000, 0x10000, CRC(9506b10d) SHA1(1a205a519fdbb7a3149c2e72c8620e79caa32f0d) ) // 1xxxxxxxxxxxxxxx = 0x00
+	ROM_LOAD( "mde3.u77", 0x10000, 0x10000, CRC(77c097cc) SHA1(569b36a2be149d9c8b361a4a73c628c3c7471db4) ) // 1xxxxxxxxxxxxxxx = 0x00
+
+	ROM_REGION( 0x20000, "sprites", 0 )
+	ROM_LOAD( "mde6.u80", 0x00000, 0x10000, CRC(aeef092a) SHA1(520148f663695207567f25fbb0634a650c7986e5) ) // 1ST AND 2ND HALF IDENTICAL
+	ROM_LOAD( "mde5.u79", 0x10000, 0x10000, CRC(14b52f76) SHA1(8d94bb1b404c483c0dbd69d40d9095fb97bd2faa) ) // 1ST AND 2ND HALF IDENTICAL
+ROM_END
+
 ROM_START( stoffy )
 	ROM_REGION( 0x30000, "maincpu", 0 )
 	ROM_LOAD( "2.u70", 0x00000, 0x10000, CRC(6203aeb5) SHA1(e57aa520e8096df01461b235f77557c267571a57) )
@@ -2211,6 +2404,7 @@ void toffy_state::init_toffy()
 	}
 
 	// should the sound ROM be bitswapped too?
+	// probably not, as the unencrypted set's sound ROM matches
 }
 
 void ddragon_state::init_ddragon6809()
@@ -2253,6 +2447,8 @@ GAME( 1987, ddragonbl,    ddragon,  ddragonbl,   ddragon,  ddragon_state,  init_
 GAME( 1987, ddragonbla,   ddragon,  ddragonbla,  ddragon,  ddragon_state,  init_ddragon,     ROT0, "bootleg",                               "Double Dragon (bootleg with MC6803)",         MACHINE_SUPPORTS_SAVE )
 GAME( 1987, ddragon6809,  ddragon,  ddragon6809, ddragon,  ddragon_state,  init_ddragon6809, ROT0, "bootleg",                               "Double Dragon (bootleg with 3xM6809, set 1)", MACHINE_NOT_WORKING )
 GAME( 1987, ddragon6809a, ddragon,  ddragon6809, ddragon,  ddragon_state,  init_ddragon6809, ROT0, "bootleg",                               "Double Dragon (bootleg with 3xM6809, set 2)", MACHINE_NOT_WORKING )
+GAME( 1987, ddragon6809b, ddragon,  ddragon6809, ddragon,  ddragon_state,  init_ddragon6809, ROT0, "bootleg",                               "Double Dragon (bootleg with 3xM6809, set 3)", MACHINE_NOT_WORKING )
+GAME( 1987, ddragon6809c, ddragon,  ddragon6809, ddragon,  ddragon_state,  init_ddragon6809, ROT0, "bootleg",                               "Double Dragon (bootleg with 3xM6809, set 4)", MACHINE_NOT_WORKING )
 
 GAME( 1988, ddragon2,     0,        ddragon2,    ddragon2, ddragon_state,  init_ddragon2,    ROT0, "Technos Japan", "Double Dragon II: The Revenge (World)",       MACHINE_SUPPORTS_SAVE )
 GAME( 1988, ddragon2u,    ddragon2, ddragon2,    ddragon2, ddragon_state,  init_ddragon2,    ROT0, "Technos Japan", "Double Dragon II: The Revenge (US)",          MACHINE_SUPPORTS_SAVE )
@@ -2267,7 +2463,8 @@ GAME( 1992, ddungeone,    ddungeon, darktowr,    ddungeon, darktowr_state, init_
 GAME( 1992, darktowr,     0,        darktowr,    darktowr, darktowr_state, init_darktowr,    ROT0, "The Game Room",           "Dark Tower",                    MACHINE_SUPPORTS_SAVE )
 
 // these run on their own board, but are basically the same game. Toffy even has 'Dangerous Dungeons' text in it
-GAME( 1993, toffy,        0,         toffy,      toffy,    toffy_state,    init_toffy,       ROT0, "Midas",                   "Toffy",                         MACHINE_SUPPORTS_SAVE )
+GAME( 1993, toffy,        0,         toffy,      toffy,    toffy_state,    init_toffy,       ROT0, "Midas",                   "Toffy (encrypted)",             MACHINE_SUPPORTS_SAVE )
+GAME( 1993, toffya,       toffy,     toffy,      toffy,    toffy_state,    empty_init,       ROT0, "Midas",                   "Toffy (unencrypted)",           MACHINE_SUPPORTS_SAVE )
 
 GAME( 1994, stoffy,       0,         toffy,      toffy,    toffy_state,    init_toffy,       ROT0, "Midas",                   "Super Toffy",                   MACHINE_SUPPORTS_SAVE )
 GAME( 1994, stoffyu,      stoffy,    toffy,      toffy,    toffy_state,    init_toffy,       ROT0, "Midas (Unico license)",   "Super Toffy (Unico license)",   MACHINE_SUPPORTS_SAVE )

@@ -86,9 +86,6 @@
     - hookup adc0838, reads from i2c;
     - convert epic to be a device, make it input_merger/irq_callback compliant;
     - (more intermediate steps for proper PCI conversions here)
-    - jpark3: attract mode demo play acts weird, the dinosaur gets submerged
-      and camera doesn't really know what to do, CPU core bug?
-    - jpark3: crashes during second attract cycle;
     - sscopex: attract mode black screens (coin still works), sogeki/sscopefh are unaffected;
     - mocapglf, sscopefh, sscopex: implement 2nd screen output, controlled by IP90C63A;
     \- sscopex/sogeki desyncs during gameplay intro, leaves heavy trails in gameplay;
@@ -101,7 +98,9 @@
     Other notes:
     - "Distribution error" means there's a region mismatch.
     - Hold TEST while booting (from the very start) to initialize the RTC for most games.
-    - It seems that p911 has 3 unique regional images: U/E, K/A, and J. If you try booting, for example, U region on a K/A image, it won't find some files and will error out with "distribution error".
+    - It seems that p911 has 3 unique regional images: U/E, K/A, and J. If you try booting,
+      for example, U region on a K/A image, it won't find some files and will error
+      out with "distribution error".
     - mocapglf: enable "show diag" at boot then disable it once the diag text appears.
       This will allow game to bypass the I/O SENSOR error later on.
 
@@ -391,10 +390,10 @@ The golf club acts like a LED gun. PCB power input is 12V.
 
 #include "emu.h"
 
-#include "cpu/powerpc/ppc.h"
-#include "cpu/upd78k/upd78k4.h"
 #include "bus/ata/ataintf.h"
 #include "bus/ata/hdd.h"
+#include "cpu/powerpc/ppc.h"
+#include "cpu/upd78k/upd78k4.h"
 #include "machine/ds2430a.h"
 #include "machine/ins8250.h"
 #include "machine/k056230.h"
@@ -407,6 +406,8 @@ The golf club acts like a LED gun. PCB power input is 12V.
 #include "emupal.h"
 #include "screen.h"
 #include "speaker.h"
+
+#include <iostream>
 
 // configurable logging
 //#define LOG_WARN  (1U << 1)
@@ -452,27 +453,27 @@ public:
 	{
 	}
 
-	void viper(machine_config &config);
-	void viper_ppp(machine_config &config);
-	void viper_omz(machine_config &config);
-	void viper_fullbody(machine_config &config);
-	void viper_fbdongle(machine_config &config);
+	void viper(machine_config &config) ATTR_COLD;
+	void viper_ppp(machine_config &config) ATTR_COLD;
+	void viper_omz(machine_config &config) ATTR_COLD;
+	void viper_fullbody(machine_config &config) ATTR_COLD;
+	void viper_fbdongle(machine_config &config) ATTR_COLD;
 
-	void init_viper();
-	void init_vipercf();
-	void init_viperhd();
+	void init_viper() ATTR_COLD;
+	void init_vipercf() ATTR_COLD;
+	void init_viperhd() ATTR_COLD;
 
 	int ds2430_combined_r();
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	virtual uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
 	required_device<voodoo_3_device> m_voodoo;
 private:
-	void mpc8240_soc_map(address_map &map);
+	void mpc8240_soc_map(address_map &map) ATTR_COLD;
 
 	void unk2_w(offs_t offset, uint64_t data, uint64_t mem_mask = ~0);
 	uint64_t voodoo3_io_r(offs_t offset, uint64_t mem_mask = ~0);
@@ -515,9 +516,9 @@ private:
 	uint32_t m_voodoo3_pci_reg[0x100];
 	uint32_t m_mpc8240_regs[256/4];
 
-	void viper_map(address_map &map);
-	void viper_ppp_map(address_map &map);
-	void omz3d_map(address_map &map);
+	void viper_map(address_map &map) ATTR_COLD;
+	void viper_ppp_map(address_map &map) ATTR_COLD;
+	void omz3d_map(address_map &map) ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(epic_global_timer_callback);
 	TIMER_CALLBACK_MEMBER(i2c_timer_callback);
@@ -605,8 +606,8 @@ private:
 
 	void epic_update_interrupts();
 	void mpc8240_interrupt(int irq);
-	void mpc8240_epic_init();
-	void mpc8240_epic_reset(void);
+	void mpc8240_epic_init() ATTR_COLD;
+	void mpc8240_epic_reset() ATTR_COLD;
 
 	struct MPC8240_I2C {
 		uint8_t adr = 0U;
@@ -653,7 +654,7 @@ public:
 
 protected:
 	virtual uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect) override;
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 private:
 	std::unique_ptr<bitmap_rgb32> m_voodoo_buf;
 	std::unique_ptr<bitmap_rgb32> m_ttl_buf;
@@ -1154,8 +1155,6 @@ TIMER_CALLBACK_MEMBER(viper_state::epic_global_timer_callback)
 
 void viper_state::epic_update_interrupts()
 {
-	int i;
-
 	int irq = -1;
 	int priority = -1;
 
@@ -1164,7 +1163,7 @@ void viper_state::epic_update_interrupts()
 		return;
 
 	// find the highest priority pending interrupt
-	for (i=MPC8240_NUM_INTERRUPTS-1; i >= 0; i--)
+	for (int i = MPC8240_NUM_INTERRUPTS - 1; i >= 0; i--)
 	{
 		if (m_epic.irq[i].pending)
 		{
@@ -1215,11 +1214,9 @@ void viper_state::mpc8240_epic_init()
 	m_epic.global_timer[3].timer = timer_alloc(FUNC(viper_state::epic_global_timer_callback), this);
 }
 
-void viper_state::mpc8240_epic_reset(void)
+void viper_state::mpc8240_epic_reset()
 {
-	int i;
-
-	for (i=0; i < MPC8240_NUM_INTERRUPTS; i++)
+	for (int i = 0; i < MPC8240_NUM_INTERRUPTS; i++)
 	{
 		m_epic.irq[i].mask = 1;
 	}
@@ -1259,15 +1256,11 @@ uint64_t viper_state::cf_card_data_r(offs_t offset, uint64_t mem_mask)
 		switch (offset & 0xf)
 		{
 			case 0x8:   // Duplicate Even RD Data
-			{
 				r |= m_ata->cs0_r(0, mem_mask >> 16) << 16;
 				break;
-			}
 
 			default:
-			{
 				throw emu_fatalerror("%s:cf_card_data_r: IDE reg %02X\n", machine().describe_context().c_str(), offset & 0xf);
-			}
 		}
 	}
 	return r;
@@ -1280,15 +1273,11 @@ void viper_state::cf_card_data_w(offs_t offset, uint64_t data, uint64_t mem_mask
 		switch (offset & 0xf)
 		{
 			case 0x8:   // Duplicate Even RD Data
-			{
 				m_ata->cs0_w(0, data >> 16, mem_mask >> 16);
 				break;
-			}
 
 			default:
-			{
 				throw emu_fatalerror("%s:cf_card_data_w: IDE reg %02X, %04X\n", machine().describe_context().c_str(), offset & 0xf, (uint16_t)(data >> 16));
-			}
 		}
 	}
 }
@@ -1311,30 +1300,22 @@ uint64_t viper_state::cf_card_r(offs_t offset, uint64_t mem_mask)
 				case 0x5:   // Cylinder High
 				case 0x6:   // Select Card/Head
 				case 0x7:   // Status
-				{
 					r |= m_ata->cs0_r(offset & 7, mem_mask >> 16) << 16;
 					break;
-				}
 
 				//case 0x8: // Duplicate Even RD Data
 				//case 0x9: // Duplicate Odd RD Data
 
 				case 0xd:   // Duplicate Error
-				{
 					r |= m_ata->cs0_r(1, mem_mask >> 16) << 16;
 					break;
-				}
 				case 0xe:   // Alt Status
 				case 0xf:   // Drive Address
-				{
 					r |= m_ata->cs1_r(offset & 7, mem_mask >> 16) << 16;
 					break;
-				}
 
 				default:
-				{
-					printf("%s:compact_flash_r: IDE reg %02X\n", machine().describe_context().c_str(), offset & 0xf);
-				}
+					util::stream_format(std::cerr, "%s:compact_flash_r: IDE reg %02X\n", machine().describe_context(), offset & 0xf);
 			}
 		}
 		else
@@ -1374,30 +1355,22 @@ void viper_state::cf_card_w(offs_t offset, uint64_t data, uint64_t mem_mask)
 				case 0x5:   // Cylinder High
 				case 0x6:   // Select Card/Head
 				case 0x7:   // Command
-				{
 					m_ata->cs0_w(offset & 7, data >> 16, mem_mask >> 16);
 					break;
-				}
 
 				//case 0x8: // Duplicate Even WR Data
 				//case 0x9: // Duplicate Odd WR Data
 
 				case 0xd:   // Duplicate Features
-				{
 					m_ata->cs0_w(1, data >> 16, mem_mask >> 16);
 					break;
-				}
 				case 0xe:   // Device Ctl
 				case 0xf:   // Reserved
-				{
 					m_ata->cs1_w(offset & 7, data >> 16, mem_mask >> 16);
 					break;
-				}
 
 				default:
-				{
 					throw emu_fatalerror("%s:compact_flash_w: IDE reg %02X, data %04X\n", machine().describe_context().c_str(), offset & 0xf, (uint16_t)((data >> 16) & 0xffff));
-				}
 			}
 		}
 		else if (offset >= 0x100)
@@ -1405,7 +1378,6 @@ void viper_state::cf_card_w(offs_t offset, uint64_t data, uint64_t mem_mask)
 			switch (offset)
 			{
 				case 0x100:
-				{
 					if ((data >> 16) & 0x80)
 					{
 						m_cf_card_ide = 1;
@@ -1413,11 +1385,9 @@ void viper_state::cf_card_w(offs_t offset, uint64_t data, uint64_t mem_mask)
 						m_ata->reset();
 					}
 					break;
-				}
+
 				default:
-				{
 					throw emu_fatalerror("%s:compact_flash_w: reg %02X, data %04X\n", machine().describe_context().c_str(), offset, (uint16_t)((data >> 16) & 0xffff));
-				}
 			}
 		}
 	}
@@ -1479,33 +1449,19 @@ uint32_t viper_state::voodoo3_pci_r(int function, int reg, uint32_t mem_mask)
 	switch (reg)
 	{
 		case 0x00:      // PCI Vendor ID (0x121a = 3dfx), Device ID (0x0005 = Voodoo 3)
-		{
 			return 0x0005121a;
-		}
 		case 0x08:      // Device class code
-		{
 			return 0x03000000;
-		}
 		case 0x10:      // memBaseAddr0
-		{
 			return m_voodoo3_pci_reg[0x10/4];
-		}
 		case 0x14:      // memBaseAddr1
-		{
 			return m_voodoo3_pci_reg[0x14/4];
-		}
 		case 0x18:      // memBaseAddr1
-		{
 			return m_voodoo3_pci_reg[0x18/4];
-		}
 		case 0x40:      // fabId
-		{
 			return m_voodoo3_pci_reg[0x40/4];
-		}
 		case 0x50:      // cfgScratch
-		{
 			return m_voodoo3_pci_reg[0x50/4];
-		}
 
 		default:
 			throw emu_fatalerror("voodoo3_pci_r: %08X at %08X\n", reg, m_maincpu->pc());
@@ -1519,12 +1475,9 @@ void viper_state::voodoo3_pci_w(int function, int reg, uint32_t data, uint32_t m
 	switch (reg)
 	{
 		case 0x04:      // Command register
-		{
 			m_voodoo3_pci_reg[0x04/4] = data;
 			break;
-		}
 		case 0x10:      // memBaseAddr0
-		{
 			if (data == 0xffffffff)
 			{
 				m_voodoo3_pci_reg[0x10/4] = 0xfe000000;
@@ -1534,9 +1487,7 @@ void viper_state::voodoo3_pci_w(int function, int reg, uint32_t data, uint32_t m
 				m_voodoo3_pci_reg[0x10/4] = data;
 			}
 			break;
-		}
 		case 0x14:      // memBaseAddr1
-		{
 			if (data == 0xffffffff)
 			{
 				m_voodoo3_pci_reg[0x14/4] = 0xfe000008;
@@ -1546,9 +1497,7 @@ void viper_state::voodoo3_pci_w(int function, int reg, uint32_t data, uint32_t m
 				m_voodoo3_pci_reg[0x14/4] = data;
 			}
 			break;
-		}
 		case 0x18:      // ioBaseAddr
-		{
 			if (data == 0xffffffff)
 			{
 				m_voodoo3_pci_reg[0x18/4] = 0xffffff01;
@@ -1558,21 +1507,14 @@ void viper_state::voodoo3_pci_w(int function, int reg, uint32_t data, uint32_t m
 				m_voodoo3_pci_reg[0x18/4] = data;
 			}
 			break;
-		}
 		case 0x3c:      // InterruptLine
-		{
 			break;
-		}
 		case 0x40:      // fabId
-		{
 			m_voodoo3_pci_reg[0x40/4] = data;
 			break;
-		}
 		case 0x50:      // cfgScratch
-		{
 			m_voodoo3_pci_reg[0x50/4] = data;
 			break;
-		}
 
 		default:
 			throw emu_fatalerror("voodoo3_pci_w: %08X, %08X at %08X\n", data, reg, m_maincpu->pc());
@@ -1880,7 +1822,7 @@ static INPUT_PORTS_START( viper )
 	PORT_DIPSETTING( 0x08, DEF_STR( Off ) )
 	PORT_DIPSETTING( 0x00, DEF_STR( On ) )
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_UNKNOWN )
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ds2430", ds2430a_device, data_r)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ds2430", FUNC(ds2430a_device::data_r))
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN ) // if this bit is 0, loads a disk copier instead
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_UNKNOWN )
 
@@ -2165,7 +2107,7 @@ INPUT_PORTS_START( p9112 )
 	PORT_INCLUDE( p911 )
 
 	PORT_MODIFY("IN2")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(viper_state, ds2430_combined_r)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(viper_state::ds2430_combined_r))
 INPUT_PORTS_END
 
 INPUT_PORTS_START( mfightc )
@@ -2578,7 +2520,7 @@ void viper_state::viper(machine_config &config)
 
 	ATA_INTERFACE(config, m_ata).options(ata_devices, "hdd", nullptr, true);
 
-	PC16552D(config, "duart_com", 0);
+	PC16552D(config, "duart_com");
 	// TODO: unverified clocks and channel types, likely connects to sensor motion based games
 	NS16550(config, "duart_com:chan0", XTAL(19'660'800));
 	NS16550(config, "duart_com:chan1", XTAL(19'660'800)).out_int_callback().set(FUNC(viper_state::uart_int));
@@ -2605,12 +2547,11 @@ void viper_state::viper(machine_config &config)
 	PALETTE(config, "palette").set_entries(65536);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
-	DMADAC(config, "dacl").add_route(ALL_OUTPUTS, "lspeaker", 1.0);
-	DMADAC(config, "dacr").add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+	SPEAKER(config, "speaker", 2).front();
+	DMADAC(config, "dacl").add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+	DMADAC(config, "dacr").add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 
-	M48T58(config, "m48t58", 0);
+	M48T58(config, "m48t58");
 
 	// Each IRQ3 will update the data buffers with 256 samples, and the playback rate is always 44100hz.
 	// The frequency is picked such that the DMADAC buffer should never overflow or underflow.
@@ -2629,12 +2570,10 @@ void viper_state::viper_ppp(machine_config &config)
 void viper_state::viper_fullbody(machine_config &config)
 {
 	viper(config);
-	config.device_remove("lspeaker");
-	config.device_remove("rspeaker");
-	SPEAKER(config, "front").front_center();
-	SPEAKER(config, "rear").rear_center();
-	DMADAC(config.replace(), "dacl").add_route(ALL_OUTPUTS, "front", 1.0);
-	DMADAC(config.replace(), "dacr").add_route(ALL_OUTPUTS, "rear", 1.0);
+	config.device_remove("speaker");
+	SPEAKER(config, "speaker", 2).front_center(0).rear_center(1);
+	DMADAC(config.replace(), "dacl").add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+	DMADAC(config.replace(), "dacr").add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 }
 
 void viper_state::viper_fbdongle(machine_config &config)
@@ -2990,6 +2929,19 @@ ROM_START(sscopex)
 	VIPER_BIOS
 
 	ROM_REGION(0x28, "ds2430", ROMREGION_ERASE00)       /* DS2430 */
+	ROM_LOAD("ds2430.u3", 0x00, 0x28, CRC(e4f44830) SHA1(97a43ae1605b59ffc57b59608f46e6258dcee5ba) )
+
+	ROM_REGION(0x2000, "m48t58", ROMREGION_ERASE00)     /* M48T58 Timekeeper NVRAM */
+	ROM_LOAD("a13eaa_nvram.u39", 0x000000, 0x2000, CRC(7b0e1ac8) SHA1(1ea549964539e27f87370e9986bfa44eeed037cd))
+
+	DISK_REGION( "ata:0:hdd" )
+	DISK_IMAGE( "a13c02", 0, SHA1(d740784fa51a3f43695ea95e23f92ef05f43284a) )
+ROM_END
+
+ROM_START(sscopexu)
+	VIPER_BIOS
+
+	ROM_REGION(0x28, "ds2430", ROMREGION_ERASE00)       /* DS2430 */
 	ROM_LOAD("ds2430.u3", 0x00, 0x28, CRC(427a65ef) SHA1(745e951715ece9f60898b7ed4809e69558145d2d))
 
 	ROM_REGION(0x2000, "m48t58", ROMREGION_ERASE00)     /* M48T58 Timekeeper NVRAM */
@@ -3252,7 +3204,7 @@ ROM_START(mfightcc) //*
 ROM_END
 
 
-} // Anonymous namespace
+} // anonymous namespace
 
 
 /*****************************************************************************/
@@ -3281,8 +3233,9 @@ GAME(2000, p911ud,    p911,      viper_fullbody,     p911,       viper_state, in
 GAME(2000, p911ed,    p911,      viper_fullbody,     p911,       viper_state, init_vipercf,  ROT90, "Konami", "Police 24/7 (ver EAD)", MACHINE_NOT_WORKING)
 GAME(2000, p911j,     p911,      viper_fullbody,     p911,       viper_state, init_vipercf,  ROT90, "Konami", "The Keisatsukan: Shinjuku 24-ji (ver JAE)", MACHINE_NOT_WORKING)
 GAME(2001, p9112,     kviper,    viper_fbdongle,     p9112,      viper_state, init_vipercf,  ROT90, "Konami", "Police 911 2 (VER. UAA:B)", MACHINE_NOT_WORKING)
-GAME(2001, sscopex,   kviper,    viper,     sscopex,    viper_subscreen_state, init_vipercf,  ROT0,  "Konami", "Silent Scope EX (ver UAA)", MACHINE_NOT_WORKING)
-GAME(2001, sogeki,    sscopex,   viper,     sogeki,     viper_subscreen_state, init_vipercf,  ROT0,  "Konami", "Sogeki (ver JAA)", MACHINE_NOT_WORKING)
+GAME(2001, sscopex,   kviper,    viper,     sscopex,    viper_subscreen_state, init_vipercf,  ROT0,  "Konami", "Silent Scope EX (ver EAC 1.20)", MACHINE_NOT_WORKING)
+GAME(2001, sscopexu,  sscopex,   viper,     sscopex,    viper_subscreen_state, init_vipercf,  ROT0,  "Konami", "Silent Scope EX (ver UAC 1.20)", MACHINE_NOT_WORKING)
+GAME(2001, sogeki,    sscopex,   viper,     sogeki,     viper_subscreen_state, init_vipercf,  ROT0,  "Konami", "Sogeki (ver JRB 1.01)", MACHINE_NOT_WORKING)
 GAME(2002, sscopefh,  kviper,    viper,     sscopefh,   viper_subscreen_state, init_vipercf,  ROT0,  "Konami", "Silent Scope Fortune Hunter (ver EAA)", MACHINE_NOT_WORKING) // UK only?
 GAME(2001, thrild2,   kviper,    viper,     thrild2,    viper_state, init_vipercf,  ROT0,  "Konami", "Thrill Drive 2 (ver EBB)", MACHINE_NOT_WORKING)
 GAME(2001, thrild2j,  thrild2,   viper,     gticlub2,   viper_state, init_vipercf,  ROT0,  "Konami", "Thrill Drive 2 (ver JAA)", MACHINE_NOT_WORKING)

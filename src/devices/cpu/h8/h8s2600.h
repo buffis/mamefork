@@ -8,7 +8,6 @@
 
     Adds the multiply-and-accumulate register and related instructions
 
-
 ***************************************************************************/
 
 #ifndef MAME_CPU_H8_H8S2600_H
@@ -24,8 +23,8 @@ protected:
 
 	virtual std::unique_ptr<util::disasm_interface> create_disassembler() override;
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	virtual void do_exec_full() override;
 	virtual void do_exec_partial() override;

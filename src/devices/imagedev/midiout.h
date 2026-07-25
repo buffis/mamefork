@@ -33,7 +33,7 @@ class midiout_device :    public device_t,
 {
 public:
 	// construction/destruction
-	midiout_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	midiout_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 	~midiout_device();
 
 	// device_image_interface implementation
@@ -54,8 +54,8 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_serial_interface implementation
 	virtual void rcv_complete() override;    // Rx completed receiving byte

@@ -29,10 +29,10 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 	// sound stream update overrides
-	virtual void sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs) override;
+	virtual void sound_stream_update(sound_stream &stream) override;
 
 private:
 	// internal state
@@ -73,6 +73,8 @@ void pv1000_sound_device::device_start()
 void pv1000_sound_device::voice_w(offs_t offset, uint8_t data)
 {
 	offset &= 0x03;
+	m_sh_channel->update();
+
 	switch (offset)
 	{
 	case 0x03:
@@ -117,14 +119,12 @@ void pv1000_sound_device::voice_w(offs_t offset, uint8_t data)
   square1 via i/o$F8 is -6dB, square2 via i/o$F9 is -3dB, defining square3 via i/o$FA as 0dB
 */
 
-void pv1000_sound_device::sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs)
+void pv1000_sound_device::sound_stream_update(sound_stream &stream)
 {
-	auto &buffer = outputs[0];
-
 	// Each channel has a different volume via resistor mixing which correspond to -6dB, -3dB, 0dB drops
 	static const int volumes[3] = { 0x1000, 0x1800, 0x2000 };
 
-	for (int index = 0; index < buffer.samples(); index++)
+	for (int index = 0; index < stream.samples(); index++)
 	{
 		s32 sum = 0;
 
@@ -161,7 +161,7 @@ void pv1000_sound_device::sound_stream_update(sound_stream &stream, std::vector<
 			sum += m_voice[2].val * volumes[2];
 		}
 
-		buffer.put_int(index, sum, 32768);
+		stream.put_int(0, index, sum, 32768);
 	}
 }
 
@@ -186,8 +186,8 @@ public:
 	void pv1000(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	void io_w(offs_t offset, uint8_t data);
@@ -197,8 +197,8 @@ private:
 	uint8_t m_io_regs[8]{};
 
 	emu_timer *m_irq_on_timer = nullptr;
-	emu_timer *m_busrq_on_timer = nullptr;
-	emu_timer *m_busrq_off_timer = nullptr;
+	emu_timer *m_busreq_on_timer = nullptr;
+	emu_timer *m_busreq_off_timer = nullptr;
 	uint8_t m_irq_enabled = 0;
 	uint8_t m_irq_active = 0;
 	uint8_t m_pcg_bank = 0;
@@ -220,12 +220,12 @@ private:
 
 	uint32_t screen_update_pv1000(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	TIMER_CALLBACK_MEMBER(d65010_irq_on_cb);
-	TIMER_CALLBACK_MEMBER(d65010_busrq_on_cb);
-	TIMER_CALLBACK_MEMBER(d65010_busrq_off_cb);
+	TIMER_CALLBACK_MEMBER(d65010_busreq_on_cb);
+	TIMER_CALLBACK_MEMBER(d65010_busreq_off_cb);
 	DECLARE_DEVICE_IMAGE_LOAD_MEMBER(cart_load);
 
-	void pv1000_mem(address_map &map);
-	void pv1000_io(address_map &map);
+	void pv1000_mem(address_map &map) ATTR_COLD;
+	void pv1000_io(address_map &map) ATTR_COLD;
 };
 
 
@@ -296,7 +296,7 @@ void pv1000_state::io_w(offs_t offset, uint8_t data)
 			int vpos = m_screen->vpos();
 			if (hpos < 248 && vpos >= 26 && vpos < 192+26)
 			{
-				m_maincpu->set_input_line(Z80_INPUT_LINE_BUSRQ, ASSERT_LINE);
+				m_maincpu->set_input_line(Z80_INPUT_LINE_BUSREQ, ASSERT_LINE);
 				// The de-assertion is always automatically scheduled
 			}
 		}
@@ -454,29 +454,29 @@ TIMER_CALLBACK_MEMBER(pv1000_state::d65010_irq_on_cb)
 }
 
 /* Add BUSACK-triggered scanline renderer */
-TIMER_CALLBACK_MEMBER(pv1000_state::d65010_busrq_on_cb)
+TIMER_CALLBACK_MEMBER(pv1000_state::d65010_busreq_on_cb)
 {
 	int vpos = m_screen->vpos();
 	int next_vpos = vpos + 1;
 
 	if (m_render_disable == 0)
 	{
-		m_maincpu->set_input_line(Z80_INPUT_LINE_BUSRQ, ASSERT_LINE);
+		m_maincpu->set_input_line(Z80_INPUT_LINE_BUSREQ, ASSERT_LINE);
 	}
 
 	// schedule the de-assertion of Busreq that corresponds to the current assertion
-	m_busrq_off_timer->adjust(m_screen->time_until_pos(vpos, 248));
+	m_busreq_off_timer->adjust(m_screen->time_until_pos(vpos, 248));
 
 	if (vpos >= 192 + 26)
 	{
 		next_vpos = 26;
 	}
-	m_busrq_on_timer->adjust(m_screen->time_until_pos(next_vpos, 0));
+	m_busreq_on_timer->adjust(m_screen->time_until_pos(next_vpos, 0));
 }
 
-TIMER_CALLBACK_MEMBER(pv1000_state::d65010_busrq_off_cb)
+TIMER_CALLBACK_MEMBER(pv1000_state::d65010_busreq_off_cb)
 {
-	m_maincpu->set_input_line(Z80_INPUT_LINE_BUSRQ, CLEAR_LINE);
+	m_maincpu->set_input_line(Z80_INPUT_LINE_BUSREQ, CLEAR_LINE);
 }
 
 void pv1000_state::pv1000_postload()
@@ -489,8 +489,8 @@ void pv1000_state::pv1000_postload()
 void pv1000_state::machine_start()
 {
 	m_irq_on_timer = timer_alloc(FUNC(pv1000_state::d65010_irq_on_cb), this);
-	m_busrq_on_timer = timer_alloc(FUNC(pv1000_state::d65010_busrq_on_cb), this);
-	m_busrq_off_timer = timer_alloc(FUNC(pv1000_state::d65010_busrq_off_cb), this);
+	m_busreq_on_timer = timer_alloc(FUNC(pv1000_state::d65010_busreq_on_cb), this);
+	m_busreq_off_timer = timer_alloc(FUNC(pv1000_state::d65010_busreq_off_cb), this);
 
 	m_gfxram = memregion("gfxram")->base();
 	save_pointer(NAME(m_gfxram), 0x400);
@@ -520,8 +520,8 @@ void pv1000_state::machine_reset()
 {
 	m_io_regs[5] = 0;
 	m_irq_on_timer->adjust(m_screen->time_until_pos(222, 256));
-	m_busrq_on_timer->adjust(m_screen->time_until_pos(26, 0));
-	m_busrq_off_timer->adjust(m_screen->time_until_pos(26, 248));
+	m_busreq_on_timer->adjust(m_screen->time_until_pos(26, 0));
+	m_busreq_off_timer->adjust(m_screen->time_until_pos(26, 248));
 }
 
 

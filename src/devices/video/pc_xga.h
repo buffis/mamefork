@@ -17,7 +17,7 @@ public:
 		OTI111
 	};
 
-	xga_copro_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	xga_copro_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	u8 xga_read(offs_t offset);
 	void xga_write(offs_t offset, u8 data);
@@ -26,8 +26,8 @@ public:
 	auto mem_write_callback() { return m_mem_write_cb.bind(); }
 	auto set_type(TYPE var) { m_var = var; }
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 private:
 	void start_command();
 	void do_pxblt();

@@ -111,13 +111,13 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(cu_plug);
 
 	// machine configs
-	void ssystem3(machine_config &config);
-	void ssystem4(machine_config &config);
+	void ssystem3(machine_config &config) ATTR_COLD;
+	void ssystem4(machine_config &config) ATTR_COLD;
 
-	void init_ssystem3() { m_xor_kludge = true; }
+	void init_ssystem3() ATTR_COLD { m_xor_kludge = true; }
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -143,9 +143,9 @@ private:
 	bool m_xor_kludge = false;
 
 	// address maps
-	void ssystem3_map(address_map &map);
-	void ssystem4_map(address_map &map);
-	void chessunit_map(address_map &map);
+	void ssystem3_map(address_map &map) ATTR_COLD;
+	void ssystem4_map(address_map &map) ATTR_COLD;
+	void chessunit_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void lcd1_output_w(u32 data) { m_lcd1_data = data; }
@@ -168,8 +168,6 @@ private:
 
 void ssystem3_state::machine_start()
 {
-	m_out_lcd2.resolve();
-
 	// register for savestates
 	save_item(NAME(m_inp_mux));
 	save_item(NAME(m_control));
@@ -441,7 +439,7 @@ static INPUT_PORTS_START( ssystem3 )
 	PORT_CONFNAME( 0x01, 0x01, "Memory Unit" )
 	PORT_CONFSETTING(    0x00, DEF_STR( Off ) )
 	PORT_CONFSETTING(    0x01, DEF_STR( On ) )
-	PORT_CONFNAME( 0x02, 0x02, "Chess Unit" ) PORT_CHANGED_MEMBER(DEVICE_SELF, ssystem3_state, cu_plug, 0)
+	PORT_CONFNAME( 0x02, 0x02, "Chess Unit" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(ssystem3_state::cu_plug), 0)
 	PORT_CONFSETTING(    0x00, DEF_STR( Off ) )
 	PORT_CONFSETTING(    0x02, DEF_STR( On ) )
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_CUSTOM)
@@ -511,11 +509,11 @@ void ssystem3_state::ssystem3(machine_config &config)
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
 	// video hardware
-	HLCD0438(config, m_lcd2[0], 0);
+	HLCD0438(config, m_lcd2[0]);
 	m_lcd2[0]->write_segs().set(FUNC(ssystem3_state::lcd2_output_w<0>));
 	m_lcd2[0]->write_data().set(m_lcd2[1], FUNC(hlcd0438_device::data_w));
 
-	HLCD0438(config, m_lcd2[1], 0);
+	HLCD0438(config, m_lcd2[1]);
 	m_lcd2[1]->write_segs().set(FUNC(ssystem3_state::lcd2_output_w<1>));
 
 	screen_device &screen(SCREEN(config, "chessunit", SCREEN_TYPE_SVG));

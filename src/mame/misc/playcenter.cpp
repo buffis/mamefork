@@ -12,7 +12,7 @@ All PlayCenter machines:
           VT82C686A, built-in SoundBlaster Pro with AC'97 codec support).
          -128MB RAM PC133, AMD K6-2 processor (K6-2/500(100*5)).
          -PCI Ethernet card (RTL8029AS chipset, PCI).
-         -Trident Blade3D/MVP4 AGP video.
+         -Trident Blade3D/MVP4 AGP video. (CyberBlade/i7, PCIR 1023:8400)
          -56K Modem (S56MR, HAMR5603 + Si3014-KS).
          -Elo Touch CTR-231000 touch screen (87C51-based, undumped) or custom touch I/O PCB named
           "Touch Presas" with unknown (and undumped) MCU.
@@ -71,7 +71,7 @@ public:
 	void playcenter(machine_config &config);
 
 private:
-	void mem_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 };
@@ -91,7 +91,7 @@ void playcenter_state::playcenter(machine_config &config)
 	PENTIUM(config, m_maincpu, 166'000'000); // Actually an AMD K6, AMD K6-2 or Intel Celeron
 	m_maincpu->set_addrmap(AS_PROGRAM, &playcenter_state::mem_map);
 
-	PCI_ROOT(config, "pci", 0);
+	PCI_ROOT(config, "pci");
 	// ...
 }
 
@@ -136,7 +136,7 @@ ROM_END
 } // Anonymous namespace
 
 //   YEAR  NAME          PARENT       MACHINE     INPUT       CLASS             INIT        ROT   COMPANY                             FULLNAME                                                      FLAGS
-GAME(2000, plycntrchtr,  0,           playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "PlayCenter Champions Tournament (v9.3, 'Epox' hardware)",    MACHINE_IS_SKELETON)
-GAME(2000, plycntrchtrk, plycntrchtr, playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "PlayCenter Champions Tournament (v9.3, 'K6' hardware)",      MACHINE_IS_SKELETON)
-GAME(2000, plycntrchtrc, plycntrchtr, playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "PlayCenter Champions Tournament (v9.3, 'Celeron' hardware)", MACHINE_IS_SKELETON)
-GAME(2004, plycntre3,    0,           playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "Playcenter Evolution III (v14.0, 'Epox' hardware)",          MACHINE_IS_SKELETON) // E.14.0.TCT
+GAME(2000, plycntrchtr,  0,           playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "PlayCenter Champions Tournament (v9.3, 'Epox' hardware)",    MACHINE_NO_SOUND | MACHINE_NOT_WORKING)
+GAME(2000, plycntrchtrk, plycntrchtr, playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "PlayCenter Champions Tournament (v9.3, 'K6' hardware)",      MACHINE_NO_SOUND | MACHINE_NOT_WORKING)
+GAME(2000, plycntrchtrc, plycntrchtr, playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "PlayCenter Champions Tournament (v9.3, 'Celeron' hardware)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING)
+GAME(2004, plycntre3,    0,           playcenter, playcenter, playcenter_state, empty_init, ROT0, "Recreativos Presas / Undergaming", "Playcenter Evolution III (v14.0, 'Epox' hardware)",          MACHINE_NO_SOUND | MACHINE_NOT_WORKING) // E.14.0.TCT

@@ -6,6 +6,7 @@
 #pragma once
 
 #include "cpu/m6805/m68hc05e1.h"
+#include "machine/macseconds.h"
 
 #define USE_BUS_ADB (0)
 
@@ -23,7 +24,7 @@
 /// on-board RAM and ROM plus several GPIO pins.  Egret handles
 /// simple power management, the Apple Desktop Bus, I2C, real-time
 /// clock, and parameter RAM.
-class egret_device :  public device_t, public device_nvram_interface
+class egret_device :  public device_t, public device_nvram_interface, public macseconds_interface
 {
 public:
 	// construction/destruction
@@ -65,10 +66,10 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 private:
 	u8 m_xcvr_session;

@@ -132,9 +132,9 @@ protected:
 	void ioport_w(offs_t offset, u64 data);
 	u32 gpu_r(offs_t offset);
 	void gpu_w(offs_t offset, u32 data);
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 	u32 screen_update_atvtrack(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	inline u32 decode64_32(offs_t offset64, u64 data, u64 mem_mask, offs_t &offset32);
 	[[maybe_unused]] void logbinary(u32 data, int high, int low);
@@ -143,18 +143,18 @@ protected:
 	int m_nandcommand[4]{}, m_nandoffset[4]{}, m_nandaddressstep = 0, m_nandaddress[4]{};
 	u32 m_area1_data[4]{};
 
-	required_device<sh4_device> m_maincpu;
-	required_device<sh4_device> m_subcpu;
+	required_device<sh7750s_device> m_maincpu;
+	required_device<sh7750s_device> m_subcpu;
 
 	u16 gpu_irq_pending = 0;
 	u16 gpu_irq_mask = 0;
 	void gpu_irq_test();
 	void gpu_irq_set(int);
 
-	void atvtrack_main_map(address_map &map);
-	void atvtrack_main_port(address_map &map);
-	void atvtrack_sub_map(address_map &map);
-	void atvtrack_sub_port(address_map &map);
+	void atvtrack_main_map(address_map &map) ATTR_COLD;
+	void atvtrack_main_port(address_map &map) ATTR_COLD;
+	void atvtrack_sub_map(address_map &map) ATTR_COLD;
+	void atvtrack_sub_port(address_map &map) ATTR_COLD;
 
 	bool m_slaverun = false;
 };
@@ -169,11 +169,11 @@ public:
 	void smashdrv(machine_config &config);
 
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void smashdrv_main_map(address_map &map);
-	void smashdrv_main_port(address_map &map);
+	void smashdrv_main_map(address_map &map) ATTR_COLD;
+	void smashdrv_main_port(address_map &map) ATTR_COLD;
 };
 
 void atvtrack_state::logbinary(u32 data, int high=31, int low=0)
@@ -208,9 +208,7 @@ inline u32 atvtrack_state::decode64_32(offs_t offset64, u64 data, u64 mem_mask, 
 
 u64 atvtrack_state::control_r(offs_t offset, u64 mem_mask)
 {
-	u32 addr;
-
-	addr = 0;
+	offs_t addr = 0;
 	decode64_32(offset, 0, mem_mask, addr);
 	if (addr == (0x00020000-0x00020000)/4)
 		return -1;
@@ -221,11 +219,9 @@ u64 atvtrack_state::control_r(offs_t offset, u64 mem_mask)
 
 void atvtrack_state::control_w(offs_t offset, u64 data, u64 mem_mask)
 {
-	u32 addr, dat; //, old;
-
-	addr = 0;
-	dat = decode64_32(offset, data, mem_mask, addr);
-//  old = m_area1_data[addr];
+	offs_t addr = 0;
+	u32 dat = decode64_32(offset, data, mem_mask, addr);
+	//u32 old = m_area1_data[addr];
 	m_area1_data[addr] = dat;
 	if (addr == (0x00020000-0x00020000)/4) {
 		if ((data & 4) && m_slaverun)
@@ -576,7 +572,7 @@ INPUT_PORTS_END
 void atvtrack_state::atvtrack(machine_config &config)
 {
 	/* basic machine hardware */
-	SH4LE(config, m_maincpu, ATV_CPU_CLOCK);
+	SH7750S(config, m_maincpu, ATV_CPU_CLOCK);
 	m_maincpu->set_md(0, 1);
 	m_maincpu->set_md(1, 1);
 	m_maincpu->set_md(2, 0);
@@ -591,7 +587,7 @@ void atvtrack_state::atvtrack(machine_config &config)
 	m_maincpu->set_addrmap(AS_IO, &atvtrack_state::atvtrack_main_port);
 	m_maincpu->set_force_no_drc(true);
 
-	SH4LE(config, m_subcpu, ATV_CPU_CLOCK);
+	SH7750S(config, m_subcpu, ATV_CPU_CLOCK);
 	m_subcpu->set_md(0, 1);
 	m_subcpu->set_md(1, 1);
 	m_subcpu->set_md(2, 0);

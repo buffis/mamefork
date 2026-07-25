@@ -61,8 +61,8 @@ public:
 	void kishon(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override { m_dac->write(0x80); }
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD { m_dac->write(0x80); }
 
 private:
 	// devices/pointers
@@ -77,7 +77,7 @@ private:
 	u8 m_speech_bank = 0;
 	u8 m_select = 0;
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void control_w(offs_t offset, u8 data);

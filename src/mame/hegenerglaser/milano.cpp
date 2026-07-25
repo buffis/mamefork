@@ -17,7 +17,7 @@ Nigel Short is basically a Milano 2.00
 
 #include "emu.h"
 
-#include "mmdisplay2.h"
+#include "mdisplay2.h"
 
 #include "cpu/m6502/r65c02.h"
 #include "machine/74259.h"
@@ -46,7 +46,7 @@ public:
 	void milano(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -58,7 +58,7 @@ private:
 	u8 m_board_mux = 0;
 	u8 m_led_data = 0;
 
-	void milano_mem(address_map &map);
+	void milano_mem(address_map &map) ATTR_COLD;
 
 	void update_leds();
 	void io_w(u8 data);

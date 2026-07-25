@@ -50,7 +50,7 @@ public:
 	void microb(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void dmac_hrq_w(int state);
@@ -61,8 +61,8 @@ private:
 	u8 ppi2_pa_r();
 	void ppi2_pc_w(u8 data);
 
-	void microb_io(address_map &map);
-	void microb_mem(address_map &map);
+	void microb_io(address_map &map) ATTR_COLD;
+	void microb_mem(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<i8257_device> m_dmac;
@@ -349,7 +349,7 @@ void microb_state::microb(machine_config &config)
 	SPEAKER(config, "mono").front_center();
 	BEEP(config, m_beep, 1000).add_route(ALL_OUTPUTS, "mono", 0.5);
 
-	I8251(config, m_usart[0], 0);
+	I8251(config, m_usart[0]);
 	m_usart[0]->txd_handler().set(m_rs232[0], FUNC(rs232_port_device::write_txd));
 	m_usart[0]->dtr_handler().set(m_rs232[0], FUNC(rs232_port_device::write_dtr));
 	m_usart[0]->rts_handler().set(m_rs232[0], FUNC(rs232_port_device::write_rts));
@@ -361,7 +361,7 @@ void microb_state::microb(machine_config &config)
 	m_rs232[0]->dsr_handler().set(m_usart[0], FUNC(i8251_device::write_dsr));
 	m_rs232[0]->cts_handler().set(m_usart[0], FUNC(i8251_device::write_cts));
 
-	I8251(config, m_usart[1], 0);
+	I8251(config, m_usart[1]);
 	m_usart[1]->txd_handler().set(m_rs232[1], FUNC(rs232_port_device::write_txd));
 	m_usart[1]->dtr_handler().set(m_rs232[1], FUNC(rs232_port_device::write_dtr));
 	m_usart[1]->rts_handler().set(m_rs232[1], FUNC(rs232_port_device::write_rts));

@@ -167,10 +167,13 @@ void m5074x_device::execute_set_input(int inputnum, int state)
 	switch (inputnum)
 	{
 	case M5074X_INT1_LINE:
-		// FIXME: edge-triggered
-		if (state == ASSERT_LINE)
+		if ((state == ASSERT_LINE) && !(m_intctrl & IRQ_INTREQ))
 		{
 			m_intctrl |= IRQ_INTREQ;
+		}
+		else if ((state == CLEAR_LINE) && (m_intctrl & IRQ_INTREQ))
+		{
+			m_intctrl &= ~IRQ_INTREQ;
 		}
 		break;
 	}
@@ -215,7 +218,7 @@ void m5074x_device::recalc_irqs()
 				m740_device::execute_set_input(M740_INT0_LINE + i, ASSERT_LINE);
 			}
 		}
-		else    // bit is clear now
+		else // bit is clear now
 		{
 			// ...and wasn't clear last time
 			if (m_last_all_ints & (1 << i))
@@ -600,18 +603,24 @@ void m50753_device::execute_set_input(int inputnum, int state)
 	switch (inputnum)
 	{
 	case M50753_INT1_LINE:
-		// FIXME: edge-triggered
-		if (state == ASSERT_LINE)
+		if ((state == ASSERT_LINE) && !(m_intctrl & IRQ_50753_INT1REQ))
 		{
 			m_intctrl |= IRQ_50753_INT1REQ;
+		}
+		else if ((state == CLEAR_LINE) && (m_intctrl & IRQ_50753_INT1REQ))
+		{
+			m_intctrl &= ~IRQ_50753_INT1REQ;
 		}
 		break;
 
 	case M50753_INT2_LINE:
-		// FIXME: edge-triggered
-		if (state == ASSERT_LINE)
+		if ((state == ASSERT_LINE) && !(m_intctrl & IRQ_50753_INT2REQ))
 		{
 			m_intctrl |= IRQ_50753_INT2REQ;
+		}
+		else if ((state == CLEAR_LINE) && (m_intctrl & IRQ_50753_INT2REQ))
+		{
+			m_intctrl &= ~IRQ_50753_INT2REQ;
 		}
 		break;
 	}

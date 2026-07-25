@@ -21,12 +21,12 @@
 class teleprinter_device : public generic_terminal_device
 {
 public:
-	teleprinter_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	teleprinter_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 protected:
 	virtual void term_write(uint8_t data) override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 private:
 	static inline constexpr unsigned WIDTH = 80;

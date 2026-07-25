@@ -199,8 +199,8 @@ public:
 	void init_wildpkr();
 
 protected:
-	virtual void machine_start() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -226,11 +226,11 @@ private:
 	void clock_rate_w(u16 data);
 	void unknown_trigger_w(u16 data);
 	u16 tabpkr_irq_ack(offs_t offset);
-	void cpu_space_map(address_map &map);
-	void hd63484_map(address_map &map);
-	void ramdac_map(address_map &map);
-	void tabpkr_map(address_map &map);
-	void wildpkr_map(address_map &map);
+	void cpu_space_map(address_map &map) ATTR_COLD;
+	void hd63484_map(address_map &map) ATTR_COLD;
+	void ramdac_map(address_map &map) ATTR_COLD;
+	void tabpkr_map(address_map &map) ATTR_COLD;
+	void wildpkr_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -488,9 +488,9 @@ void wildpkr_state::wildpkr(machine_config &config)
 	screen.set_screen_update("acrtc", FUNC(hd63484_device::update_screen));
 	screen.set_palette("palette");
 
-	HD63484(config, "acrtc", 0).set_addrmap(0, &wildpkr_state::hd63484_map);
+	HD63484(config, "acrtc").set_addrmap(0, &wildpkr_state::hd63484_map);
 
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, "palette"));
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", "palette"));
 	ramdac.set_addrmap(0, &wildpkr_state::ramdac_map);
 
 	PALETTE(config, "palette", FUNC(wildpkr_state::wildpkr_palette), 256);
@@ -528,9 +528,9 @@ void wildpkr_state::tabpkr(machine_config &config)
 	screen.set_palette("palette");
 	screen.screen_vblank().set_inputline(m_maincpu, M68K_IRQ_4, ASSERT_LINE);
 
-	HD63484(config, "acrtc", 0).set_addrmap(0, &wildpkr_state::hd63484_map);
+	HD63484(config, "acrtc").set_addrmap(0, &wildpkr_state::hd63484_map);
 
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, "palette"));
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", "palette"));
 	ramdac.set_addrmap(0, &wildpkr_state::ramdac_map);
 
 	PALETTE(config, "palette", FUNC(wildpkr_state::wildpkr_palette), 256);

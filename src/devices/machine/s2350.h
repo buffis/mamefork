@@ -20,7 +20,7 @@
 class s2350_device : public device_t
 {
 public:
-	s2350_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
+	s2350_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock = 0);
 	virtual ~s2350_device();
 
 	// transmit bits
@@ -55,8 +55,8 @@ public:
 
 protected:
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	void update_receiver_shift();
 

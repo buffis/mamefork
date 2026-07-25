@@ -87,10 +87,10 @@ public:
 
 	void alfaskop4110(machine_config &config);
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void mem_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<acia6850_device> m_kbd_acia;
@@ -151,7 +151,7 @@ public:
 
 	void alfaskop4120(machine_config &config);
 private:
-	void mem_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<pia6821_device> m_mic_pia;
@@ -169,7 +169,7 @@ public:
 
 	void alfaskop4101(machine_config &config);
 private:
-	void mem_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<pia6821_device> m_mic_pia;
@@ -447,7 +447,7 @@ void alfaskop4110_state::alfaskop4110(machine_config &config)
 	m_dia_pia->ca1_w(0);
 	m_dia_pia->ca2_w(0);
 
-	ACIA6850(config, m_kbd_acia, 0);
+	ACIA6850(config, m_kbd_acia);
 	//CLOCK(config, "acia_clock", ACIA_CLOCK).signal_handler().set(FUNC(alfaskop4110_state::write_acia_clock));
 	m_kbd_acia->irq_handler().set("irq3", FUNC(input_merger_device::in_w<3>));
 
@@ -579,6 +579,6 @@ ROM_END
 // Only 4101 may exist as a driver in the end making the 4110 and 4120 as slots devices on the SS3 bus, time will tell
 
 //    YEAR  NAME          PARENT  COMPAT  MACHINE       INPUT         CLASS               INIT        COMPANY      FULLNAME       FLAGS
-COMP( 1984, alfaskop4110, 0,      0,      alfaskop4110, alfaskop4110, alfaskop4110_state, empty_init, "Ericsson",  "Alfaskop Display Unit 4110", MACHINE_IS_SKELETON)
-COMP( 1984, alfaskop4120, 0,      0,      alfaskop4120, alfaskop4120, alfaskop4120_state, empty_init, "Ericsson",  "Alfaskop Flexible Disk Unit 4120", MACHINE_IS_SKELETON)
-COMP( 1984, alfaskop4101, 0,      0,      alfaskop4101, alfaskop4101, alfaskop4101_state, empty_init, "Ericsson",  "Alfaskop Communication Processor 4101", MACHINE_IS_SKELETON)
+COMP( 1984, alfaskop4110, 0,      0,      alfaskop4110, alfaskop4110, alfaskop4110_state, empty_init, "Ericsson",  "Alfaskop Display Unit 4110", MACHINE_NO_SOUND | MACHINE_NOT_WORKING)
+COMP( 1984, alfaskop4120, 0,      0,      alfaskop4120, alfaskop4120, alfaskop4120_state, empty_init, "Ericsson",  "Alfaskop Flexible Disk Unit 4120", MACHINE_NO_SOUND | MACHINE_NOT_WORKING)
+COMP( 1984, alfaskop4101, 0,      0,      alfaskop4101, alfaskop4101, alfaskop4101_state, empty_init, "Ericsson",  "Alfaskop Communication Processor 4101", MACHINE_NO_SOUND | MACHINE_NOT_WORKING)

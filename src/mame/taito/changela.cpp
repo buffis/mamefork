@@ -57,9 +57,9 @@ public:
 	void changela(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	// devices
@@ -152,7 +152,7 @@ private:
 	void draw_river(bitmap_ind16 &bitmap, int sy);
 	void draw_tree(bitmap_ind16 &bitmap, int sy, int tree_num);
 
-	void changela_map(address_map &map);
+	void changela_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -1325,5 +1325,5 @@ ROM_END
     Game Driver
 *********************************/
 
-//     YEAR  NAME      PARENT  MACHINE   INPUT     CLASS           INIT        SCREEN  COMPANY                      FULLNAME        FLAGS
-GAMEL( 1983, changela, 0,      changela, changela, changela_state, empty_init, ROT180, "Taito America Corporation", "Change Lanes", MACHINE_SUPPORTS_SAVE, layout_changela )
+//     YEAR  NAME      PARENT  MACHINE   INPUT     CLASS           INIT        SCREEN  COMPANY          FULLNAME        FLAGS
+GAMEL( 1983, changela, 0,      changela, changela, changela_state, empty_init, ROT180, "Taito America", "Change Lanes", MACHINE_SUPPORTS_SAVE, layout_changela )

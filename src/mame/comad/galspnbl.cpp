@@ -90,7 +90,7 @@ public:
 	void galspnbl(machine_config &config);
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	// memory pointers
@@ -117,8 +117,8 @@ private:
 
 	void mix_sprite_layer(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int pri);
 
-	void audio_map(address_map &map);
-	void main_map(address_map &map);
+	void audio_map(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -388,7 +388,7 @@ void galspnbl_state::galspnbl(machine_config &config)
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_galspnbl);
 	PALETTE(config, m_palette, FUNC(galspnbl_state::palette)).set_format(palette_device::xBGR_444, 1024 + 32768);
 
-	TECMO_SPRITE(config, m_sprgen, 0, m_palette, gfx_galspnbl_spr);
+	TECMO_SPRITE(config, m_sprgen, m_palette, gfx_galspnbl_spr);
 	m_sprgen->set_bootleg(true);
 
 	// sound hardware

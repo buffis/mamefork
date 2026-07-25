@@ -11,6 +11,9 @@
 
 #pragma once
 
+#include <optional>
+
+
 class sensorboard_device : public device_t, public device_nvram_interface
 {
 public:
@@ -26,7 +29,7 @@ public:
 
 	// configuration helpers
 	sensorboard_device &set_type(sb_type type); // sensor type
-	sensorboard_device &set_size(u8 width, u8 height) { m_width = width; m_height = height; return *this; } // board dimensions, max 13 * 10
+	sensorboard_device &set_size(u8 width, u8 height) { m_width = width; m_height = height; return *this; } // board dimensions, max 13 * 13
 	sensorboard_device &set_spawnpoints(u8 i) { m_maxspawn = i; m_maxid = i; return *this; } // number of piece spawnpoints, max 16
 	sensorboard_device &set_max_id(u8 i) { m_maxid = i; return *this; } // maximum piece id (if larger than set_spawnpoints)
 	sensorboard_device &set_delay(attotime delay) { m_sensordelay = delay; return *this; } // delay when activating a sensor (like PORT_IMPULSE), set to attotime::never to disable
@@ -48,12 +51,14 @@ public:
 	u16 read_file(u8 x, bool reverse = false);
 	u16 read_rank(u8 y, bool reverse = false);
 
-	bool is_inductive() { return m_inductive; }
-
 	// handle board state
 	u8 read_piece(u8 x, u8 y) { return m_curstate[y * m_width + x]; }
 	void write_piece(u8 x, u8 y, u8 id) { m_curstate[y * m_width + x] = id; }
 	void clear_board(u8 data = 0) { memset(m_curstate, 0, sizeof(m_curstate)); } // default clear_cb()
+
+	bool inductive() { return m_inductive; }
+	u8 width() { return m_width; }
+	u8 height() { return m_height; }
 
 	void refresh();
 	void cancel_sensor();
@@ -76,18 +81,18 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(ui_init);
 	DECLARE_INPUT_CHANGED_MEMBER(ui_refresh) { refresh(); }
 
-	DECLARE_CUSTOM_INPUT_MEMBER(check_sensor_busy) { return (m_sensorpos == -1) ? 0 : 1; }
-	DECLARE_CUSTOM_INPUT_MEMBER(check_bs_mask) { return m_bs_mask; }
-	DECLARE_CUSTOM_INPUT_MEMBER(check_ss_mask) { return m_ss_mask; }
-	DECLARE_CUSTOM_INPUT_MEMBER(check_ui_enabled) { return m_ui_enabled; }
+	ioport_value check_sensor_busy() { return (m_sensorpos == -1) ? 0 : 1; }
+	ioport_value check_bs_mask() { return m_bs_mask; }
+	ioport_value check_ss_mask() { return m_ss_mask; }
+	ioport_value check_ui_enabled() { return m_ui_enabled; }
 
 protected:
-	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	// device_t implementation
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual void device_config_complete() override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 	virtual void device_post_load() override { refresh(); }
-
-	virtual ioport_constructor device_input_ports() const override;
 
 	// device_nvram_interface overrides
 	virtual void nvram_default() override;
@@ -96,10 +101,10 @@ protected:
 	virtual bool nvram_can_write() const override;
 
 private:
-	output_finder<0x10, 0x10> m_out_piece;
-	output_finder<0x20+1> m_out_pui;
-	output_finder<2> m_out_count;
-	required_ioport_array<10> m_inp_rank;
+	std::optional<output_finder<0x10, 0x10> > m_out_piece;
+	std::optional<output_finder<0x20+1> > m_out_pui;
+	std::optional<output_finder<2> > m_out_count;
+	required_ioport_array<13> m_inp_rank;
 	required_ioport m_inp_spawn;
 	required_ioport m_inp_ui;
 	required_ioport m_inp_conf;

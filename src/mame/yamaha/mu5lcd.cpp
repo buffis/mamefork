@@ -27,18 +27,10 @@ mu5lcd_device::mu5lcd_device(const machine_config &mconfig, const char *tag, dev
 
 void mu5lcd_device::device_start()
 {
-	m_outputs.resolve();
 }
 
-void mu5lcd_device::device_reset()
+u32 mu5lcd_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
 {
-}
-
-void mu5lcd_device::render_w(int state)
-{
-	if(!state)
-		return;
-
 	const u8 *render = m_lcd->render();
 	for(int y=0; y != 2; y++)
 		for(int x=0; x != 8; x++)
@@ -47,6 +39,8 @@ void mu5lcd_device::render_w(int state)
 				for(int xx=0; xx != 5; xx++)
 					m_outputs[y][x][yy][xx] = (v >> xx) & 1;
 			}
+
+	return 0;
 }
 
 void mu5lcd_device::device_add_mconfig(machine_config &config)
@@ -57,5 +51,5 @@ void mu5lcd_device::device_add_mconfig(machine_config &config)
 	screen.set_refresh_hz(60);
 	screen.set_size(800, 435);
 	screen.set_visarea_full();
-	screen.screen_vblank().set(FUNC(mu5lcd_device::render_w));
+	screen.set_screen_update(FUNC(mu5lcd_device::screen_update));
 }

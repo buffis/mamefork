@@ -54,7 +54,7 @@ TODO:
 #include "emu.h"
 
 #include "cpu/i86/i186.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c52.h"
 #include "machine/nvram.h"
 #include "sound/upd7759.h"
 #include "video/pc_vga_cirrus.h"
@@ -76,7 +76,7 @@ public:
 	void gambl186(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -95,8 +95,8 @@ private:
 	void comms_w(offs_t offset, uint16_t data);
 	void data_bank_w(uint16_t data);
 	void upd_w(uint16_t data);
-	void gambl186_io(address_map &map);
-	void gambl186_map(address_map &map);
+	void gambl186_io(address_map &map) ATTR_COLD;
+	void gambl186_map(address_map &map) ATTR_COLD;
 };
 
 void gambl186_state::machine_start()
@@ -511,7 +511,7 @@ void gambl186_state::gambl186(machine_config &config)
 	screen.set_raw(XTAL(25'174'800),900,0,640,526,0,480);
 	screen.set_screen_update("vga", FUNC(cirrus_gd5428_vga_device::screen_update));
 
-	cirrus_gd5428_vga_device &vga(CIRRUS_GD5428_VGA(config, "vga", 0));
+	cirrus_gd5428_vga_device &vga(CIRRUS_GD5428_VGA(config, "vga"));
 	vga.set_screen("screen");
 	vga.set_vram_size(0x200000);
 

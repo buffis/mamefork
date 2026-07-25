@@ -32,9 +32,9 @@ private:
 	uint8_t fff400_r();
 	SCN2674_DRAW_CHARACTER_MEMBER(draw_character);
 
-	void mem_map(address_map &map);
-	void ramdac_map(address_map &map);
-	void vram_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void ramdac_map(address_map &map) ATTR_COLD;
+	void vram_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 };
@@ -109,7 +109,7 @@ void tr175_state::tr175(machine_config &config)
 	duart.irq_cb().set_inputline("maincpu", M68K_IRQ_1);
 
 	PALETTE(config, "palette").set_entries(0x100);
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, "palette"));
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", "palette"));
 	ramdac.set_addrmap(0, &tr175_state::ramdac_map);
 }
 
@@ -133,4 +133,4 @@ ROM_END
 } // anonymous namespace
 
 
-COMP( 1982, tr175, 0, 0, tr175, tr175, tr175_state, empty_init, "Relisys", "TR-175 II", MACHINE_IS_SKELETON )
+COMP( 1982, tr175, 0, 0, tr175, tr175, tr175_state, empty_init, "Relisys", "TR-175 II", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

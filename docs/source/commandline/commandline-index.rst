@@ -201,6 +201,7 @@ Core Artwork Options
 | :ref:`[no]artwork_crop <mame-commandline-noartworkcrop>`
 | :ref:`fallback_artwork <mame-commandline-fallbackartwork>`
 | :ref:`override_artwork <mame-commandline-overrideartwork>`
+| :ref:`artwork_font <mame-commandline-artworkfont>`
 
 
 Core Screen Options
@@ -246,7 +247,6 @@ Core Sound Options
 
 | :ref:`samplerate <mame-commandline-samplerate>`
 | :ref:`[no]samples <mame-commandline-nosamples>`
-| :ref:`[no]compressor <mame-commandline-nocompressor>`
 | :ref:`volume <mame-commandline-volume>`
 | :ref:`sound <mame-commandline-sound>`
 | :ref:`audio_latency <mame-commandline-audiolatency>`
@@ -264,7 +264,6 @@ Core Input Options
 | :ref:`[no]multimouse <mame-commandline-nomultimouse>`
 | :ref:`[no]steadykey <mame-commandline-nosteadykey>`
 | :ref:`[no]ui_active <mame-commandline-uiactive>`
-| :ref:`[no]offscreen_reload <mame-commandline-nooffscreenreload>`
 | :ref:`joystick_map <mame-commandline-joystickmap>`
 | :ref:`joystick_deadzone <mame-commandline-joystickdeadzone>`
 | :ref:`joystick_saturation <mame-commandline-joysticksaturation>`
@@ -318,6 +317,7 @@ Core Misc Options
 ~~~~~~~~~~~~~~~~~
 
 | :ref:`[no]drc <mame-commandline-drc>`
+| :ref:`[no]drc_rwx <mame-commandline-drcrwx>`
 | :ref:`[no]drc_use_c <mame-commandline-drcusec>`
 | :ref:`[no]drc_log_uml <mame-commandline-drcloguml>`
 | :ref:`[no]drc_log_native <mame-commandline-drclognative>`
@@ -331,6 +331,7 @@ Core Misc Options
 | :ref:`[no]ui_mouse <mame-commandline-uimouse>`
 | :ref:`language <mame-commandline-language>`
 | :ref:`[no]nvram_save <mame-commandline-nvramsave>`
+| :ref:`rtc <mame-commandline-rtc>`
 
 
 Scripting Options
@@ -351,14 +352,6 @@ HTTP Server Options
 | :ref:`http <mame-commandline-http>`
 | :ref:`http_port <mame-commandline-httpport>`
 | :ref:`http_root <mame-commandline-httproot>`
-
-
-PortAudio Options
-~~~~~~~~~~~~~~~~~
-
-| :ref:`pa_api <mame-commandline-paapi>`
-| :ref:`pa_device <mame-commandline-padevice>`
-| :ref:`pa_latency <mame-commandline-palatency>`
 
 
 Windows-Specific Command-line Options

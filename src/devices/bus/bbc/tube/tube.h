@@ -53,10 +53,7 @@ public:
 	bbc_tube_slot_device(machine_config const &mconfig, char const *tag, device_t *owner, T &&slot_options, char const *default_option)
 		: bbc_tube_slot_device(mconfig, tag, owner)
 	{
-		option_reset();
-		slot_options(*this);
-		set_default_option(default_option);
-		set_fixed(false);
+		set_options(std::forward<T>(slot_options), default_option, false);
 		set_insert_rom(true);
 	}
 
@@ -79,7 +76,7 @@ public:
 
 protected:
 	// device_t overrides
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 	device_bbc_tube_interface *m_card;
 

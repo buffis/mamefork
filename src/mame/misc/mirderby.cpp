@@ -127,11 +127,11 @@ private:
 	required_device<i8255_device> m_coin_ppi;
 	required_device<pit8253_device> m_coin_pit;
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	void screen_vblank(int state);
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 	uint8_t prot_r();
 	void prot_w(uint8_t data);
@@ -141,13 +141,13 @@ private:
 	TILE_GET_INFO_MEMBER(get_bg_tile_info);
 	void videoram_w(offs_t offset, u8 data);
 
-	void main_map(address_map &map);
-	void sub_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void sub_map(address_map &map) ATTR_COLD;
 
-	void shared_map(address_map &map);
+	void shared_map(address_map &map) ATTR_COLD;
 
-	void x70coin_map(address_map &map);
-	void x70coin_io(address_map &map);
+	void x70coin_map(address_map &map) ATTR_COLD;
+	void x70coin_io(address_map &map) ATTR_COLD;
 
 	tilemap_t *m_bg_tilemap{};
 //  int m_visible_page = 0;
@@ -581,10 +581,10 @@ static INPUT_PORTS_START( mirderby )
 	PORT_START("DSW2")
 	// Applies to Medal
 	PORT_DIPNAME( 0x03, 0x03, DEF_STR( Coinage ) ) PORT_DIPLOCATION("SW2:1,2")
-	PORT_DIPSETTING(      0x00, "1 Coin / 100 Credits" )
-	PORT_DIPSETTING(      0x01, "1 Coin / 50 Credits" )
-	PORT_DIPSETTING(      0x02, "1 Coin / 20 Credits" )
-	PORT_DIPSETTING(      0x03, "1 Coin / 10 Credits" )
+	PORT_DIPSETTING(      0x00, DEF_STR( 1C_100C ) )
+	PORT_DIPSETTING(      0x01, DEF_STR( 1C_50C ) )
+	PORT_DIPSETTING(      0x02, DEF_STR( 1C_20C ) )
+	PORT_DIPSETTING(      0x03, DEF_STR( 1C_10C ) )
 	PORT_DIPNAME( 0x04, 0x04, DEF_STR( Unknown ) ) PORT_DIPLOCATION("SW2:3")
 	PORT_DIPSETTING(      0x04, DEF_STR( Off ) )
 	PORT_DIPSETTING(      0x00, DEF_STR( On ) )
@@ -654,7 +654,7 @@ void mirderby_state::mirderby(machine_config &config)
 	m_coin_ppi->out_pb_callback().set(m_coinlatch, FUNC(generic_latch_8_device::write));
 	m_coin_ppi->in_pc_callback().set_ioport("SUB_COIN1");
 
-	PIT8253(config, m_coin_pit, 0);
+	PIT8253(config, m_coin_pit);
 	m_coin_pit->set_clk<0>(XTAL(16'000'000) / 8);
 	m_coin_pit->out_handler<0>().set_inputline(m_x70coincpu, INPUT_LINE_NMI);
 //  m_coin_pit->set_clk<1>(XTAL(16'000'000) / 8);

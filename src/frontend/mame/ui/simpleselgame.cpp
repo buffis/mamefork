@@ -36,14 +36,15 @@ namespace ui {
 //  ctor
 //-------------------------------------------------
 
-simple_menu_select_game::simple_menu_select_game(mame_ui_manager &mui, render_container &container, const char *gamename)
-	: menu(mui, container)
+simple_menu_select_game::simple_menu_select_game(mame_ui_manager &mui, render_target &target, const char *gamename)
+	: menu(mui, target)
 	, m_nomatch(false), m_error(false), m_rerandomize(false)
 	, m_search()
 	, m_driverlist(driver_list::total() + 1)
 	, m_drivlist()
 	, m_cached_driver(nullptr)
-	, m_cached_flags(machine_flags::NOT_WORKING)
+	, m_cached_machine_flags(machine_flags::ROT0)
+	, m_cached_emulation_flags(device_t::flags::NOT_WORKING)
 	, m_cached_unemulated(device_t::feature::NONE), m_cached_imperfect(device_t::feature::NONE)
 	, m_cached_color(ui().colors().background_color())
 {
@@ -160,7 +161,7 @@ bool simple_menu_select_game::inkey_select(const event &menu_event)
 	{
 		menu::stack_push<menu_simple_game_options>(
 				ui(),
-				container(),
+				target(),
 				[this] () { reset(reset_options::SELECT_FIRST); });
 		return false;
 	}
@@ -262,7 +263,7 @@ void simple_menu_select_game::populate()
 				item_append(
 						m_drivlist->driver(curmatch).type.fullname(),
 						m_drivlist->driver(curmatch).name,
-						(cloneof == -1) ? 0 : FLAG_INVERT,
+						(cloneof == -1) ? 0 : FLAG_DEEMPHASIZE,
 						(void *)&m_drivlist->driver(curmatch));
 			}
 		}
@@ -305,7 +306,7 @@ void simple_menu_select_game::custom_render(uint32_t flags, void *selectedref, f
 	{
 		// if no matches, display the error message
 		ui().draw_text_box(
-				container(),
+				target(),
 				string_format(
 						_("No system ROMs found. Please check the rompath setting specified in the %1$s.ini file.\n\n"
 						"If this is your first time using %2$s, please see the %2$s.pdf file in "
@@ -353,14 +354,15 @@ void simple_menu_select_game::custom_render(uint32_t flags, void *selectedref, f
 				emu_options clean_options;
 				machine_static_info const info(ui().options(), machine_config(*driver, clean_options));
 				m_cached_driver = driver;
-				m_cached_flags = info.machine_flags();
+				m_cached_machine_flags = info.machine_flags();
+				m_cached_emulation_flags = info.emulation_flags();
 				m_cached_unemulated = info.unemulated_features();
 				m_cached_imperfect = info.imperfect_features();
 				m_cached_color = info.status_color();
 			}
 
 			// next line is overall driver status
-			if (m_cached_flags & machine_flags::NOT_WORKING)
+			if (m_cached_emulation_flags & device_t::flags::NOT_WORKING)
 				tempbuf[3] = _("Status: NOT WORKING");
 			else if ((m_cached_unemulated | m_cached_imperfect) & device_t::feature::PROTECTION)
 				tempbuf[3] = _("Status: Unemulated Protection");
@@ -375,7 +377,7 @@ void simple_menu_select_game::custom_render(uint32_t flags, void *selectedref, f
 			else
 				tempbuf[4] = _("Graphics: OK, ");
 
-			if (m_cached_flags & machine_flags::NO_SOUND_HW)
+			if (m_cached_machine_flags & machine_flags::NO_SOUND_HW)
 				tempbuf[4].append(_("Sound: None"));
 			else if (m_cached_unemulated & device_t::feature::SOUND)
 				tempbuf[4].append(_("Sound: Unimplemented"));
@@ -421,7 +423,7 @@ void simple_menu_select_game::custom_render(uint32_t flags, void *selectedref, f
 	if (m_error)
 	{
 		ui().draw_text_box(
-				container(),
+				target(),
 				_("The selected system is missing one or more required ROMs/disk images. "
 				"Please select a different system.\n\nPress any key to continue."),
 				text_layout::text_justify::CENTER, 0.5f, 0.5f, UI_RED_COLOR);
@@ -452,7 +454,7 @@ std::tuple<int, bool, bool> simple_menu_select_game::custom_pointer_updated(bool
 //  select menu to be visible and inescapable
 //-------------------------------------------------
 
-void simple_menu_select_game::force_game_select(mame_ui_manager &mui, render_container &container)
+void simple_menu_select_game::force_game_select(mame_ui_manager &mui, render_target &target)
 {
 	char *gamename = (char *)mui.machine().options().system_name();
 
@@ -460,8 +462,8 @@ void simple_menu_select_game::force_game_select(mame_ui_manager &mui, render_con
 
 	// drop any existing menus and start the system selection menu
 	menu::stack_reset(mui);
-	menu::stack_push_special_main<simple_menu_select_game>(mui, container, gamename);
-	mui.show_menu();
+	menu::stack_push_special_main<simple_menu_select_game>(mui, target, gamename);
+	mui.show_menu(target);
 
 	// make sure MAME is paused
 	mui.machine().pause();

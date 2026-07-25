@@ -8,6 +8,9 @@
 
     31/Mar/2001 -
 
+    TODO:
+    - convert irq system to input_merger;
+
 *****************************************************************************/
 
 #include "emu.h"
@@ -43,8 +46,8 @@ public:
 	template <int Mask> int status_r();
 
 protected:
-	virtual void machine_start() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	void bank_sel_w(uint8_t data);
@@ -57,6 +60,7 @@ private:
 	void scroll_x_w(uint8_t data);
 	void scroll_y_w(uint8_t data);
 
+	IRQ_CALLBACK_MEMBER( vector_r );
 	void interrupt_m(int state);
 	INTERRUPT_GEN_MEMBER(interrupt_s);
 
@@ -68,9 +72,9 @@ private:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect, gfx_element *gfx);
 
-	void base_map(address_map &map);
-	void main_map(address_map &map);
-	void sub_map(address_map &map);
+	void base_map(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
+	void sub_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<cpu_device> m_subcpu;
@@ -254,7 +258,8 @@ void xxmissio_state::status_m_w(uint8_t data)
 
 		case 0x40:
 			m_status &= ~0x08;
-			m_subcpu->set_input_line_and_vector(0, HOLD_LINE, 0x10); // Z80
+			//m_subcpu->set_input_line_and_vector(0, HOLD_LINE, 0x10);
+			m_subcpu->set_input_line(0, HOLD_LINE);
 			break;
 
 		case 0x80:
@@ -277,9 +282,17 @@ void xxmissio_state::status_s_w(uint8_t data)
 
 		case 0x80:
 			m_status &= ~0x04;
-			m_maincpu->set_input_line_and_vector(0, HOLD_LINE, 0x10); // Z80
+			// m_maincpu->set_input_line_and_vector(0, HOLD_LINE, 0x10);
+			m_maincpu->set_input_line(0, HOLD_LINE);
 			break;
 	}
+}
+
+IRQ_CALLBACK_MEMBER(xxmissio_state::vector_r)
+{
+	// TODO: both CPUs runs in IM 1, where is this coming from? Schematics or misunderstanding?
+	// cfr. the two commented out _vector calls above
+	return 0x10;
 }
 
 void xxmissio_state::interrupt_m(int state)
@@ -419,14 +432,14 @@ static INPUT_PORTS_START( xxmissio )
 	PORT_DIPUNUSED_DIPLOC( 0x80, 0x80, "SW2:8" ) // Shown as "Unused" in the manual
 
 	PORT_START("STATUS")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(xxmissio_state, status_r<0x01>)
-	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen")
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(xxmissio_state, status_r<0x04>)
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(xxmissio_state, status_r<0x08>)
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(xxmissio_state, status_r<0x10>)
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(xxmissio_state, status_r<0x20>)
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(xxmissio_state, status_r<0x40>)
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(xxmissio_state, status_r<0x80>)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(xxmissio_state::status_r<0x01>))
+	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank))
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(xxmissio_state::status_r<0x04>))
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(xxmissio_state::status_r<0x08>))
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(xxmissio_state::status_r<0x10>))
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(xxmissio_state::status_r<0x20>))
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(xxmissio_state::status_r<0x40>))
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(xxmissio_state::status_r<0x80>))
 INPUT_PORTS_END
 
 /****************************************************************************/
@@ -466,9 +479,11 @@ void xxmissio_state::xxmissio(machine_config &config)
 	// basic machine hardware
 	Z80(config, m_maincpu, 12_MHz_XTAL / 4); // 3.0MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &xxmissio_state::main_map);
+	m_maincpu->set_irq_acknowledge_callback(FUNC(xxmissio_state::vector_r));
 
 	Z80(config, m_subcpu, 12_MHz_XTAL / 4); // 3.0MHz
 	m_subcpu->set_addrmap(AS_PROGRAM, &xxmissio_state::sub_map);
+	m_subcpu->set_irq_acknowledge_callback(FUNC(xxmissio_state::vector_r));
 	m_subcpu->set_periodic_int(FUNC(xxmissio_state::interrupt_s), attotime::from_hz(2*60));
 
 	config.set_maximum_quantum(attotime::from_hz(6000));

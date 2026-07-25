@@ -73,7 +73,7 @@ public:
 	void tk85(machine_config &config);
 
 private:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	uint8_t key_matrix_r();
 	uint8_t nd80z_key_r();
@@ -83,12 +83,12 @@ private:
 	uint8_t display_r(offs_t offset);
 	void display_w(offs_t offset, uint8_t data);
 
-	void ics8080_mem(address_map &map);
-	void mikrolab_io(address_map &map);
-	void nd80z_io(address_map &map);
-	void tk80_io(address_map &map);
-	void tk80_mem(address_map &map);
-	void tk85_mem(address_map &map);
+	void ics8080_mem(address_map &map) ATTR_COLD;
+	void mikrolab_io(address_map &map) ATTR_COLD;
+	void nd80z_io(address_map &map) ATTR_COLD;
+	void tk80_io(address_map &map) ATTR_COLD;
+	void tk80_mem(address_map &map) ATTR_COLD;
+	void tk85_mem(address_map &map) ATTR_COLD;
 
 	uint8_t m_term_data = 0U;
 	uint8_t m_keyb_press = 0U;
@@ -104,8 +104,6 @@ private:
 
 void tk80_state::machine_start()
 {
-	m_digit.resolve();
-
 	save_item(NAME(m_term_data));
 	save_item(NAME(m_keyb_press));
 	save_item(NAME(m_keyb_press_flag));

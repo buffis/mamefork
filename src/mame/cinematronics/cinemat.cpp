@@ -44,8 +44,6 @@
 #include "warrior.lh"
 #include "wotw.lh"
 
-#define MASTER_CLOCK            XTAL(19'923'000)
-
 
 /*************************************
  *
@@ -61,8 +59,6 @@ void cinemat_state::machine_start()
 	save_item(NAME(m_vector_color));
 	save_item(NAME(m_lastx));
 	save_item(NAME(m_lasty));
-	m_led.resolve();
-	m_pressed.resolve();
 }
 
 
@@ -372,7 +368,7 @@ static INPUT_PORTS_START( spacewar )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_PLAYER(1)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_PLAYER(1)
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Reset Playfield") PORT_CODE(KEYCODE_R)
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -451,7 +447,7 @@ static INPUT_PORTS_START( barrier )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -484,19 +480,19 @@ static INPUT_PORTS_START( speedfrk )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 
 	PORT_START("WHEEL")
 	PORT_BIT( 0xff, 0x00, IPT_DIAL ) PORT_SENSITIVITY(100) PORT_KEYDELTA(10) PORT_RESET
 
 	PORT_START("GEAR")
-	PORT_BIT (0x03, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(cinemat_state, speedfrk_gear_number_r)
+	PORT_BIT (0x03, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(cinemat_state::speedfrk_gear_number_r))
 
 	PORT_START("GEARRAW")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP ) PORT_NAME("1st gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(cinemat_state, speedfrk_gear_change_w<0>)
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_JOYSTICK_LEFT ) PORT_NAME("2nd gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(cinemat_state, speedfrk_gear_change_w<1>)
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_JOYSTICK_RIGHT ) PORT_NAME("3rd gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(cinemat_state, speedfrk_gear_change_w<2>)
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_JOYSTICK_DOWN ) PORT_NAME("4th gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(cinemat_state, speedfrk_gear_change_w<3>)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP ) PORT_NAME("1st gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(FUNC(cinemat_state::speedfrk_gear_change_w<0>))
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_JOYSTICK_LEFT ) PORT_NAME("2nd gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(FUNC(cinemat_state::speedfrk_gear_change_w<1>))
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_JOYSTICK_RIGHT ) PORT_NAME("3rd gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(FUNC(cinemat_state::speedfrk_gear_change_w<2>))
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_JOYSTICK_DOWN ) PORT_NAME("4th gear") PORT_PLAYER(2) PORT_WRITE_LINE_MEMBER(FUNC(cinemat_state::speedfrk_gear_change_w<3>))
 INPUT_PORTS_END
 
 
@@ -532,7 +528,7 @@ static INPUT_PORTS_START( starhawk )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -576,7 +572,7 @@ static INPUT_PORTS_START( sundance )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 
 	PORT_START("PAD1")
 	PORT_BIT( 0x0001, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("P1 Pad 1") PORT_CODE(KEYCODE_7_PAD) PORT_PLAYER(1)
@@ -632,7 +628,7 @@ static INPUT_PORTS_START( tailg )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 
 	PORT_START("ANALOGX")
 	PORT_BIT( 0xfff, 0x800, IPT_AD_STICK_X ) PORT_MINMAX(0x200,0xe00) PORT_SENSITIVITY(100) PORT_KEYDELTA(50)
@@ -670,7 +666,7 @@ static INPUT_PORTS_START( warrior )
 	PORT_DIPUNUSED_DIPLOC( 0x10, IP_ACTIVE_HIGH, "SW1:!5" )
 	PORT_DIPUNUSED_DIPLOC( 0x20, IP_ACTIVE_HIGH, "SW1:!6" )
 	PORT_DIPUNUSED_DIPLOC( 0x40, IP_ACTIVE_HIGH, "SW1:!7" )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -706,7 +702,7 @@ static INPUT_PORTS_START( armora )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE( 0x40, IP_ACTIVE_HIGH )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -742,7 +738,7 @@ static INPUT_PORTS_START( ripoff )
 	PORT_DIPSETTING(    0x00, "Individual" )
 	PORT_DIPSETTING(    0x20, "Combined" )
 	PORT_SERVICE( 0x40, IP_ACTIVE_LOW )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -779,7 +775,7 @@ static INPUT_PORTS_START( starcas )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE( 0x40, IP_ACTIVE_HIGH )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( starcasc )
@@ -815,7 +811,7 @@ static INPUT_PORTS_START( starcasc )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE( 0x40, IP_ACTIVE_HIGH )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( solarq )
@@ -846,7 +842,7 @@ static INPUT_PORTS_START( solarq )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE( 0x40, IP_ACTIVE_HIGH )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -880,7 +876,7 @@ static INPUT_PORTS_START( boxingb )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE( 0x40, IP_ACTIVE_LOW )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 
 	PORT_START("DIAL")
 	PORT_BIT( 0xff, 0x00, IPT_DIAL ) PORT_REVERSE PORT_SENSITIVITY(100) PORT_KEYDELTA(5)
@@ -922,7 +918,7 @@ static INPUT_PORTS_START( wotw )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE( 0x40, IP_ACTIVE_LOW )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -964,7 +960,7 @@ static INPUT_PORTS_START( demon )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Free_Play ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -1010,7 +1006,7 @@ static INPUT_PORTS_START( qb3 )
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 	PORT_SERVICE( 0x40, IP_ACTIVE_LOW )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, cinemat_state, coin_inserted, 0)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cinemat_state::coin_inserted), 0)
 INPUT_PORTS_END
 
 
@@ -1024,7 +1020,7 @@ INPUT_PORTS_END
 void cinemat_state::cinemat_nojmi_4k(machine_config &config)
 {
 	// basic machine hardware
-	CCPU(config, m_maincpu, MASTER_CLOCK/4);
+	CCPU(config, m_maincpu, 19.923_MHz_XTAL/4);
 	m_maincpu->set_vector_func(FUNC(cinemat_state::cinemat_vector_callback));
 	m_maincpu->external_func().set(FUNC(cinemat_state::joystick_read));
 	m_maincpu->set_addrmap(AS_PROGRAM, &cinemat_state::program_map_4k);
@@ -1036,13 +1032,15 @@ void cinemat_state::cinemat_nojmi_4k(machine_config &config)
 	m_outlatch->q_out_cb<6>().set(FUNC(cinemat_state::vector_control_w));
 
 	// video hardware
-	VECTOR(config, "vector", 0);
+	VECTOR(config, "vector");
+
 	SCREEN(config, m_screen, SCREEN_TYPE_VECTOR);
 	m_screen->set_video_attributes(VIDEO_ALWAYS_UPDATE);
-	m_screen->set_refresh_hz(MASTER_CLOCK/4/16/16/16/16/2);
+	m_screen->set_refresh_hz(19.923_MHz_XTAL/4/16/16/16/16/2);
 	m_screen->set_size(1024, 768);
-	m_screen->set_visarea(0, 1023, 0, 767);
+	m_screen->set_visarea_full();
 	m_screen->set_screen_update(FUNC(cinemat_state::screen_update_cinemat));
+	m_screen->screen_vblank().set(m_maincpu, FUNC(ccpu_cpu_device::wdt_trigger));
 }
 
 void cinemat_state::cinemat_jmi_4k(machine_config &config)
@@ -1089,7 +1087,7 @@ void cinemat_state::spacewar(machine_config &config)
 	cinemat_nojmi_4k(config);
 
 	SPEAKER(config, "mono").front_center();
-	SPACE_WARS_AUDIO(config, "soundboard", 0)
+	SPACE_WARS_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 
@@ -1101,7 +1099,7 @@ void cinemat_state::barrier(machine_config &config)
 	cinemat_jmi_4k(config);
 
 	SPEAKER(config, "mono").front_center();
-	BARRIER_AUDIO(config, "soundboard", 0)
+	BARRIER_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1117,7 +1115,7 @@ void cinemat_state::speedfrk(machine_config &config)
 	cinemat_nojmi_8k(config);
 
 	SPEAKER(config, "mono").front_center();
-	SPEED_FREAK_AUDIO(config, "soundboard", 0)
+	SPEED_FREAK_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 //  m_outlatch->q_out_cb<1>().set(FUNC(cinemat_state::speedfrk_start_led_w));
@@ -1128,7 +1126,7 @@ void cinemat_state::starhawk(machine_config &config)
 	cinemat_jmi_4k(config);
 
 	SPEAKER(config, "mono").front_center();
-	STAR_HAWK_AUDIO(config, "soundboard", 0)
+	STAR_HAWK_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1138,7 +1136,7 @@ void cinemat_16level_state::sundance(machine_config &config)
 	cinemat_jmi_8k(config);
 
 	SPEAKER(config, "mono").front_center();
-	SUNDANCE_AUDIO(config, "soundboard", 0)
+	SUNDANCE_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1148,7 +1146,7 @@ void cinemat_state::tailg(machine_config &config)
 	cinemat_nojmi_8k(config);
 
 	SPEAKER(config, "mono").front_center();
-	TAIL_GUNNER_AUDIO(config, "soundboard", 0)
+	TAIL_GUNNER_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 	m_outlatch->q_out_cb<7>().set(FUNC(cinemat_state::mux_select_w));
@@ -1159,7 +1157,7 @@ void cinemat_state::warrior(machine_config &config)
 	cinemat_jmi_8k(config);
 
 	SPEAKER(config, "mono").front_center();
-	WARRIOR_AUDIO(config, "soundboard", 0)
+	WARRIOR_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1169,7 +1167,7 @@ void cinemat_state::armora(machine_config &config)
 	cinemat_jmi_16k(config);
 
 	SPEAKER(config, "mono").front_center();
-	ARMOR_ATTACK_AUDIO(config, "soundboard", 0)
+	ARMOR_ATTACK_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1179,7 +1177,7 @@ void cinemat_state::ripoff(machine_config &config)
 	cinemat_jmi_8k(config);
 
 	SPEAKER(config, "mono").front_center();
-	RIPOFF_AUDIO(config, "soundboard", 0)
+	RIPOFF_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1189,7 +1187,7 @@ void cinemat_state::starcas(machine_config &config)
 	cinemat_jmi_8k(config);
 
 	SPEAKER(config, "mono").front_center();
-	STAR_CASTLE_AUDIO(config, "soundboard", 0)
+	STAR_CASTLE_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1199,7 +1197,7 @@ void cinemat_64level_state::solarq(machine_config &config)
 	cinemat_jmi_16k(config);
 
 	SPEAKER(config, "mono").front_center();
-	SOLAR_QUEST_AUDIO(config, "soundboard", 0)
+	SOLAR_QUEST_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1209,7 +1207,7 @@ void cinemat_color_state::boxingb(machine_config &config)
 	cinemat_jmi_32k(config);
 
 	SPEAKER(config, "mono").front_center();
-	BOXING_BUGS_AUDIO(config, "soundboard", 0)
+	BOXING_BUGS_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 	m_outlatch->q_out_cb<7>().append(FUNC(cinemat_state::mux_select_w));
@@ -1223,7 +1221,7 @@ void cinemat_state::wotw(machine_config &config)
 	m_screen->set_visarea(0, 1120, 0, 767);
 
 	SPEAKER(config, "mono").front_center();
-	WAR_OF_THE_WORLDS_AUDIO(config, "soundboard", 0)
+	WAR_OF_THE_WORLDS_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }
@@ -1233,7 +1231,7 @@ void cinemat_color_state::wotwc(machine_config &config)
 	cinemat_jmi_16k(config);
 
 	SPEAKER(config, "mono").front_center();
-	WAR_OF_THE_WORLDS_AUDIO(config, "soundboard", 0)
+	WAR_OF_THE_WORLDS_AUDIO(config, "soundboard")
 		.configure_latch_inputs(*m_outlatch)
 		.add_route(ALL_OUTPUTS, "mono", 1.0);
 }

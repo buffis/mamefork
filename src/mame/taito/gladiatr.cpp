@@ -496,7 +496,7 @@ u8 ppking_state::ppking_qx0_r(offs_t offset)
 			m_mcu[0].rxd |= 0x40;
 	}
 
-	//printf("%04x rst %d\n",m_maincpu->pc(),m_mcu[0].rst);
+	//logerror("%04x rst %d\n", m_maincpu->pc(),m_mcu[0].rst);
 
 	return m_mcu[0].rxd;
 }
@@ -536,8 +536,7 @@ void ppking_state::ppking_qx0_w(offs_t offset, u8 data)
 				break;
 
 			default:
-				printf("%02x %02x\n",offset,data);
-				break;
+				logerror("ppking_qx0_w: %02x %02x\n", offset, data);
 		}
 	}
 	else
@@ -858,8 +857,8 @@ static INPUT_PORTS_START( gladiatr )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT )  PORT_8WAY
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_JOYSTICK_UP )    PORT_8WAY
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN )  PORT_8WAY
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1 )                                   PORT_CHANGED_MEMBER(DEVICE_SELF, gladiatr_state, p1_s1, 0)
-	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 )                                   PORT_CHANGED_MEMBER(DEVICE_SELF, gladiatr_state, p1_s2, 0)
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1 )                                   PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(gladiatr_state::p1_s1), 0)
+	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 )                                   PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(gladiatr_state::p1_s2), 0)
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_START1 )
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_START2 )
 
@@ -868,8 +867,8 @@ static INPUT_PORTS_START( gladiatr )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT )  PORT_8WAY   PORT_COCKTAIL
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_JOYSTICK_UP )    PORT_8WAY   PORT_COCKTAIL
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN )  PORT_8WAY   PORT_COCKTAIL
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1 )                    PORT_COCKTAIL  PORT_CHANGED_MEMBER(DEVICE_SELF, gladiatr_state, p2_s1, 0)
-	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 )                    PORT_COCKTAIL  PORT_CHANGED_MEMBER(DEVICE_SELF, gladiatr_state, p2_s2, 0)
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1 )                    PORT_COCKTAIL  PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(gladiatr_state::p2_s1), 0)
+	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON2 )                    PORT_COCKTAIL  PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(gladiatr_state::p2_s2), 0)
 	PORT_BIT( 0xc0, IP_ACTIVE_LOW, IPT_UNUSED )                                     // coin counter outputs
 
 	PORT_START("IN2")   // cctl p1
@@ -1073,7 +1072,7 @@ void gladiatr_state::gladiatr(machine_config &config)
 	m_msm->set_prescaler_selector(msm5205_device::SEX_4B);  /* vclk input mode */
 	m_msm->add_route(ALL_OUTPUTS, "mono", 0.60);
 
-	LS259(config, "filtlatch", 0); // 9R - filters on sound output
+	LS259(config, "filtlatch"); // 9R - filters on sound output
 }
 
 void gladiatr_state::greatgur(machine_config &config)
@@ -1450,9 +1449,9 @@ void ppking_state::init_ppking()
 }
 
 
-//    year  name      parent    machine   input     class           init           rot    company                                fullname                                         flags
-GAME( 1985, ppking,   0,        ppking,   ppking,   ppking_state,   init_ppking,   ROT90, "Taito America Corporation",           "Ping-Pong King",                                MACHINE_IMPERFECT_SOUND | MACHINE_NO_COCKTAIL | MACHINE_NODEVICE_LAN )
-GAME( 1986, gladiatr, 0,        gladiatr, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito America Corporation", "Gladiator (US)",                                MACHINE_SUPPORTS_SAVE )
-GAME( 1986, ogonsiro, gladiatr, gladiatr, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito Corporation",         "Ougon no Shiro (Japan)",                        MACHINE_SUPPORTS_SAVE )
-GAME( 1986, greatgur, gladiatr, greatgur, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito Corporation",         "Great Gurianos (bootleg?)",                     MACHINE_SUPPORTS_SAVE )
-GAME( 1986, gcastle,  gladiatr, gladiatr, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito Corporation",         "Golden Castle (prototype?)",                    MACHINE_SUPPORTS_SAVE ) // incomplete dump
+//    Year  Name      Parent    Machine   Input     Class           Init           ROT    Company                    Fullname                                         Flags
+GAME( 1985, ppking,   0,        ppking,   ppking,   ppking_state,   init_ppking,   ROT90, "Taito America",           "Ping-Pong King",                                MACHINE_IMPERFECT_SOUND | MACHINE_NO_COCKTAIL | MACHINE_NODEVICE_LAN )
+GAME( 1986, gladiatr, 0,        gladiatr, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito America", "Gladiator (US)",                                MACHINE_SUPPORTS_SAVE )
+GAME( 1986, ogonsiro, gladiatr, gladiatr, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito",         "Ougon no Shiro (Japan)",                        MACHINE_SUPPORTS_SAVE )
+GAME( 1986, greatgur, gladiatr, greatgur, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito",         "Great Gurianos (bootleg?)",                     MACHINE_SUPPORTS_SAVE )
+GAME( 1986, gcastle,  gladiatr, gladiatr, gladiatr, gladiatr_state, init_gladiatr, ROT0,  "Allumer / Taito",         "Golden Castle (prototype?)",                    MACHINE_SUPPORTS_SAVE ) // incomplete dump

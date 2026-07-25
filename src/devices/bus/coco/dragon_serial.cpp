@@ -39,8 +39,8 @@ protected:
 	virtual memory_region *get_cart_memregion() override { return m_eprom; }
 
 	// optional information overrides
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
 
 	virtual u8 cts_read(offs_t offset) override;
 	virtual u8 scs_read(offs_t offset) override;
@@ -73,7 +73,7 @@ const tiny_rom_entry *dragon_serial_device::device_rom_region() const
 
 void dragon_serial_device::device_add_mconfig(machine_config &config)
 {
-	ACIA6850(config, m_acia, 0);
+	ACIA6850(config, m_acia);
 	m_acia->txd_handler().set("rs232", FUNC(rs232_port_device::write_txd));
 	m_acia->rts_handler().set("rs232", FUNC(rs232_port_device::write_rts));
 	m_acia->irq_handler().set([this](int state) { set_line_value(line::NMI, state); });

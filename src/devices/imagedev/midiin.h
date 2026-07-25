@@ -33,7 +33,7 @@ class midiin_device :    public device_t,
 {
 public:
 	// construction/destruction
-	midiin_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	midiin_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 	~midiin_device();
 
 	auto input_callback() { return m_input_cb.bind(); }
@@ -54,9 +54,9 @@ public:
 
 protected:
 	// device_t implementation
-	virtual ioport_constructor device_input_ports() const override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_serial_interface implementation
 	virtual void tra_complete() override;    // Tx completed sending byte

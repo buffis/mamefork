@@ -47,7 +47,7 @@ public:
 	void tk80bs(machine_config &config);
 
 protected:
-	 virtual void machine_start() override;
+	 virtual void machine_start() override ATTR_COLD;
 
 private:
 	uint8_t ppi_custom_r(offs_t offse);
@@ -56,7 +56,7 @@ private:
 	uint8_t port_a_r();
 	uint8_t port_b_r();
 	uint32_t screen_update_tk80bs(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-	void mem_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
 	uint8_t m_term_data = 0U;
 	required_shared_ptr<uint8_t> m_p_videoram;
 	required_device<cpu_device> m_maincpu;
@@ -204,7 +204,7 @@ void tk80bs_state::tk80bs(machine_config &config)
 	m_ppi->in_pa_callback().set(FUNC(tk80bs_state::port_a_r));
 	m_ppi->in_pb_callback().set(FUNC(tk80bs_state::port_b_r));
 
-	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard", 0));
+	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard"));
 	keyboard.set_keyboard_callback(FUNC(tk80bs_state::kbd_put));
 }
 

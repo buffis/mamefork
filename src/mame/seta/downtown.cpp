@@ -15,7 +15,7 @@ Custom :    X1-001A, X1-002A (SDIP64)   Sprites
             X1-004           (SDIP52)   Inputs
             X1-005 or X1-009 (DIP48)    NVRAM/simple protection
             X1-006           (SDIP64)   Palette
-            X1-010           (QFP80)    Sound: 16 Bit PCM
+            X1-010           (QFP80)    Sound: 8 Bit PCM
             X1-011           (QFP80)    Graphics mixing
             X1-012           (QFP100)   Tilemaps
             X1-014                      Sprites?
@@ -44,6 +44,7 @@ Notes:
 TODO:
 - metafox test grid not aligned when screen flipped
 - tndrcade: lots of flickering sprites
+- Verify screen raw parameters
 
 ********************************************************************************
 
@@ -293,7 +294,7 @@ P1-049-A
 #include "emu.h"
 #include "x1_012.h"
 
-#include "cpu/m6502/m65c02.h"
+#include "cpu/m6502/w65c02.h"
 #include "cpu/m68000/m68000.h"
 #include "machine/74157.h"
 #include "machine/gen_latch.h"
@@ -345,13 +346,13 @@ public:
 	void tndrcade(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	u16 ipl1_ack_r();
 	void ipl1_ack_w(u16 data = 0);
 
-	void seta_coin_lockout_w(u8 data);
-	X1_001_SPRITE_GFXBANK_CB_MEMBER(setac_gfxbank_callback);
+	void coin_lockout_w(u8 data);
+	X1_001_SPRITE_GFXBANK_CB_MEMBER(gfxbank_callback);
 	u32 screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
 	u8 sharedram_68000_r(offs_t offset);
@@ -365,8 +366,8 @@ protected:
 
 	TIMER_DEVICE_CALLBACK_MEMBER(tndrcade_sub_interrupt);
 
-	void tndrcade_map(address_map &map);
-	void tndrcade_sub_map(address_map &map);
+	void tndrcade_map(address_map &map) ATTR_COLD;
+	void tndrcade_sub_map(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<cpu_device> m_subcpu;
@@ -421,6 +422,7 @@ protected:
 	u8 downtown_ip_r(offs_t offset);
 	void calibr50_sub_bankswitch_w(u8 data);
 	void calibr50_soundlatch2_w(u8 data);
+	void calibr50_sub_reset_w(u8 data);
 	void twineagl_ctrl_w(u8 data);
 	u16 twineagl_debug_r();
 	u16 twineagl_200100_r(offs_t offset);
@@ -432,15 +434,15 @@ protected:
 	DECLARE_MACHINE_RESET(calibr50);
 	u16 twineagl_tile_offset(u16 code);
 
-	TIMER_DEVICE_CALLBACK_MEMBER(seta_sub_interrupt);
+	TIMER_DEVICE_CALLBACK_MEMBER(sub_interrupt);
 	TIMER_DEVICE_CALLBACK_MEMBER(calibr50_interrupt);
 
-	void calibr50_map(address_map &map);
-	void calibr50_sub_map(address_map &map);
-	void downtown_map(address_map &map);
-	void downtown_sub_map(address_map &map);
-	void metafox_sub_map(address_map &map);
-	void twineagl_sub_map(address_map &map);
+	void calibr50_map(address_map &map) ATTR_COLD;
+	void calibr50_sub_map(address_map &map) ATTR_COLD;
+	void downtown_map(address_map &map) ATTR_COLD;
+	void downtown_sub_map(address_map &map) ATTR_COLD;
+	void metafox_sub_map(address_map &map) ATTR_COLD;
+	void twineagl_sub_map(address_map &map) ATTR_COLD;
 
 	required_device<x1_012_device> m_tiles;
 	required_device<x1_010_device> m_x1snd;
@@ -466,11 +468,11 @@ public:
 
 	void usclssic(machine_config &config);
 
-	DECLARE_CUSTOM_INPUT_MEMBER(trackball_x_r);
-	DECLARE_CUSTOM_INPUT_MEMBER(trackball_y_r);
+	ioport_value trackball_x_r();
+	ioport_value trackball_y_r();
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	u16 dsw_r(offs_t offset);
@@ -483,7 +485,7 @@ private:
 
 	void usclssic_set_pens();
 
-	void usclssic_map(address_map &map);
+	void usclssic_map(address_map &map) ATTR_COLD;
 
 	required_device<upd4701_device> m_upd4701;
 	required_device<hc157_device> m_buttonmux;
@@ -517,7 +519,7 @@ u16 usclssic_state::tile_offset(u16 code)
 	return m_tiles_offset + code;
 }
 
-X1_001_SPRITE_GFXBANK_CB_MEMBER(tndrcade_state::setac_gfxbank_callback)
+X1_001_SPRITE_GFXBANK_CB_MEMBER(tndrcade_state::gfxbank_callback)
 {
 	const int bank = (color & 0x06) >> 1;
 	code = (code & 0x3fff) + (bank * 0x4000);
@@ -668,7 +670,7 @@ void tndrcade_state::sub_ctrl_w(offs_t offset, u8 data)
 	switch (offset)
 	{
 		case 0/2:   // bit 0: reset sub cpu?
-			if (!(m_sub_ctrl_data & 1) && (data & 1))
+			if (BIT(~m_sub_ctrl_data, 0) && BIT(data, 0))
 				m_subcpu->pulse_input_line(INPUT_LINE_RESET, attotime::zero);
 			m_sub_ctrl_data = data;
 			break;
@@ -700,7 +702,7 @@ u8 tndrcade_state::dsw2_r()
 }
 
 
-void tndrcade_state::seta_coin_lockout_w(u8 data)
+void tndrcade_state::coin_lockout_w(u8 data)
 {
 	machine().bookkeeping().coin_counter_w(0, BIT(data, 0));
 	machine().bookkeeping().coin_counter_w(1, BIT(data, 1));
@@ -755,20 +757,20 @@ void downtown_state::ipl2_ack_w(u16 data)
 
 void tndrcade_state::tndrcade_map(address_map &map)
 {
-	map(0x000000, 0x07ffff).rom();                             // ROM
+	map(0x000000, 0x07ffff).rom();
 	map(0x200000, 0x200001).w(FUNC(tndrcade_state::ipl1_ack_w));
-	map(0x280000, 0x280001).nopw();                        // ? 0 / 1 (sub cpu related?)
-	map(0x300000, 0x300001).nopw();                        // ? 0 / 1
-	map(0x380000, 0x3803ff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette"); // Palette
+	map(0x280000, 0x280001).nopw(); // ? 0 / 1 (sub cpu related?)
+	map(0x300000, 0x300001).nopw(); // ? 0 / 1
+	map(0x380000, 0x3803ff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");
 	map(0x400000, 0x400000).w(m_spritegen, FUNC(x1_001_device::spritebgflag_w8));
-	map(0x600000, 0x6005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16));     // Sprites Y
+	map(0x600000, 0x6005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16));
 	map(0x600600, 0x600607).ram().rw(m_spritegen, FUNC(x1_001_device::spritectrl_r16), FUNC(x1_001_device::spritectrl_w16));
 
-	map(0x800000, 0x800007).w(FUNC(tndrcade_state::sub_ctrl_w)).umask16(0x00ff);               // Sub CPU Control?
-	map(0xa00000, 0xa00fff).rw(FUNC(tndrcade_state::sharedram_68000_r), FUNC(tndrcade_state::sharedram_68000_w)).umask16(0x00ff);  // Shared RAM
-	map(0xc00000, 0xc03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));     // Sprites Code + X + Attr
-	map(0xe00000, 0xe03fff).ram().share("mainram");                  // RAM (Mirrored?)
-	map(0xffc000, 0xffffff).ram().share("mainram");                  // RAM (Mirrored?)
+	map(0x800000, 0x800007).w(FUNC(tndrcade_state::sub_ctrl_w)).umask16(0x00ff); // Sub CPU Control?
+	map(0xa00000, 0xa00fff).rw(FUNC(tndrcade_state::sharedram_68000_r), FUNC(tndrcade_state::sharedram_68000_w)).umask16(0x00ff);
+	map(0xc00000, 0xc03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));
+	map(0xe00000, 0xe03fff).ram().share("mainram"); // Mirrored?
+	map(0xffc000, 0xffffff).ram().share("mainram"); // Mirrored?
 }
 
 
@@ -788,24 +790,24 @@ void downtown_state::twineagl_ctrl_w(u8 data)
 
 void downtown_state::downtown_map(address_map &map)
 {
-	map(0x000000, 0x09ffff).rom();                             // ROM
-	map(0x100000, 0x103fff).rw(m_x1snd, FUNC(x1_010_device::word_r), FUNC(x1_010_device::word_w));   // Sound
-	map(0x200000, 0x200001).noprw();                             // watchdog? (twineagl)
+	map(0x000000, 0x09ffff).rom();
+	map(0x100000, 0x103fff).rw(m_x1snd, FUNC(x1_010_device::word_r), FUNC(x1_010_device::word_w));
+	map(0x200000, 0x200001).noprw(); // watchdog? (twineagl)
 	map(0x300000, 0x300001).w(FUNC(downtown_state::ipl1_ack_w));
-	map(0x400000, 0x400007).w(FUNC(downtown_state::twineagl_tilebank_w)).umask16(0x00ff);      // special tile banking to animate water in twineagl
+	map(0x400000, 0x400007).w(FUNC(downtown_state::twineagl_tilebank_w)).umask16(0x00ff); // special tile banking to animate water in twineagl
 	map(0x500001, 0x500001).w(FUNC(downtown_state::twineagl_ctrl_w));
 	map(0x600001, 0x600001).r(FUNC(downtown_state::dsw1_r));
 	map(0x600003, 0x600003).r(FUNC(downtown_state::dsw2_r));
-	map(0x700000, 0x7003ff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");  // Palette
-	map(0x800000, 0x800005).w(m_tiles, FUNC(x1_012_device::vctrl_w));// VRAM Ctrl
-	map(0x900000, 0x903fff).ram().w(m_tiles, FUNC(x1_012_device::vram_w)).share("tiles"); // VRAM
-	map(0xa00000, 0xa00007).w(FUNC(downtown_state::sub_ctrl_w)).umask16(0x00ff);               // Sub CPU Control?
-	map(0xb00000, 0xb00fff).rw(FUNC(downtown_state::sharedram_68000_r), FUNC(downtown_state::sharedram_68000_w)).umask16(0x00ff);  // Shared RAM
+	map(0x700000, 0x7003ff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");
+	map(0x800000, 0x800005).w(m_tiles, FUNC(x1_012_device::vctrl_w));
+	map(0x900000, 0x903fff).ram().w(m_tiles, FUNC(x1_012_device::vram_w)).share("tiles");
+	map(0xa00000, 0xa00007).w(FUNC(downtown_state::sub_ctrl_w)).umask16(0x00ff);
+	map(0xb00000, 0xb00fff).rw(FUNC(downtown_state::sharedram_68000_r), FUNC(downtown_state::sharedram_68000_w)).umask16(0x00ff);
 	map(0xc00000, 0xc00000).w(m_spritegen, FUNC(x1_001_device::spritebgflag_w8));
-	map(0xd00000, 0xd005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16));     // Sprites Y
+	map(0xd00000, 0xd005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16));
 	map(0xd00600, 0xd00607).ram().rw(m_spritegen, FUNC(x1_001_device::spritectrl_r16), FUNC(x1_001_device::spritectrl_w16));
-	map(0xe00000, 0xe03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));     // Sprites Code + X + Attr
-	map(0xf00000, 0xffffff).ram();                             // RAM
+	map(0xe00000, 0xe03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));
+	map(0xf00000, 0xffffff).ram();
 }
 
 
@@ -815,30 +817,30 @@ void downtown_state::downtown_map(address_map &map)
 
 void downtown_state::calibr50_map(address_map &map)
 {
-	map(0x000000, 0x09ffff).rom();                             // ROM
+	map(0x000000, 0x09ffff).rom();
 	map(0x100000, 0x100001).r(FUNC(downtown_state::ipl2_ack_r));
-	map(0x200000, 0x200fff).ram().share("nvram");              // NVRAM (battery backed)
+	map(0x200000, 0x200fff).ram().share("nvram");
 	map(0x300000, 0x300001).rw(FUNC(downtown_state::ipl1_ack_r), FUNC(downtown_state::ipl1_ack_w));
 	map(0x400000, 0x400001).r("watchdog", FUNC(watchdog_timer_device::reset16_r));
-	map(0x500000, 0x500001).nopw();                        // ?
+	map(0x500001, 0x500001).w(FUNC(downtown_state::calibr50_sub_reset_w));
 	map(0x600001, 0x600001).r(FUNC(downtown_state::dsw1_r));
 	map(0x600003, 0x600003).r(FUNC(downtown_state::dsw2_r));
-	map(0x700000, 0x7003ff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");  // Palette
-	map(0x800000, 0x800005).w(FUNC(downtown_state::vram_layer0_vctrl_raster_trampoline_w));// VRAM Ctrl
-	map(0x900000, 0x903fff).ram().w(m_tiles, FUNC(x1_012_device::vram_w)).share("tiles"); // VRAM
-	map(0x904000, 0x904fff).ram();                             //
-	map(0xa00000, 0xa00001).portr("P1");                 // X1-004
-	map(0xa00002, 0xa00003).portr("P2");                 // X1-004
-	map(0xa00008, 0xa00009).portr("COINS");              // X1-004
+	map(0x700000, 0x7003ff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");
+	map(0x800000, 0x800005).w(FUNC(downtown_state::vram_layer0_vctrl_raster_trampoline_w));
+	map(0x900000, 0x903fff).ram().w(m_tiles, FUNC(x1_012_device::vram_w)).share("tiles");
+	map(0x904000, 0x904fff).ram();
+	map(0xa00000, 0xa00001).portr("P1");    // X1-004
+	map(0xa00002, 0xa00003).portr("P2");    // X1-004
+	map(0xa00008, 0xa00009).portr("COINS"); // X1-004
 	map(0xa00010, 0xa00017).r("upd4701", FUNC(upd4701_device::read_xy)).umask16(0x00ff);
 	map(0xa00019, 0xa00019).r("upd4701", FUNC(upd4701_device::reset_xy_r));
-	map(0xb00001, 0xb00001).r(m_soundlatch[1], FUNC(generic_latch_8_device::read)); // From Sub CPU
-	map(0xb00001, 0xb00001).w(m_soundlatch[0], FUNC(generic_latch_8_device::write)); // To Sub CPU
+	map(0xb00001, 0xb00001).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));
+	map(0xb00001, 0xb00001).w(m_soundlatch[0], FUNC(generic_latch_8_device::write));
 	map(0xc00000, 0xc00000).w(m_spritegen, FUNC(x1_001_device::spritebgflag_w8));
-	map(0xd00000, 0xd005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16));     // Sprites Y
+	map(0xd00000, 0xd005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16));
 	map(0xd00600, 0xd00607).ram().rw(m_spritegen, FUNC(x1_001_device::spritectrl_r16), FUNC(x1_001_device::spritectrl_w16));
-	map(0xe00000, 0xe03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));     // Sprites Code + X + Attr
-	map(0xff0000, 0xffffff).ram();                             // RAM
+	map(0xe00000, 0xe03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));
+	map(0xff0000, 0xffffff).ram();
 }
 
 
@@ -858,12 +860,12 @@ u16 usclssic_state::dsw_r(offs_t offset)
 	return 0;
 }
 
-CUSTOM_INPUT_MEMBER(usclssic_state::trackball_x_r)
+ioport_value usclssic_state::trackball_x_r()
 {
 	return m_track_x[m_port_select ? 1 : 0]->read();
 }
 
-CUSTOM_INPUT_MEMBER(usclssic_state::trackball_y_r)
+ioport_value usclssic_state::trackball_y_r()
 {
 	return m_track_y[m_port_select ? 1 : 0]->read();
 }
@@ -888,31 +890,31 @@ void usclssic_state::lockout_w(u8 data)
 		m_tiles->mark_all_dirty();
 	m_tiles_offset = tiles_offset;
 
-	seta_coin_lockout_w(data);
+	coin_lockout_w(data);
 }
 
 
 void usclssic_state::usclssic_map(address_map &map)
 {
-	map(0x000000, 0x07ffff).rom();                                 // ROM
-	map(0x800000, 0x8005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16)); // Sprites Y
+	map(0x000000, 0x07ffff).rom();
+	map(0x800000, 0x8005ff).ram().rw(m_spritegen, FUNC(x1_001_device::spriteylow_r16), FUNC(x1_001_device::spriteylow_w16));
 	map(0x800600, 0x800607).ram().rw(m_spritegen, FUNC(x1_001_device::spritectrl_r16), FUNC(x1_001_device::spritectrl_w16));
 	map(0x900000, 0x900000).w(m_spritegen, FUNC(x1_001_device::spritebgflag_w8));
-	map(0xa00000, 0xa00005).rw(m_tiles, FUNC(x1_012_device::vctrl_r), FUNC(x1_012_device::vctrl_w));         // VRAM Ctrl
-	map(0xb00000, 0xb003ff).ram().share(m_paletteram);  // Palette
+	map(0xa00000, 0xa00005).rw(m_tiles, FUNC(x1_012_device::vctrl_r), FUNC(x1_012_device::vctrl_w));
+	map(0xb00000, 0xb003ff).ram().share(m_paletteram);
 	map(0xb40000, 0xb40007).r(m_upd4701, FUNC(upd4701_device::read_xy)).umask16(0x00ff);
-	map(0xb40001, 0xb40001).w(FUNC(usclssic_state::lockout_w));  // Coin Lockout + Tiles Banking
+	map(0xb40001, 0xb40001).w(FUNC(usclssic_state::lockout_w)); // Coin Lockout + Tiles Banking
 	map(0xb4000a, 0xb4000b).w(FUNC(usclssic_state::ipl1_ack_w));
-	map(0xb40010, 0xb40011).portr("COINS");                  // Coins
-	map(0xb40011, 0xb40011).w(m_soundlatch[0], FUNC(generic_latch_8_device::write)); // To Sub CPU
-	map(0xb40018, 0xb4001f).r(FUNC(usclssic_state::dsw_r));                // 2 DSWs
+	map(0xb40010, 0xb40011).portr("COINS");
+	map(0xb40011, 0xb40011).w(m_soundlatch[0], FUNC(generic_latch_8_device::write));
+	map(0xb40018, 0xb4001f).r(FUNC(usclssic_state::dsw_r)); // 2 DSWs
 	map(0xb40018, 0xb40019).w("watchdog", FUNC(watchdog_timer_device::reset16_w));
 	map(0xb80000, 0xb80001).r(FUNC(usclssic_state::ipl2_ack_r));
-	map(0xc00000, 0xc03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));         // Sprites Code + X + Attr
-	map(0xd00000, 0xd03fff).ram().w(m_tiles, FUNC(x1_012_device::vram_w)).share("tiles"); // VRAM
-	map(0xd04000, 0xd04fff).ram();                                 //
-	map(0xe00000, 0xe00fff).ram();                                 // NVRAM? (odd bytes)
-	map(0xff0000, 0xffffff).ram();                                 // RAM
+	map(0xc00000, 0xc03fff).ram().rw(m_spritegen, FUNC(x1_001_device::spritecode_r16), FUNC(x1_001_device::spritecode_w16));
+	map(0xd00000, 0xd03fff).ram().w(m_tiles, FUNC(x1_012_device::vram_w)).share("tiles");
+	map(0xd04000, 0xd04fff).ram();
+	map(0xe00000, 0xe00fff).ram(); // NVRAM? (odd bytes)
+	map(0xff0000, 0xffffff).ram();
 }
 
 
@@ -930,10 +932,10 @@ void tndrcade_state::sub_bankswitch_w(u8 data)
 void tndrcade_state::sub_bankswitch_lockout_w(u8 data)
 {
 	sub_bankswitch_w(data);
-	seta_coin_lockout_w(data);
+	coin_lockout_w(data);
 
 	// 65C02 code doesn't seem to do anything to explicitly acknowledge IRQ; implicitly acknowledging it here seems most likely
-	m_subcpu->set_input_line(m65c02_device::IRQ_LINE, CLEAR_LINE);
+	m_subcpu->set_input_line(W65C02_IRQ_LINE, CLEAR_LINE);
 }
 
 
@@ -945,20 +947,20 @@ u8 tndrcade_state::ff_r(){return 0xff;}
 
 void tndrcade_state::tndrcade_sub_map(address_map &map)
 {
-	map(0x0000, 0x01ff).ram();                             // RAM
-	map(0x0800, 0x0800).r(FUNC(tndrcade_state::ff_r));                      // ? (bits 0/1/2/3: 1 -> do test 0-ff/100-1e0/5001-57ff/banked rom)
-	//map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));             //
-	//map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));            //
-	map(0x1000, 0x1000).portr("P1");                 // P1
-	map(0x1000, 0x1000).w(FUNC(tndrcade_state::sub_bankswitch_lockout_w)); // ROM Bank + Coin Lockout
-	map(0x1001, 0x1001).portr("P2");                 // P2
-	map(0x1002, 0x1002).portr("COINS");              // Coins
+	map(0x0000, 0x01ff).ram();
+	map(0x0800, 0x0800).r(FUNC(tndrcade_state::ff_r)); // ? (bits 0/1/2/3: 1 -> do test 0-ff/100-1e0/5001-57ff/banked rom)
+	//map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));
+	//map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));
+	map(0x1000, 0x1000).portr("P1");
+	map(0x1000, 0x1000).w(FUNC(tndrcade_state::sub_bankswitch_lockout_w));
+	map(0x1001, 0x1001).portr("P2");
+	map(0x1002, 0x1002).portr("COINS");
 	map(0x2000, 0x2001).rw("ym1", FUNC(ym2203_device::read), FUNC(ym2203_device::write));
 	map(0x3000, 0x3001).w("ym2", FUNC(ym3812_device::write));
-	map(0x5000, 0x57ff).ram().share(m_sharedram);       // Shared RAM
-	map(0x6000, 0x7fff).rom();                             // ROM
-	map(0x8000, 0xbfff).bankr(m_subbank);                        // Banked ROM
-	map(0xc000, 0xffff).rom();                             // ROM
+	map(0x5000, 0x57ff).ram().share(m_sharedram);
+	map(0x6000, 0x7fff).rom();
+	map(0x8000, 0xbfff).bankr(m_subbank);
+	map(0xc000, 0xffff).rom();
 }
 
 
@@ -968,17 +970,17 @@ void tndrcade_state::tndrcade_sub_map(address_map &map)
 
 void downtown_state::twineagl_sub_map(address_map &map)
 {
-	map(0x0000, 0x01ff).ram();                         // RAM
-	map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));         //
-	map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));            //
-	map(0x1000, 0x1000).portr("P1");             // P1
-	map(0x1000, 0x1000).w(FUNC(downtown_state::sub_bankswitch_lockout_w)); // ROM Bank + Coin Lockout
-	map(0x1001, 0x1001).portr("P2");             // P2
-	map(0x1002, 0x1002).portr("COINS");          // Coins
-	map(0x5000, 0x57ff).ram().share(m_sharedram);       // Shared RAM
-	map(0x7000, 0x7fff).rom();                         // ROM
-	map(0x8000, 0xbfff).bankr(m_subbank);                    // Banked ROM
-	map(0xc000, 0xffff).rom();                         // ROM
+	map(0x0000, 0x01ff).ram();
+	map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));
+	map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));
+	map(0x1000, 0x1000).portr("P1");
+	map(0x1000, 0x1000).w(FUNC(downtown_state::sub_bankswitch_lockout_w));
+	map(0x1001, 0x1001).portr("P2");
+	map(0x1002, 0x1002).portr("COINS");
+	map(0x5000, 0x57ff).ram().share(m_sharedram);
+	map(0x7000, 0x7fff).rom();
+	map(0x8000, 0xbfff).bankr(m_subbank);
+	map(0xc000, 0xffff).rom();
 }
 
 
@@ -998,11 +1000,11 @@ u8 downtown_state::downtown_ip_r(offs_t offset)
 	{
 		case 0: return (m_coins->read() & 0xf0) + (dir1 >> 8);  // upper 4 bits of p1 rotation + coins
 		case 1: return (dir1 & 0xff);                   // lower 8 bits of p1 rotation
-		case 2: return m_p1->read();    // p1
+		case 2: return m_p1->read();                    // p1
 		case 3: return 0xff;                            // ?
 		case 4: return (dir2 >> 8);                     // upper 4 bits of p2 rotation + ?
 		case 5: return (dir2 & 0xff);                   // lower 8 bits of p2 rotation
-		case 6: return m_p2->read();    // p2
+		case 6: return m_p2->read();                    // p2
 		case 7: return 0xff;                            // ?
 	}
 
@@ -1011,15 +1013,15 @@ u8 downtown_state::downtown_ip_r(offs_t offset)
 
 void downtown_state::downtown_sub_map(address_map &map)
 {
-	map(0x0000, 0x01ff).ram();                         // RAM
-	map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));         //
-	map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));            //
-	map(0x1000, 0x1007).r(FUNC(downtown_state::downtown_ip_r));         // Input Ports
-	map(0x1000, 0x1000).w(FUNC(downtown_state::sub_bankswitch_lockout_w)); // ROM Bank + Coin Lockout
-	map(0x5000, 0x57ff).ram().share(m_sharedram);       // Shared RAM
-	map(0x7000, 0x7fff).rom();                         // ROM
-	map(0x8000, 0xbfff).bankr(m_subbank);                    // Banked ROM
-	map(0xc000, 0xffff).rom();                         // ROM
+	map(0x0000, 0x01ff).ram();
+	map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));
+	map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));
+	map(0x1000, 0x1007).r(FUNC(downtown_state::downtown_ip_r));
+	map(0x1000, 0x1000).w(FUNC(downtown_state::sub_bankswitch_lockout_w));
+	map(0x5000, 0x57ff).ram().share(m_sharedram);
+	map(0x7000, 0x7fff).rom();
+	map(0x8000, 0xbfff).bankr(m_subbank);
+	map(0xc000, 0xffff).rom();
 }
 
 
@@ -1043,7 +1045,7 @@ void downtown_state::calibr50_sub_bankswitch_w(u8 data)
 
 	// Bit 2: IRQCLR
 	if (!BIT(data, 2))
-		m_subcpu->set_input_line(m65c02_device::IRQ_LINE, CLEAR_LINE);
+		m_subcpu->set_input_line(W65C02_IRQ_LINE, CLEAR_LINE);
 
 	// Bit 1: /PCMMUTE
 	m_x1snd->set_output_gain(ALL_OUTPUTS, BIT(data, 1) ? 1.0f : 0.0f);
@@ -1055,16 +1057,21 @@ void downtown_state::calibr50_soundlatch2_w(u8 data)
 	m_subcpu->spin_until_time(attotime::from_usec(50));  // Allow the other cpu to reply
 }
 
+void downtown_state::calibr50_sub_reset_w(u8 data)
+{
+	m_subcpu->set_input_line(INPUT_LINE_RESET, BIT(data, 4) ? CLEAR_LINE : ASSERT_LINE);
+}
+
 void downtown_state::calibr50_sub_map(address_map &map)
 {
 	map(0x0000, 0x1fff).lrw8(
-								 NAME([this](offs_t offset) { return m_x1snd->read(offset ^ 0x1000); }),
-								 NAME([this](offs_t offset, u8 data) { m_x1snd->write(offset ^ 0x1000, data); })); // Sound
-	map(0x4000, 0x4000).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));             // From Main CPU
-	map(0x4000, 0x4000).w(FUNC(downtown_state::calibr50_sub_bankswitch_w));        // Bankswitching
-	map(0x8000, 0xbfff).bankr(m_subbank);                        // Banked ROM
-	map(0xc000, 0xffff).rom();                             // ROM
-	map(0xc000, 0xc000).w(FUNC(downtown_state::calibr50_soundlatch2_w));   // To Main CPU
+			NAME([this] (offs_t offset) { return m_x1snd->read(offset ^ 0x1000); }),
+			NAME([this] (offs_t offset, u8 data) { m_x1snd->write(offset ^ 0x1000, data); }));
+	map(0x4000, 0x4000).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));
+	map(0x4000, 0x4000).w(FUNC(downtown_state::calibr50_sub_bankswitch_w));
+	map(0x8000, 0xbfff).bankr(m_subbank);
+	map(0xc000, 0xffff).rom();
+	map(0xc000, 0xc000).w(FUNC(downtown_state::calibr50_soundlatch2_w));
 }
 
 
@@ -1074,18 +1081,18 @@ void downtown_state::calibr50_sub_map(address_map &map)
 
 void downtown_state::metafox_sub_map(address_map &map)
 {
-	map(0x0000, 0x01ff).ram();                         // RAM
-	map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));         //
-	map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));            //
-	map(0x1000, 0x1000).portr("COINS");          // Coins
-	map(0x1000, 0x1000).w(FUNC(downtown_state::sub_bankswitch_lockout_w)); // ROM Bank + Coin Lockout
-	map(0x1002, 0x1002).portr("P1");             // P1
-	//map(0x1004, 0x1004).nopr();                // ?
-	map(0x1006, 0x1006).portr("P2");             // P2
-	map(0x5000, 0x57ff).ram().share(m_sharedram);       // Shared RAM
-	map(0x7000, 0x7fff).rom();                         // ROM
-	map(0x8000, 0xbfff).bankr(m_subbank);                    // Banked ROM
-	map(0xc000, 0xffff).rom();                         // ROM
+	map(0x0000, 0x01ff).ram();
+	map(0x0800, 0x0800).r(m_soundlatch[0], FUNC(generic_latch_8_device::read));
+	map(0x0801, 0x0801).r(m_soundlatch[1], FUNC(generic_latch_8_device::read));
+	map(0x1000, 0x1000).portr("COINS");
+	map(0x1000, 0x1000).w(FUNC(downtown_state::sub_bankswitch_lockout_w));
+	map(0x1002, 0x1002).portr("P1");
+	//map(0x1004, 0x1004).nopr(); // ?
+	map(0x1006, 0x1006).portr("P2");
+	map(0x5000, 0x57ff).ram().share(m_sharedram);
+	map(0x7000, 0x7fff).rom();
+	map(0x8000, 0xbfff).bankr(m_subbank);
+	map(0xc000, 0xffff).rom();
 }
 
 
@@ -1593,10 +1600,10 @@ INPUT_PORTS_END
 
 static INPUT_PORTS_START( usclssic )
 	PORT_START("TRACKX")
-	PORT_BIT( 0xfff, 0x000, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(usclssic_state, trackball_x_r)
+	PORT_BIT( 0xfff, 0x000, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(usclssic_state::trackball_x_r))
 
 	PORT_START("TRACKY")
-	PORT_BIT( 0xfff, 0x000, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(usclssic_state, trackball_y_r)
+	PORT_BIT( 0xfff, 0x000, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(usclssic_state::trackball_y_r))
 
 	PORT_START("TRACK1_X")     // muxed port 0
 	PORT_BIT( 0xfff, 0x000, IPT_TRACKBALL_X ) PORT_SENSITIVITY(70) PORT_KEYDELTA(30)
@@ -1611,12 +1618,12 @@ static INPUT_PORTS_START( usclssic )
 	PORT_BIT( 0xfff, 0x000, IPT_TRACKBALL_Y ) PORT_SENSITIVITY(70) PORT_KEYDELTA(30) PORT_COCKTAIL
 
 	PORT_START("BUTTONS")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_UNKNOWN ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", hc157_device, a0_w)
-	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", hc157_device, a1_w)
-	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_START1 ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", hc157_device, a2_w)
-	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", hc157_device, b0_w)
-	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_COCKTAIL PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", hc157_device, b1_w)
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_START2 ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", hc157_device, b2_w)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_UNKNOWN ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", FUNC(hc157_device::a0_w))
+	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", FUNC(hc157_device::a1_w))
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_START1 ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", FUNC(hc157_device::a2_w))
+	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", FUNC(hc157_device::b0_w))
+	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_COCKTAIL PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", FUNC(hc157_device::b1_w))
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_START2 ) PORT_WRITE_LINE_DEVICE_MEMBER("buttonmux", FUNC(hc157_device::b2_w))
 
 	PORT_START("COINS")
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW,  IPT_UNKNOWN  )    // tested (sound related?)
@@ -1764,15 +1771,15 @@ GFXDECODE_END
 
 ***************************************************************************/
 
-TIMER_DEVICE_CALLBACK_MEMBER(downtown_state::seta_sub_interrupt)
+TIMER_DEVICE_CALLBACK_MEMBER(downtown_state::sub_interrupt)
 {
 	int scanline = param;
 
 	if (scanline == 240)
-		m_subcpu->pulse_input_line(m65c02_device::NMI_LINE, attotime::zero);
+		m_subcpu->pulse_input_line(W65C02_NMI_LINE, attotime::zero);
 
 	if (scanline == 112)
-		m_subcpu->set_input_line(m65c02_device::IRQ_LINE, ASSERT_LINE);
+		m_subcpu->set_input_line(W65C02_IRQ_LINE, ASSERT_LINE);
 }
 
 
@@ -1785,10 +1792,10 @@ TIMER_DEVICE_CALLBACK_MEMBER(tndrcade_state::tndrcade_sub_interrupt)
 	int scanline = param;
 
 	if (scanline == 240)
-		m_subcpu->pulse_input_line(m65c02_device::NMI_LINE, attotime::zero);
+		m_subcpu->pulse_input_line(W65C02_NMI_LINE, attotime::zero);
 
 	if ((scanline % 16) == 0)
-		m_subcpu->set_input_line(m65c02_device::IRQ_LINE, ASSERT_LINE);
+		m_subcpu->set_input_line(W65C02_IRQ_LINE, ASSERT_LINE);
 }
 
 void tndrcade_state::tndrcade(machine_config &config)
@@ -1797,12 +1804,12 @@ void tndrcade_state::tndrcade(machine_config &config)
 	M68000(config, m_maincpu, 16_MHz_XTAL / 2); // 8 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &tndrcade_state::tndrcade_map);
 
-	M65C02(config, m_subcpu, 16_MHz_XTAL / 8); // 2 MHz
+	W65C02(config, m_subcpu, 16_MHz_XTAL / 8); // 2 MHz
 	m_subcpu->set_addrmap(AS_PROGRAM, &tndrcade_state::tndrcade_sub_map);
 	TIMER(config, "scantimer").configure_scanline(FUNC(tndrcade_state::tndrcade_sub_interrupt), "screen", 0, 1);
 
 	X1_001(config, m_spritegen, 16_MHz_XTAL, m_palette, gfx_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(tndrcade_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(tndrcade_state::gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(0, 0); // correct (start grid, wall at beginning of game)
 	m_spritegen->set_fg_yoffsets(-0x12, 0x0e);
@@ -1849,12 +1856,12 @@ void downtown_state::twineagl(machine_config &config)
 	M68000(config, m_maincpu, 16_MHz_XTAL / 2); // 8 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &downtown_state::downtown_map);
 
-	M65C02(config, m_subcpu, 16_MHz_XTAL / 8); // 2 MHz
+	W65C02(config, m_subcpu, 16_MHz_XTAL / 8); // 2 MHz
 	m_subcpu->set_addrmap(AS_PROGRAM, &downtown_state::twineagl_sub_map);
-	TIMER(config, "s_scantimer").configure_scanline(FUNC(downtown_state::seta_sub_interrupt), "screen", 0, 1);
+	TIMER(config, "s_scantimer").configure_scanline(FUNC(downtown_state::sub_interrupt), "screen", 0, 1);
 
 	X1_001(config, m_spritegen, 16_MHz_XTAL, m_palette, gfx_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(0, 0); // unknown
 	m_spritegen->set_fg_yoffsets(-0x12, 0x0e);
@@ -1900,12 +1907,12 @@ void downtown_state::downtown(machine_config &config)
 	M68000(config, m_maincpu, 16_MHz_XTAL / 2); // verified on pcb
 	m_maincpu->set_addrmap(AS_PROGRAM, &downtown_state::downtown_map);
 
-	M65C02(config, m_subcpu, 16_MHz_XTAL / 8); // verified on pcb
+	W65C02(config, m_subcpu, 16_MHz_XTAL / 8); // verified on pcb
 	m_subcpu->set_addrmap(AS_PROGRAM, &downtown_state::downtown_sub_map);
-	TIMER(config, "s_scantimer").configure_scanline(FUNC(downtown_state::seta_sub_interrupt), "screen", 0, 1);
+	TIMER(config, "s_scantimer").configure_scanline(FUNC(downtown_state::sub_interrupt), "screen", 0, 1);
 
 	X1_001(config, m_spritegen, 16_MHz_XTAL, m_palette, gfx_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(0, 1); // sprites correct (test grid), tilemap unknown but at least -1 non-flipped to fix glitches later in the game
 	m_spritegen->set_fg_yoffsets(-0x12, 0x0e);
@@ -1981,14 +1988,14 @@ void usclssic_state::usclssic(machine_config &config)
 
 	WATCHDOG_TIMER(config, "watchdog");
 
-	M65C02(config, m_subcpu, 16_MHz_XTAL / 8); // 2 MHz
+	W65C02(config, m_subcpu, 16_MHz_XTAL / 8); // 2 MHz
 	m_subcpu->set_addrmap(AS_PROGRAM, &usclssic_state::calibr50_sub_map);
 
 	UPD4701A(config, m_upd4701);
 	m_upd4701->set_portx_tag("TRACKX");
 	m_upd4701->set_porty_tag("TRACKY");
 
-	HC157(config, m_buttonmux, 0);
+	HC157(config, m_buttonmux);
 	m_buttonmux->out_callback().set(m_upd4701, FUNC(upd4701_device::middle_w)).bit(0);
 	m_buttonmux->out_callback().append(m_upd4701, FUNC(upd4701_device::right_w)).bit(1);
 	m_buttonmux->out_callback().append(m_upd4701, FUNC(upd4701_device::left_w)).bit(2);
@@ -1996,7 +2003,7 @@ void usclssic_state::usclssic(machine_config &config)
 	MCFG_MACHINE_RESET_OVERRIDE(usclssic_state,calibr50)
 
 	X1_001(config, m_spritegen, 16_MHz_XTAL, m_palette, gfx_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(usclssic_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(usclssic_state::gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(2, 1); // correct (test grid and bg)
 	m_spritegen->set_fg_yoffsets(-0x12, 0x0e);
@@ -2010,7 +2017,7 @@ void usclssic_state::usclssic(machine_config &config)
 	screen.set_visarea(0*8, 48*8-1, 1*8, 31*8-1);
 	screen.set_screen_update(FUNC(usclssic_state::screen_update_usclssic));
 	screen.set_palette(m_palette);
-	screen.screen_vblank().set_inputline(m_subcpu, m65c02_device::IRQ_LINE, ASSERT_LINE);
+	screen.screen_vblank().set_inputline(m_subcpu, W65C02_IRQ_LINE, ASSERT_LINE);
 
 	X1_012(config, m_tiles, m_palette, gfx_usclssic);
 	m_tiles->set_screen(m_screen);
@@ -2023,7 +2030,7 @@ void usclssic_state::usclssic(machine_config &config)
 	SPEAKER(config, "mono").front_center();
 
 	GENERIC_LATCH_8(config, m_soundlatch[0]);
-	m_soundlatch[0]->data_pending_callback().set_inputline(m_subcpu, m65c02_device::NMI_LINE);
+	m_soundlatch[0]->data_pending_callback().set_inputline(m_subcpu, W65C02_NMI_LINE);
 	m_soundlatch[0]->set_separate_acknowledge(true);
 
 	X1_010(config, m_x1snd, 16_MHz_XTAL);   // 16 MHz
@@ -2051,7 +2058,7 @@ void downtown_state::calibr50(machine_config &config)
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
-	M65C02(config, m_subcpu, 16_MHz_XTAL / 8); // verified on pcb
+	W65C02(config, m_subcpu, 16_MHz_XTAL / 8); // verified on pcb
 	m_subcpu->set_addrmap(AS_PROGRAM, &downtown_state::calibr50_sub_map);
 	m_subcpu->set_periodic_int(FUNC(downtown_state::irq0_line_assert), attotime::from_hz(4*60));  // IRQ: 4/frame
 
@@ -2062,7 +2069,7 @@ void downtown_state::calibr50(machine_config &config)
 	MCFG_MACHINE_RESET_OVERRIDE(downtown_state,calibr50)
 
 	X1_001(config, m_spritegen, 16_MHz_XTAL, m_palette, gfx_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(2, -1); // correct (test grid and roof in animation at beginning of game)
 	m_spritegen->set_fg_yoffsets(-0x12, 0x0e);
@@ -2088,7 +2095,7 @@ void downtown_state::calibr50(machine_config &config)
 	SPEAKER(config, "mono").front_center();
 
 	GENERIC_LATCH_8(config, m_soundlatch[0]);
-	m_soundlatch[0]->data_pending_callback().set_inputline(m_subcpu, m65c02_device::NMI_LINE);
+	m_soundlatch[0]->data_pending_callback().set_inputline(m_subcpu, W65C02_NMI_LINE);
 	m_soundlatch[0]->set_separate_acknowledge(true);
 
 	GENERIC_LATCH_8(config, m_soundlatch[1]);
@@ -2110,12 +2117,12 @@ void downtown_state::metafox(machine_config &config)
 	M68000(config, m_maincpu, 16000000/2); // 8 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &downtown_state::downtown_map);
 
-	M65C02(config, m_subcpu, 16000000/8); // 2 MHz
+	W65C02(config, m_subcpu, 16000000/8); // 2 MHz
 	m_subcpu->set_addrmap(AS_PROGRAM, &downtown_state::metafox_sub_map);
-	TIMER(config, "s_scantimer").configure_scanline(FUNC(downtown_state::seta_sub_interrupt), "screen", 0, 1);
+	TIMER(config, "s_scantimer").configure_scanline(FUNC(downtown_state::sub_interrupt), "screen", 0, 1);
 
 	X1_001(config, m_spritegen, 16000000, m_palette, gfx_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(downtown_state::gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(0, 0); // sprites unknown, tilemap correct (test grid)
 	m_spritegen->set_fg_yoffsets(-0x12, 0x0e);
@@ -2123,7 +2130,7 @@ void downtown_state::metafox(machine_config &config)
 
 	// video hardware
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_refresh_hz(60);
+	screen.set_refresh_hz(59.1845); // for close to real hardware music tempo
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	screen.set_size(64*8, 32*8);
 	screen.set_visarea(0*8, 48*8-1, 2*8, 30*8-1);

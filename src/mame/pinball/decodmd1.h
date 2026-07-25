@@ -17,7 +17,7 @@
 class decodmd_type1_device : public device_t
 {
 public:
-	decodmd_type1_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	decodmd_type1_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void data_w(uint8_t data);
 	uint8_t busy_r();
@@ -25,9 +25,9 @@ public:
 	uint8_t status_r();
 
 protected:
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	static constexpr unsigned B_CLR = 0x01;
@@ -74,8 +74,8 @@ private:
 	uint32_t screen_update( screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect );
 	TIMER_DEVICE_CALLBACK_MEMBER(dmd_nmi);
 
-	void decodmd1_map(address_map &map);
-	void decodmd1_io_map(address_map &map);
+	void decodmd1_map(address_map &map) ATTR_COLD;
+	void decodmd1_io_map(address_map &map) ATTR_COLD;
 };
 
 DECLARE_DEVICE_TYPE(DECODMD1, decodmd_type1_device)

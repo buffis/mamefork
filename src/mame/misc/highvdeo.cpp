@@ -142,8 +142,8 @@ public:
 	void tv_vcf(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_shared_ptr<uint16_t> m_blit_ram;
@@ -195,33 +195,31 @@ private:
 	uint32_t screen_update_tourvisn(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	uint32_t screen_update_brasil(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void brasil_io(address_map &map);
-	void brasil_map(address_map &map);
-	void ciclone_io(address_map &map);
-	void fashion_io(address_map &map);
-	void grancapi_io(address_map &map);
-	void newtiger_io(address_map &map);
-	void zoomania_io(address_map &map);
-	void magicbom_io(address_map &map);
-	void newmcard_io_base(address_map &map);
-	void newmcard_io(address_map &map);
-	void newmcard_map(address_map &map);
-	void nyjoker_io(address_map &map);
-	void nyjoker_map(address_map &map);
-	void ramdac_map(address_map &map);
-	void record_io(address_map &map);
-	void tv_ncf_io(address_map &map);
-	void tv_ncf_map(address_map &map);
-	void tv_tcf_io(address_map &map);
-	void tv_tcf_map(address_map &map);
-	void tv_vcf_io(address_map &map);
-	void tv_vcf_map(address_map &map);
+	void brasil_io(address_map &map) ATTR_COLD;
+	void brasil_map(address_map &map) ATTR_COLD;
+	void ciclone_io(address_map &map) ATTR_COLD;
+	void fashion_io(address_map &map) ATTR_COLD;
+	void grancapi_io(address_map &map) ATTR_COLD;
+	void newtiger_io(address_map &map) ATTR_COLD;
+	void zoomania_io(address_map &map) ATTR_COLD;
+	void magicbom_io(address_map &map) ATTR_COLD;
+	void newmcard_io_base(address_map &map) ATTR_COLD;
+	void newmcard_io(address_map &map) ATTR_COLD;
+	void newmcard_map(address_map &map) ATTR_COLD;
+	void nyjoker_io(address_map &map) ATTR_COLD;
+	void nyjoker_map(address_map &map) ATTR_COLD;
+	void ramdac_map(address_map &map) ATTR_COLD;
+	void record_io(address_map &map) ATTR_COLD;
+	void tv_ncf_io(address_map &map) ATTR_COLD;
+	void tv_ncf_map(address_map &map) ATTR_COLD;
+	void tv_tcf_io(address_map &map) ATTR_COLD;
+	void tv_tcf_map(address_map &map) ATTR_COLD;
+	void tv_vcf_io(address_map &map) ATTR_COLD;
+	void tv_vcf_map(address_map &map) ATTR_COLD;
 };
 
 void highvdeo_state::machine_start()
 {
-	m_lamps.resolve();
-
 	if (m_mainbank.found()) /*bankaddress might be incorrect at brasil/fasion/grancapi/magicbom*/
 	{
 		uint32_t max = memregion("maincpu")->bytes() / 0x40000;
@@ -1237,7 +1235,7 @@ void highvdeo_state::tv_vcf(machine_config &config)
 	screen.screen_vblank().set_inputline(m_maincpu, INPUT_LINE_NMI, ASSERT_LINE);
 
 	PALETTE(config, m_palette).set_entries(0x100);
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, m_palette));
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", m_palette));
 	ramdac.set_addrmap(0, &highvdeo_state::ramdac_map);
 
 	/* sound hardware */
@@ -1390,7 +1388,7 @@ void highvdeo_state::magicbom(machine_config &config)
 	PALETTE(config, m_palette).set_entries(0x100);
 	m_palette->set_format(palette_device::RGB_565, 0x100);
 
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, m_palette));
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", m_palette));
 	ramdac.set_addrmap(0, &highvdeo_state::ramdac_map);
 
 	/* sound hardware */

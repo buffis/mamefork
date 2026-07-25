@@ -259,7 +259,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<description>3-D Genesis (prototype)</description>
 		<year>1983</year>
 		<publisher>Amiga</publisher>
-		<info name="programmer" value="Jerry Lawson, Dan Mcelroy" />
+		<info name="programmer" value="Jerry Lawson" />
+		<info name="programmer" value="Dan Mcelroy" />
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a2600_cart">
 			<feature name="slot" value="a26_f8" />
@@ -273,7 +274,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<description>3-D Ghost Attack (prototype)</description>
 		<year>1983</year>
 		<publisher>Amiga</publisher>
-		<info name="programmer" value="michael k. glass, jerry lawson" />
+		<info name="programmer" value="Michael K. Glass" />
+		<info name="programmer" value="Jerry Lawson" />
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a2600_cart">
 			<feature name="slot" value="a26_f6" />
@@ -287,7 +289,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<description>3-D Havoc (prototype)</description>
 		<year>1983</year>
 		<publisher>Amiga</publisher>
-		<info name="programmer" value="Frank Ellis, Jerry Lawson" />
+		<info name="programmer" value="Frank Ellis" />
+		<info name="programmer" value="Jerry Lawson" />
 		<info name="serial" value="2110"/>
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a2600_cart">
@@ -552,7 +555,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<year>1983</year>
 		<publisher>Mattel Electronics</publisher>
 		<info name="serial" value="4317" />
-		<info name="programmer" value="Hal Finney, Glenn Hightower" />
+		<info name="programmer" value="Hal Finney" />
+		<info name="programmer" value="Glenn Hightower" />
 		<sharedfeat name="compatibility" value="NTSC" />
 		<part name="cart" interface="a2600_cart">
 			<dataarea name="rom" size="4096">
@@ -566,7 +570,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<year>1989</year>
 		<publisher>Telegames</publisher>
 		<info name="serial" value="4317 A009" />
-		<info name="programmer" value="Hal Finney, Glenn Hightower" />
+		<info name="programmer" value="Hal Finney" />
+		<info name="programmer" value="Glenn Hightower" />
 		<sharedfeat name="compatibility" value="PAL" />
 		<part name="cart" interface="a2600_cart">
 			<dataarea name="rom" size="4096">
@@ -767,7 +772,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<year>1983</year>
 		<publisher>Atari</publisher>
 		<info name="serial" value="CX26103" />
-		<info name="programmer" value="Michael Callahan &amp; Preston Stuart" />
+		<info name="programmer" value="Michael Callahan " />
+		<info name="programmer" value="Preston Stuart" />
 		<sharedfeat name="compatibility" value="PAL" />
 		<part name="cart" interface="a2600_cart">
 			<feature name="slot" value="a26_f8" />
@@ -783,7 +789,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<year>1983</year>
 		<publisher>Atari</publisher>
 		<info name="serial" value="CX26103" />
-		<info name="programmer" value="Michael Callahan &amp; Preston Stuart" />
+		<info name="programmer" value="Michael Callahan " />
+		<info name="programmer" value="Preston Stuart" />
 		<sharedfeat name="compatibility" value="NTSC" />
 		<part name="cart" interface="a2600_cart">
 			<feature name="slot" value="a26_f8" />
@@ -799,7 +806,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<year>1983</year>
 		<publisher>Atari</publisher>
 		<info name="serial" value="CX26103" />
-		<info name="programmer" value="Michael Callahan &amp; Preston Stuart" />
+		<info name="programmer" value="Michael Callahan " />
+		<info name="programmer" value="Preston Stuart" />
 		<sharedfeat name="compatibility" value="NTSC" />
 		<part name="cart" interface="a2600_cart">
 			<feature name="slot" value="a26_f8" />
@@ -815,7 +823,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<year>1983</year>
 		<publisher>Atari</publisher>
 		<info name="serial" value="CX26103" />
-		<info name="programmer" value="Michael Callahan &amp; Preston Stuart" />
+		<info name="programmer" value="Michael Callahan " />
+		<info name="programmer" value="Preston Stuart" />
 		<sharedfeat name="compatibility" value="PAL" />
 		<part name="cart" interface="a2600_cart">
 			<feature name="slot" value="a26_f8" />
@@ -859,7 +868,8 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<description>AndroMan on the Moon (prototype)</description>
 		<year>1984</year>
 		<publisher>Western Technologies</publisher>
-		<info name="programmer" value="Michael Case, Lenny Carlson" />
+		<info name="programmer" value="Michael Case" />
+		<info name="programmer" value="Lenny Carlson" />
 		<part name="cart" interface="a2600_cart">
 			<feature name="slot" value="a26_f8" />
 			<dataarea name="rom" size="8192">
@@ -5129,14 +5139,17 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<description>Dig Dug</description>
 		<year>1983</year>
 		<publisher>Atari</publisher>
+		<info name="serial" value="CX2677" />
+		<info name="programmer" value="Douglas B. Macrae" />
+		<sharedfeat name="compatibility" value="NTSC" />
 		<part name="cart" interface="a2600_cart">
-			<!-- SuperChip -->
-			<feature name="slot" value="a26_f6" />
-			<dataarea name="rom" size="16384">
-				<rom name="dig dug (1983) (atari - gcc, douglas b. macrae) (cx2677).bin" size="16384" crc="ee7b80d1" sha1="79e746524520da546249149c33614fc23a4f2a51"/>
-			</dataarea>
-			<dataarea name="ram" size="128">
-			</dataarea>
+		<!-- SuperChip CO20231-01 -->
+		<feature name="slot" value="a26_f6" />
+		<dataarea name="rom" size="16384">
+			<rom name="co25077-22.bin" size="16384" crc="ee7b80d1" sha1="79e746524520da546249149c33614fc23a4f2a51"/>
+		</dataarea>
+		<dataarea name="ram" size="128">
+		</dataarea>
 		</part>
 	</software>
 
@@ -5149,6 +5162,25 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 			<feature name="slot" value="a26_f6" />
 			<dataarea name="rom" size="16384">
 				<rom name="dig dug (1983) (atari - gcc, douglas b. macrae) (cx2677, cx2677p) (pal).bin" size="16384" crc="de5c5553" sha1="816abcef9cc8fca5007cc400534e84d00285f199"/>
+			</dataarea>
+			<dataarea name="ram" size="128">
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="digdugea" cloneof="digdug">
+		<description>Dig Dug (PAL, alt)</description>
+		<year>1983</year>
+		<publisher>Atari</publisher>
+		<info name="serial" value="2677" />
+		<!-- Actual silver label only has 2677 and end label has DIG DUG TM  P" -->
+		<info name="programmer" value="Douglas B. Macrae" />
+		<sharedfeat name="compatibility" value="PAL" />
+		<part name="cart" interface="a2600_cart">
+		<!-- SuperChip CO20231-01 -->
+		<feature name="slot" value="a26_f6" />
+			<dataarea name="rom" size="16384">
+				<rom name="co26077-29(pal).bin" size="16384" crc="8c550791" sha1="8d991206e286aa781433c68a56eea6b2f97bab2d"/>
 			</dataarea>
 			<dataarea name="ram" size="128">
 			</dataarea>
@@ -6160,6 +6192,47 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<part name="cart" interface="a2600_cart">
 			<dataarea name="rom" size="4096">
 				<rom name="felix return (aka bobby is going home) (1983) (goliath - hot shot) (83-116) (pal).bin" size="4096" crc="31bc54ae" sha1="5e48b5e98be4e8d2d8602b0039c3ea959d6a0731"/>
+			</dataarea>
+		</part>
+	</software>
+
+	<!-- https://forums.atariage.com/topic/210515-new-2600-homebrews-heartbreak-fix-it-felix-sr-joy-ride/ -->
+	<software name="felixsr">
+		<description>Fix-It Felix Sr.</description>
+		<year>2013</year>
+		<publisher>Cybearg</publisher>
+		<info name="release" value="20130327"/>
+		<sharedfeat name="compatibility" value="NTSC"/>
+		<part name="cart" interface="a2600_cart">
+			<dataarea name="rom" size="4096">
+				<rom name="fix-it felix sr. (ntsc).bin" size="4096" crc="4f066bc9" sha1="296d9c1ef7b214b863516822c7a38009559f3a2a"/>
+			</dataarea>
+		</part>
+	</software>
+
+	<software name="felixsre" cloneof="felixsr">
+		<description>Fix-It Felix Sr. (PAL)</description>
+		<year>2013</year>
+		<publisher>Cybearg</publisher>
+		<info name="release" value="20130327"/>
+		<sharedfeat name="compatibility" value="PAL" />
+		<part name="cart" interface="a2600_cart">
+			<dataarea name="rom" size="4096">
+				<rom name="fix-it felix sr. (pal50).bin" size="4096" crc="a0a88a0c" sha1="8942868cead351fffd1914fd52b523bdc774dace"/>
+			</dataarea>
+		</part>
+	</software>
+
+	<!-- Is this meant for a console mod? -->
+	<software name="felixsrea" cloneof="felixsr" supported="no">
+		<description>Fix-It Felix Sr. (PAL60)</description>
+		<year>2013</year>
+		<publisher>Cybearg</publisher>
+		<info name="release" value="20130327"/>
+		<sharedfeat name="compatibility" value="PAL" />
+		<part name="cart" interface="a2600_cart">
+			<dataarea name="rom" size="4096">
+				<rom name="fix-it felix sr. (pal60).bin" size="4096" crc="b0677067" sha1="5a258bdfdf1c72c7b74d1a90f7fb8f7a4d3f7cc7"/>
 			</dataarea>
 		</part>
 	</software>
@@ -16961,6 +17034,18 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		</part>
 	</software>
 
+	<software name="tarzan">
+		<description>Tarzan (prototype)</description>
+		<year>1984</year>
+		<publisher>Coleco</publisher>
+		<part name="cart" interface="a2600_cart">
+			<feature name="slot" value="a26_f0" />
+			<dataarea name="rom" size="16384">
+				<rom name="atari_tarzan_42a3.bin" size="16384" crc="15e22f06" sha1="a6d9a3375f9ca62123353760d0c78d05717de7d2"/>
+			</dataarea>
+		</part>
+	</software>
+
 	<software name="taskfrce">
 		<description>Task Force</description>
 		<year>1987</year>
@@ -17716,17 +17801,6 @@ MOS Atari-made game NTSC ROMs had a CO16xxx number and PAL ROMs had CO17xxx numb
 		<part name="cart" interface="a2600_cart">
 			<dataarea name="rom" size="4096">
 				<rom name="unknown activision game #1 (10-29-1982) (activision) (prototype).bin" size="4096" crc="6b0672a6" sha1="d93c86970d3df29326acc35c0ce6679b83c2aff2"/>
-			</dataarea>
-		</part>
-	</software>
-
-	<software name="unkact2">
-		<description>Unknown Activision Game #2 (prototype)</description>
-		<year>1983</year>
-		<publisher>Activision</publisher>
-		<part name="cart" interface="a2600_cart">
-			<dataarea name="rom" size="4096">
-				<rom name="unknown activision game #2 (1983) (activision) (prototype).bin" size="4096" crc="5c009ea0" sha1="a25c4b33e1c86895cb63635bd6ca5b8379a206b3"/>
 			</dataarea>
 		</part>
 	</software>

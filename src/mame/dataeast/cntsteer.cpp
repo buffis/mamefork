@@ -54,6 +54,8 @@
 #include "speaker.h"
 #include "tilemap.h"
 
+#include <numbers>
+
 
 namespace {
 
@@ -140,11 +142,11 @@ public:
 	void zerotrgt_rearrange_gfx( int romsize, int romarea );
 	void cntsteer(machine_config &config);
 	void zerotrgt(machine_config &config);
-	void cntsteer_cpu1_map(address_map &map);
-	void cntsteer_cpu2_map(address_map &map);
-	void gekitsui_cpu1_map(address_map &map);
-	void gekitsui_cpu2_map(address_map &map);
-	void sound_map(address_map &map);
+	void cntsteer_cpu1_map(address_map &map) ATTR_COLD;
+	void cntsteer_cpu2_map(address_map &map) ATTR_COLD;
+	void gekitsui_cpu1_map(address_map &map) ATTR_COLD;
+	void gekitsui_cpu2_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -374,10 +376,11 @@ uint32_t cntsteer_state::screen_update_zerotrgt(screen_device &screen, bitmap_in
 		     0
 		*/
 		/*65536*z*cos(a), 65536*z*sin(a), -65536*z*sin(a), 65536*z*cos(a)*/
-		p1 = -65536 * 1 * cos(2 * M_PI * (rot_val) / 1024);
-		p2 = -65536 * 1 * sin(2 * M_PI * (rot_val) / 1024);
-		p3 = 65536 * 1 * sin(2 * M_PI * (rot_val) / 1024);
-		p4 = -65536 * 1 * cos(2 * M_PI * (rot_val) / 1024);
+		constexpr double PI = std::numbers::pi;
+		p1 = -65536 * 1 * cos(2 * PI * (rot_val) / 1024);
+		p2 = -65536 * 1 * sin(2 * PI * (rot_val) / 1024);
+		p3 = 65536 * 1 * sin(2 * PI * (rot_val) / 1024);
+		p4 = -65536 * 1 * cos(2 * PI * (rot_val) / 1024);
 
 		x = -256 - (m_scrollx | m_scrollx_hi);
 		y = 256 + (m_scrolly | m_scrolly_hi);
@@ -421,10 +424,11 @@ uint32_t cntsteer_state::screen_update_cntsteer(screen_device &screen, bitmap_in
 		     0
 		*/
 		/*65536*z*cos(a), 65536*z*sin(a), -65536*z*sin(a), 65536*z*cos(a)*/
-		p1 = -65536 * 1 * cos(2 * M_PI * (rot_val) / 1024);
-		p2 = -65536 * 1 * sin(2 * M_PI * (rot_val) / 1024);
-		p3 = 65536 * 1 * sin(2 * M_PI * (rot_val) / 1024);
-		p4 = -65536 * 1 * cos(2 * M_PI * (rot_val) / 1024);
+		constexpr double PI = std::numbers::pi;
+		p1 = -65536 * 1 * cos(2 * PI * (rot_val) / 1024);
+		p2 = -65536 * 1 * sin(2 * PI * (rot_val) / 1024);
+		p3 = 65536 * 1 * sin(2 * PI * (rot_val) / 1024);
+		p4 = -65536 * 1 * cos(2 * PI * (rot_val) / 1024);
 
 		x = 256 + (m_scrollx | m_scrollx_hi);
 		y = 256 - (m_scrolly | m_scrolly_hi);
@@ -733,7 +737,7 @@ static INPUT_PORTS_START( zerotrgt )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_JOYSTICK_DOWN ) PORT_8WAY PORT_COCKTAIL
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_COCKTAIL
 	PORT_BIT( 0x60, IP_ACTIVE_LOW, IPT_UNUSED )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_VBLANK("screen")
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank))
 
 	PORT_START("P1")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_JOYSTICK_LEFT ) PORT_8WAY
@@ -791,9 +795,9 @@ static INPUT_PORTS_START( cntsteer )
 	PORT_BIT( 0xff, 0x80, IPT_AD_STICK_X ) PORT_MINMAX(0x01,0xff) PORT_SENSITIVITY(10) PORT_KEYDELTA(2)
 
 	PORT_START("COINS")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, cntsteer_state,coin_inserted, 0)
-	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, cntsteer_state,coin_inserted, 0)
-	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_SERVICE1 ) PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, cntsteer_state,coin_inserted, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cntsteer_state::coin_inserted), 0)
+	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cntsteer_state::coin_inserted), 0)
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_SERVICE1 ) PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(cntsteer_state::coin_inserted), 0)
 	PORT_DIPNAME( 0x08, 0x08, DEF_STR( Unknown ) ) //unused
 	PORT_DIPSETTING(    0x08, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
@@ -806,7 +810,7 @@ static INPUT_PORTS_START( cntsteer )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_VBLANK("screen")
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank))
 
 	PORT_START("DSW0")
 	PORT_DIPNAME( 0x03, 0x03, DEF_STR( Coin_A ) ) PORT_DIPLOCATION("SW1:1,2")

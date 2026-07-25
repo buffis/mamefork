@@ -17,7 +17,7 @@ class igs017_igs031_device :
 public:
 	typedef device_delegate<u16 (u16)> palette_scramble_delegate;
 
-	igs017_igs031_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
+	igs017_igs031_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock = 0);
 
 	auto in_pa_callback() { return m_input_port_cb[0].bind(); }
 	auto in_pb_callback() { return m_input_port_cb[1].bind(); }
@@ -38,7 +38,7 @@ public:
 private:
 	u16 palette_callback_straight(u16 bgr) const;
 
-	void map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
 
 	void palram_w(offs_t offset, u8 data);
 	u8 input_port_r(offs_t offset);
@@ -74,11 +74,12 @@ public:
 	void spkrform_decrypt_sprites();
 	void starzan_decrypt_sprites(size_t max_size, size_t flip_size);
 	void tjsb_decrypt_sprites();
+	void jking302us_decrypt_sprites();
 
 protected:
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	virtual space_config_vector memory_space_config() const override;
 

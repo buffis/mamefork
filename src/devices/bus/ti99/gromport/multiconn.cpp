@@ -247,7 +247,7 @@ void ti99_multi_cart_conn_device::device_reset(void)
 void ti99_multi_cart_conn_device::device_add_mconfig(machine_config &config)
 {
 	for (int i=0; i < NUMBER_OF_CARTRIDGE_SLOTS; i++)
-		TI99_CART(config, m_cart[i], 0);
+		TI99_CART(config, m_cart[i]);
 }
 
 INPUT_CHANGED_MEMBER( ti99_multi_cart_conn_device::switch_changed )
@@ -258,7 +258,7 @@ INPUT_CHANGED_MEMBER( ti99_multi_cart_conn_device::switch_changed )
 
 INPUT_PORTS_START(multi_slot)
 	PORT_START( "CARTSLOT" )
-	PORT_DIPNAME( 0x0f, 0x00, "Multi-cartridge slot" ) PORT_CHANGED_MEMBER(DEVICE_SELF, ti99_multi_cart_conn_device, switch_changed, 0)
+	PORT_DIPNAME( 0x0f, 0x00, "Multi-cartridge slot" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(ti99_multi_cart_conn_device::switch_changed), 0)
 		PORT_DIPSETTING(    0x00, "Auto" )
 		PORT_DIPSETTING(    0x01, "Slot 1" )
 		PORT_DIPSETTING(    0x02, "Slot 2" )

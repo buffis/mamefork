@@ -67,8 +67,8 @@ public:
 	void rc702(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	uint8_t memory_read_byte(offs_t offset);
@@ -86,8 +86,8 @@ private:
 	void rc702_palette(palette_device &palette) const;
 	void kbd_put(u8 data);
 
-	void io_map(address_map &map);
-	void mem_map(address_map &map);
+	void io_map(address_map &map) ATTR_COLD;
+	void mem_map(address_map &map) ATTR_COLD;
 
 	bool m_q_state = false;
 	bool m_qbar_state = false;
@@ -381,10 +381,10 @@ void rc702_state::rc702(machine_config &config)
 	FLOPPY_CONNECTOR(config, "fdc:0", floppies, "525qd", floppy_image_device::default_mfm_floppy_formats).enable_sound(true);
 
 	/* Keyboard */
-	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard", 0));
+	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard"));
 	keyboard.set_keyboard_callback(FUNC(rc702_state::kbd_put));
 
-	TTL7474(config, m_7474, 0);
+	TTL7474(config, m_7474);
 	m_7474->output_cb().set(FUNC(rc702_state::q_w));
 	m_7474->comp_output_cb().set(FUNC(rc702_state::qbar_w));
 

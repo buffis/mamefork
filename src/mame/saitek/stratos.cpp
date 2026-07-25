@@ -37,7 +37,7 @@ Hardware notes:
 - unknown LCDC under epoxy blob, suspected to be an MCU
 
 Stratos/Turbo King are identical.
-Corona has magnet sensors and two HELIOS chips.
+Corona has magnet sensors and two NEC gate arrays.
 
 There is no official Saitek program versioning for these. The D/D+ versions are
 known since they're the same chess engine as later Saitek modules, such as the
@@ -54,7 +54,7 @@ is engine version C.
 #include "emu.h"
 #include "stratos.h"
 
-#include "cpu/m6502/m65c02.h"
+#include "cpu/m6502/w65c02.h"
 #include "machine/nvram.h"
 #include "machine/sensorboard.h"
 #include "sound/dac.h"
@@ -86,13 +86,13 @@ public:
 	int lcd_ready_r() { return m_lcd_ready ? 1 : 0; }
 
 	// machine configs
-	void stratos(machine_config &config);
-	void tking(machine_config &config);
-	void tking2(machine_config &config);
+	void stratos(machine_config &config) ATTR_COLD;
+	void tking(machine_config &config) ATTR_COLD;
+	void tking2(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -108,7 +108,7 @@ private:
 	u8 m_control = 0;
 	u8 m_led_data = 0;
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void update_leds();
@@ -127,10 +127,6 @@ private:
 
 void stratos_base_state::machine_start()
 {
-	// resolve handlers
-	m_out_digit.resolve();
-	m_out_lcd.resolve();
-
 	// register for savestates
 	save_item(NAME(m_power));
 	save_item(NAME(m_lcd_ready));
@@ -418,10 +414,10 @@ INPUT_PORTS_START( saitek_stratos )
 	PORT_CONFSETTING(    0x01, DEF_STR( Normal ) )
 
 	PORT_START("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_A) PORT_CHANGED_MEMBER(DEVICE_SELF, stratos_base_state, go_button, 0) PORT_NAME("Go")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_A) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(stratos_base_state::go_button), 0) PORT_NAME("Go")
 
 	PORT_START("CPU")
-	PORT_CONFNAME( 0x03, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, stratos_base_state, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x03, 0x00, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(stratos_base_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x00, "5MHz" )
 	PORT_CONFSETTING(    0x01, "5.626MHz" )
 	PORT_CONFSETTING(    0x02, "5.67MHz" )
@@ -434,7 +430,7 @@ static INPUT_PORTS_START( stratos )
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_CUSTOM)
 
 	PORT_START("IN.9")
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_READ_LINE_DEVICE_MEMBER(DEVICE_SELF, stratos_state, lcd_ready_r)
+	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_READ_LINE_DEVICE_MEMBER(DEVICE_SELF, FUNC(stratos_state::lcd_ready_r))
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( tking ) // same buttons, but different locations
@@ -468,7 +464,7 @@ static INPUT_PORTS_START( tking ) // same buttons, but different locations
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_E) PORT_NAME("Normal")
 
 	PORT_MODIFY("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_Y) PORT_CHANGED_MEMBER(DEVICE_SELF, stratos_base_state, go_button, 0) PORT_NAME("Go")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_Y) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(stratos_base_state::go_button), 0) PORT_NAME("Go")
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( tking2 )
@@ -490,7 +486,7 @@ INPUT_PORTS_END
 void stratos_state::stratos(machine_config &config)
 {
 	// basic machine hardware
-	M65C02(config, m_maincpu, 5_MHz_XTAL); // see change_cpu_freq
+	W65C02(config, m_maincpu, 5_MHz_XTAL); // see change_cpu_freq
 	m_maincpu->set_addrmap(AS_PROGRAM, &stratos_state::main_map);
 	m_maincpu->set_periodic_int(FUNC(stratos_state::irq0_line_hold), attotime::from_hz(76));
 

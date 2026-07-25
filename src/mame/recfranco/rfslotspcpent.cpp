@@ -213,7 +213,7 @@ public:
 private:
 	required_device<cpu_device> m_maincpu;
 
-	void rfslotspcpent_map(address_map &map);
+	void rfslotspcpent_map(address_map &map) ATTR_COLD;
 };
 
 void rfslotspcpent_state::rfslotspcpent_map(address_map &map)
@@ -232,7 +232,7 @@ void rfslotspcpent_state::rfslotspcpent(machine_config &config)
 	PENTIUM4(config, m_maincpu, 100'000'000); // Actually an Intel Celeron 575 1M cache, 2,00 GHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &rfslotspcpent_state::rfslotspcpent_map);
 
-	PCI_ROOT(config, "pci", 0);
+	PCI_ROOT(config, "pci");
 	// ...
 }
 
@@ -303,4 +303,4 @@ ROM_END
 } // Anonymous namespace
 
 
-GAME( 2014, rfsantafeg, 0, rfslotspcpent, rfslotspcpent, rfslotspcpent_state, empty_init, ROT0, "Recreativos Franco", "Santa Fe Golden", MACHINE_IS_SKELETON_MECHANICAL )
+GAME( 2014, rfsantafeg, 0, rfslotspcpent, rfslotspcpent, rfslotspcpent_state, empty_init, ROT0, "Recreativos Franco", "Santa Fe Golden", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK )

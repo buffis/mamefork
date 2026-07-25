@@ -70,19 +70,19 @@ public:
 		m_swim(*this, "fdc"),
 		m_floppy(*this, "fdc:%d", 0U),
 		m_scsibus1(*this, "scsi"),
-		m_ncr1(*this, "scsi:7:ncr53c96"),
+		m_ncr1(*this, "ncr53c96"),
 		m_sonic(*this, "sonic"),
 		m_dafb(*this, "dafb"),
 		m_easc(*this, "easc"),
 		m_dfac(*this, "dfac"),
 		m_scc(*this, "scc"),
+		m_config(*this, "config"),
 		m_cur_floppy(nullptr),
 		m_hdsel(0),
 		m_adb_irq_pending(0),
 		m_ram_ptr(nullptr), m_rom_ptr(nullptr),
 		m_ram_mask(0), m_ram_size(0), m_rom_size(0),
 		m_overlay(0),
-		m_6015_timer(nullptr),
 		m_via2_ca1_hack(0),
 		m_nubus_irq_state(0),
 		m_via_interrupt(0), m_via2_interrupt(0), m_scc_interrupt(0), m_last_taken_interrupt(0)
@@ -92,8 +92,8 @@ public:
 	void quadra_base(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	u32 rom_switch_r(offs_t offset);
 	u16 via_r(offs_t offset);
@@ -119,9 +119,10 @@ protected:
 	required_device<ncr53c96_device> m_ncr1;
 	required_device<dp83932c_device> m_sonic;
 	required_device<dafb_device> m_dafb;
-	required_device<asc_device> m_easc;
+	required_device<asc_easc_device> m_easc;
 	required_device<dfac_device> m_dfac;
 	required_device<z80scc_device> m_scc;
+	required_ioport m_config;
 
 	floppy_image_device *m_cur_floppy;
 	int m_hdsel;
@@ -152,11 +153,8 @@ private:
 	void devsel_w(u8 devsel);
 
 	u8 m_mac[6];
-	emu_timer *m_6015_timer;
 	int m_via2_ca1_hack, m_nubus_irq_state;
 	int m_via_interrupt, m_via2_interrupt, m_scc_interrupt, m_last_taken_interrupt;
-
-	TIMER_CALLBACK_MEMBER(mac_6015_tick);
 };
 
 class spike_state : public quadrax00_state
@@ -169,7 +167,7 @@ public:
 	{
 	}
 
-	void quadra700_map(address_map &map);
+	void quadra700_map(address_map &map) ATTR_COLD;
 	void macqd700(machine_config &config);
 
 private:
@@ -191,18 +189,18 @@ public:
 		m_swimpic(*this, "swimpic"),
 		m_egret(*this, "egret"),
 		m_scsibus2(*this, "scsi2"),
-		m_ncr2(*this, "scsi2:7:ncr53c96"),
+		m_ncr2(*this, "ncr53c96_2"),
 		m_adb_in(0)
 	{
 	}
 
-	void quadra900_map(address_map &map);
+	void quadra900_map(address_map &map) ATTR_COLD;
 	void macqd900(machine_config &config);
 	void macqd950(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	void egret_reset_w(int state);
 	void fdc_hdsel(int state);
@@ -272,16 +270,13 @@ void quadrax00_state::machine_start()
 	m_mac[5] = bitswap<8>(MAC[5], 0, 1, 2, 3, 7, 6, 5, 4);
 	m_sonic->set_mac(&m_mac[0]);
 
-	m_ram_ptr = (u32*)m_ram->pointer();
+	m_ram_ptr = m_ram->pointer<u32>();
 	m_ram_size = m_ram->size()>>1;
 	m_ram_mask = m_ram_size - 1;
-	m_rom_ptr = (u32*)memregion("bootrom")->base();
+	m_rom_ptr = &memregion("bootrom")->as_u32();
 	m_rom_size = memregion("bootrom")->bytes();
 	m_via_interrupt = m_via2_interrupt = m_scc_interrupt = 0;
 	m_last_taken_interrupt = -1;
-
-	m_6015_timer = timer_alloc(FUNC(quadrax00_state::mac_6015_tick), this);
-	m_6015_timer->adjust(attotime::never);
 
 	save_item(NAME(m_via2_ca1_hack));
 	save_item(NAME(m_nubus_irq_state));
@@ -312,9 +307,6 @@ void quadrax00_state::machine_reset()
 
 	space.unmap_write(0x00000000, memory_end);
 	space.install_rom(0x00000000, memory_end & ~memory_mirror, memory_mirror, m_rom_ptr);
-
-	// start 60.15 Hz timer
-	m_6015_timer->adjust(attotime::from_hz(60.15), 0, attotime::from_hz(60.15));
 }
 
 void eclipse_state::machine_start()
@@ -406,6 +398,9 @@ u16 quadrax00_state::swim_r(offs_t offset, u16 mem_mask)
 void quadrax00_state::swim_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	m_swim->write((offset >> 8) & 0xf, data >> 8);
+
+	if (!machine().side_effects_disabled())
+		m_maincpu->adjust_icount(-5);
 }
 
 void eclipse_state::fdc_hdsel(int state)
@@ -554,12 +549,6 @@ u8 quadrax00_state::ethernet_mac_r(offs_t offset)
 	return 0;
 }
 
-TIMER_CALLBACK_MEMBER(quadrax00_state::mac_6015_tick)
-{
-	/* handle ADB keyboard/mouse */
-	m_macadb->adb_vblank();
-}
-
 /***************************************************************************
     ADDRESS MAPS
 ***************************************************************************/
@@ -575,7 +564,7 @@ void spike_state::quadra700_map(address_map &map)
 	map(0x5000f000, 0x5000f0ff).rw(m_dafb, FUNC(dafb_device::turboscsi_r<0>), FUNC(dafb_device::turboscsi_w<0>)).mirror(0x00fc0000);
 	map(0x5000f100, 0x5000f101).rw(m_dafb, FUNC(dafb_device::turboscsi_dma_r<0>), FUNC(dafb_device::turboscsi_dma_w<0>)).select(0x00fc0000);
 	map(0x5000c000, 0x5000dfff).rw(FUNC(spike_state::scc_r), FUNC(spike_state::scc_w)).mirror(0x00fc0000);
-	map(0x50014000, 0x50015fff).rw(m_easc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x00fc0000);
+	map(0x50014000, 0x50015fff).rw(m_easc, FUNC(asc_base_device::read), FUNC(asc_base_device::write)).mirror(0x00fc0000);
 	map(0x5001e000, 0x5001ffff).rw(FUNC(spike_state::swim_r), FUNC(spike_state::swim_w)).mirror(0x00fc0000);
 
 	map(0xf9000000, 0xf91fffff).rw(m_dafb, FUNC(dafb_device::vram_r), FUNC(dafb_device::vram_w));
@@ -597,7 +586,7 @@ void eclipse_state::quadra900_map(address_map &map)
 	map(0x5000f400, 0x5000f4ff).rw(m_dafb, FUNC(dafb_device::turboscsi_r<1>), FUNC(dafb_device::turboscsi_w<1>)).mirror(0x00fc0000);
 	map(0x5000f502, 0x5000f503).rw(m_dafb, FUNC(dafb_device::turboscsi_dma_r<1>), FUNC(dafb_device::turboscsi_dma_w<1>)).select(0x00fc0000);
 
-	map(0x50014000, 0x50015fff).rw(m_easc, FUNC(asc_device::read), FUNC(asc_device::write)).mirror(0x00fc0000);
+	map(0x50014000, 0x50015fff).rw(m_easc, FUNC(asc_base_device::read), FUNC(asc_base_device::write)).mirror(0x00fc0000);
 	map(0x5001e000, 0x5001efff).rw(m_swimpic, FUNC(applepic_device::host_r), FUNC(applepic_device::host_w)).mirror(0x00f00000).umask32(0xff00ff00);
 	map(0x5001e000, 0x5001efff).rw(m_swimpic, FUNC(applepic_device::host_r), FUNC(applepic_device::host_w)).mirror(0x00f00000).umask32(0x00ff00ff);
 
@@ -607,7 +596,7 @@ void eclipse_state::quadra900_map(address_map &map)
 
 u8 spike_state::via_in_a()
 {
-	return 0xc1;
+	return 0xc0 | BIT(m_config->read(), 0);
 }
 
 u8 spike_state::via_in_b()
@@ -676,12 +665,12 @@ void eclipse_state::via2_out_b_q900(u8 data)
 
 	u8 eclipse_state::via_in_a()
 	{
-		return 0xd1;
+		return 0xd0 | BIT(m_config->read(), 0);
 	}
 
 	u8 eclipse_state::via_in_a_q950()
 	{
-		return 0x91;
+		return 0x90 | BIT(m_config->read(), 0);
 	}
 
 	u8 eclipse_state::via_in_b()
@@ -728,19 +717,14 @@ void eclipse_state::via2_out_b_q900(u8 data)
 		}
 	}
 
-	/***************************************************************************
-	    DEVICE CONFIG
-	***************************************************************************/
-
 	static INPUT_PORTS_START(macadb)
+		PORT_START("config")
+		PORT_CONFNAME(0x01, 0x01, "Diagnostic Mode")
+		PORT_CONFSETTING(0x00, "Enabled")
+		PORT_CONFSETTING(0x01, "Disabled")
 		INPUT_PORTS_END
 
-		/***************************************************************************
-		    MACHINE DRIVERS
-		***************************************************************************/
-
-		void
-		quadrax00_state::quadra_base(machine_config & config)
+	void quadrax00_state::quadra_base(machine_config & config)
 	{
 		DAFB(config, m_dafb, 50_MHz_XTAL / 2);
 		m_dafb->set_maincpu_tag("maincpu");
@@ -753,17 +737,17 @@ void eclipse_state::via2_out_b_q900(u8 data)
 		applefdintf_device::add_35_hd(config, m_floppy[0]);
 		applefdintf_device::add_35_nc(config, m_floppy[1]);
 
-		SCC8530N(config, m_scc, C7M);
+		SCC8530(config, m_scc, C7M);
 		m_scc->configure_channels(3'686'400, 3'686'400, 3'686'400, 3'686'400);
-		m_scc->out_txda_callback().set("printer", FUNC(rs232_port_device::write_txd));
-		m_scc->out_txdb_callback().set("modem", FUNC(rs232_port_device::write_txd));
+		m_scc->out_txda_callback().set("modem", FUNC(rs232_port_device::write_txd));
+		m_scc->out_txdb_callback().set("printer", FUNC(rs232_port_device::write_txd));
 
-		rs232_port_device &rs232a(RS232_PORT(config, "printer", default_rs232_devices, nullptr));
+		rs232_port_device &rs232a(RS232_PORT(config, "modem", default_rs232_devices, nullptr));
 		rs232a.rxd_handler().set(m_scc, FUNC(z80scc_device::rxa_w));
 		rs232a.dcd_handler().set(m_scc, FUNC(z80scc_device::dcda_w));
 		rs232a.cts_handler().set(m_scc, FUNC(z80scc_device::ctsa_w));
 
-		rs232_port_device &rs232b(RS232_PORT(config, "modem", default_rs232_devices, nullptr));
+		rs232_port_device &rs232b(RS232_PORT(config, "printer", default_rs232_devices, nullptr));
 		rs232b.rxd_handler().set(m_scc, FUNC(z80scc_device::rxb_w));
 		rs232b.dcd_handler().set(m_scc, FUNC(z80scc_device::dcdb_w));
 		rs232b.cts_handler().set(m_scc, FUNC(z80scc_device::ctsb_w));
@@ -773,20 +757,21 @@ void eclipse_state::via2_out_b_q900(u8 data)
 		NSCSI_CONNECTOR(config, "scsi:0", mac_scsi_devices, nullptr);
 		NSCSI_CONNECTOR(config, "scsi:1", mac_scsi_devices, nullptr);
 		NSCSI_CONNECTOR(config, "scsi:2", mac_scsi_devices, nullptr);
-		NSCSI_CONNECTOR(config, "scsi:3").option_set("cdrom", NSCSI_CDROM_APPLE).machine_config([](device_t *device)
-																								 {
-			device->subdevice<cdda_device>("cdda")->add_route(0, "^^lspeaker", 1.0);
-			device->subdevice<cdda_device>("cdda")->add_route(1, "^^rspeaker", 1.0); });
+		NSCSI_CONNECTOR(config, "scsi:3").option_set("cdrom", NSCSI_CDROM_APPLE).machine_config(
+				[] (device_t *device)
+				{
+					device->subdevice<cdda_device>("cdda")->add_route(0, "^^speaker", 1.0, 0);
+					device->subdevice<cdda_device>("cdda")->add_route(1, "^^speaker", 1.0, 1);
+				});
 		NSCSI_CONNECTOR(config, "scsi:4", mac_scsi_devices, nullptr);
 		NSCSI_CONNECTOR(config, "scsi:5", mac_scsi_devices, nullptr);
 		NSCSI_CONNECTOR(config, "scsi:6", mac_scsi_devices, "harddisk");
-		NSCSI_CONNECTOR(config, "scsi:7").option_set("ncr53c96", NCR53C96).clock(50_MHz_XTAL / 2).machine_config([this](device_t *device)
-																												  {
-			ncr53c96_device &adapter = downcast<ncr53c96_device &>(*device);
 
-			adapter.set_busmd(ncr53c96_device::BUSMD_1);
-			adapter.irq_handler_cb().set(m_via2, FUNC(via6522_device::write_cb2)).invert();
-			adapter.drq_handler_cb().set(m_dafb, FUNC(dafb_device::turboscsi_drq_w<0>)); });
+		NCR53C96(config, m_ncr1, 50_MHz_XTAL / 2);
+		m_scsibus1->set_external_device(7, m_ncr1);
+		m_ncr1->set_busmd(ncr53c96_device::BUSMD_1);
+		m_ncr1->irq_handler_cb().set(m_via2, FUNC(via6522_device::write_cb2)).invert();
+		m_ncr1->drq_handler_cb().set(m_dafb, FUNC(dafb_device::turboscsi_drq_w<0>));
 
 		DP83932C(config, m_sonic, 40_MHz_XTAL / 2); // clock is C20M on the schematics
 		m_sonic->set_bus(m_maincpu, 0);
@@ -794,6 +779,7 @@ void eclipse_state::via2_out_b_q900(u8 data)
 
 		nubus_device &nubus(NUBUS(config, "nubus", 40_MHz_XTAL / 4));
 		nubus.set_space(m_maincpu, AS_PROGRAM);
+		nubus.set_bus_mode(nubus_device::nubus_mode_t::QUADRA_DAFB);
 		nubus.out_irq9_callback().set(FUNC(quadrax00_state::nubus_irq_9_w));
 		nubus.out_irqa_callback().set(FUNC(quadrax00_state::nubus_irq_a_w));
 		nubus.out_irqb_callback().set(FUNC(quadrax00_state::nubus_irq_b_w));
@@ -815,12 +801,11 @@ void eclipse_state::via2_out_b_q900(u8 data)
 
 		MACADB(config, m_macadb, C15M);
 
-		SPEAKER(config, "lspeaker").front_left();
-		SPEAKER(config, "rspeaker").front_right();
-		ASC(config, m_easc, 22.5792_MHz_XTAL, asc_device::asc_type::EASC);
+		SPEAKER(config, "speaker", 2).front();
+		ASC_EASC(config, m_easc, 22.5792_MHz_XTAL);
 		m_easc->irqf_callback().set(m_via2, FUNC(via6522_device::write_cb1)).invert();
-		m_easc->add_route(0, "lspeaker", 1.0);
-		m_easc->add_route(1, "rspeaker", 1.0);
+		m_easc->add_route(0, "speaker", 1.0, 0);
+		m_easc->add_route(1, "speaker", 1.0, 1);
 
 		// DFAC is only for audio input on Q700/Q800
 		APPLE_DFAC(config, m_dfac, 22257);
@@ -881,8 +866,8 @@ void eclipse_state::via2_out_b_q900(u8 data)
 		m_sccpic->hint_callback().set(FUNC(eclipse_state::scc_irq_w));
 
 		m_scc->out_int_callback().set(m_sccpic, FUNC(applepic_device::pint_w));
-		m_scc->out_wreqa_callback().set(m_sccpic, FUNC(applepic_device::reqa_w));
-		m_scc->out_wreqb_callback().set(m_sccpic, FUNC(applepic_device::reqb_w));
+		m_scc->out_wreqa_callback().set(m_sccpic, FUNC(applepic_device::reqa_w)).invert();
+		m_scc->out_wreqb_callback().set(m_sccpic, FUNC(applepic_device::reqb_w)).invert();
 
 		APPLEPIC(config, m_swimpic, C15M);
 		m_swimpic->prd_callback().set(m_swim, FUNC(applefdintf_device::read));
@@ -917,13 +902,12 @@ void eclipse_state::via2_out_b_q900(u8 data)
 		NSCSI_CONNECTOR(config, "scsi2:4", mac_scsi_devices, nullptr);
 		NSCSI_CONNECTOR(config, "scsi2:5", mac_scsi_devices, nullptr);
 		NSCSI_CONNECTOR(config, "scsi2:6", mac_scsi_devices, nullptr);
-		NSCSI_CONNECTOR(config, "scsi2:7").option_set("ncr53c96", NCR53C96).clock(50_MHz_XTAL / 2).machine_config([this](device_t *device)
-																												  {
-		ncr53c96_device &adapter = downcast<ncr53c96_device &>(*device);
 
-		adapter.set_busmd(ncr53c96_device::BUSMD_1);
-		adapter.irq_handler_cb().append(m_via2, FUNC(via6522_device::write_cb2)).invert();
-		adapter.drq_handler_cb().set(m_dafb, FUNC(dafb_device::turboscsi_drq_w<1>)); });
+		NCR53C96(config, m_ncr2, 50_MHz_XTAL / 2);
+		m_scsibus2->set_external_device(7, m_ncr2);
+		m_ncr2->set_busmd(ncr53c96_device::BUSMD_1);
+		m_ncr2->irq_handler_cb().append(m_via2, FUNC(via6522_device::write_cb2)).invert();
+		m_ncr2->drq_handler_cb().set(m_dafb, FUNC(dafb_device::turboscsi_drq_w<1>));
 
 		// 900 and 950 are 5-slot machines, so add the other 3
 		NUBUS_SLOT(config, "nba", "nubus", mac_nubus_cards, nullptr);

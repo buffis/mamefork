@@ -22,8 +22,7 @@
     - sound is strange, volume is often low to non-existent.
     - colours and graphics are different to those shown at
       http://www.phc25.com/collection.htm - who is correct?
-    - screen attribute bit 7 is unknown
-    - cursor flashes too rapidly, maybe VDG FSYNC issue?
+    - screen attribute bit 7 is unknown in alphanumeric/semigraphics mode (0x6800-0x6BFF)
     - Japanese keyboard labels for phc25j.
 
     TODO: MAP-1010
@@ -67,7 +66,7 @@ public:
 		, m_vram(*this, "videoram")
 		, m_maincpu(*this, "maincpu")
 		, m_chargen(*this, "chargen")
-		, m_vdg(*this, "mc6847")
+		, m_vdg(*this, "vdg")
 		, m_centronics(*this, "centronics")
 		, m_cent_data_out(*this, "cent_data_out")
 		, m_cassette(*this, "cassette")
@@ -77,8 +76,8 @@ public:
 	void phc25j(machine_config &config);
 
 protected:
-	void machine_start() override;
-	void machine_reset() override;
+	void machine_start() override ATTR_COLD;
+	void machine_reset() override ATTR_COLD;
 
 	virtual void port00_w(uint8_t data);
 	virtual uint8_t port40_r();
@@ -87,14 +86,14 @@ protected:
 	required_shared_ptr<uint8_t> m_vram;
 	required_device<cpu_device> m_maincpu;
 	required_region_ptr<uint8_t> m_chargen;
-	required_device<mc6847_base_device> m_vdg;
+	required_device<m5c6847p1_device> m_vdg;
 	required_device<centronics_device> m_centronics;
 	required_device<output_latch_device> m_cent_data_out;
 	required_device<cassette_image_device> m_cassette;
 
 private:
-	void phc25_mem(address_map &map);
-	void phc25_io(address_map &map);
+	void phc25_mem(address_map &map) ATTR_COLD;
+	void phc25_io(address_map &map) ATTR_COLD;
 
 	uint8_t video_ram_r(offs_t offset);
 	MC6847_GET_CHARROM_MEMBER(char_rom_r);
@@ -121,7 +120,7 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(rts_changed);
 
 protected:
-	void machine_start() override;
+	void machine_start() override ATTR_COLD;
 
 	virtual void port00_w(uint8_t data) override;
 	virtual uint8_t port40_r() override;
@@ -137,8 +136,8 @@ private:
 
 	void port20_w(uint8_t data);
 
-	void map1010_mem(address_map &map);
-	void map1010_io(address_map &map);
+	void map1010_mem(address_map &map) ATTR_COLD;
+	void map1010_io(address_map &map) ATTR_COLD;
 };
 
 /* Read/Write Handlers */
@@ -187,10 +186,10 @@ uint8_t phc25_state::port40_r()
 	uint8_t data = 0;
 
 	/* vertical sync */
-	data |= !m_vdg->fs_r() << 4;
+	data |= m_vdg->fs_r() << 4;
 
 	/* cassette read */
-	data |= (m_cassette->input() < +0.3) << 5;
+	data |= (m_cassette->input() > +0.3) << 5;
 
 	/* centronics busy */
 	data |= m_centronics_busy << 6;
@@ -221,7 +220,7 @@ void phc25_state::port40_w(uint8_t data)
 	    1       cassette motor
 	    2       LED in the LOCK button (on = capslock)
 	    3       centronics strobe
-	    4
+	    4       MC6847 GM1
 	    5       MC6847 GM0
 	    6       MC6847 CSS
 	    7       MC6847 A/G
@@ -229,7 +228,7 @@ void phc25_state::port40_w(uint8_t data)
 	*/
 
 	/* cassette output */
-	m_cassette->output( BIT(data, 0) ? -1.0 : +1.0);
+	m_cassette->output( BIT(data, 0) ? +1.0 : -1.0);
 
 	/* cassette motor */
 	m_cassette->change_state(BIT(data, 1) ? CASSETTE_MOTOR_DISABLED : CASSETTE_MOTOR_ENABLED, CASSETTE_MASK_MOTOR);
@@ -238,6 +237,7 @@ void phc25_state::port40_w(uint8_t data)
 	m_centronics->write_strobe(BIT(data, 3));
 
 	/* MC6847 */
+	m_vdg->gm1_w(BIT(data, 4));
 	m_vdg->gm0_w(BIT(data, 5));
 	m_vdg->css_w(BIT(data, 6));
 	m_vdg->ag_w(BIT(data, 7));
@@ -545,12 +545,12 @@ static INPUT_PORTS_START( map1010 )
 	PORT_CONFSETTING( 0x01, "Manual (Print)" )
 
 	PORT_START("MONITOR")
-	PORT_CONFNAME( 0x01, 0x01, "Monitor Selector" ) PORT_CHANGED_MEMBER(DEVICE_SELF, map1010_state, monitor_changed, 0)
+	PORT_CONFNAME( 0x01, 0x01, "Monitor Selector" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(map1010_state::monitor_changed), 0)
 	PORT_CONFSETTING( 0x01, "B")
 	PORT_CONFSETTING( 0x00, "A" )
 
 	PORT_START("RTS")
-	PORT_CONFNAME( 0x01, 0x00, "RTS" ) PORT_CHANGED_MEMBER(DEVICE_SELF, map1010_state, rts_changed, 0)
+	PORT_CONFNAME( 0x01, 0x00, "RTS" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(map1010_state::rts_changed), 0)
 	PORT_CONFSETTING( 0x00, "A")
 	PORT_CONFSETTING( 0x01, "B" )
 INPUT_PORTS_END
@@ -633,12 +633,12 @@ void phc25_state::phc25(machine_config &config)
 	/* video hardware */
 	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
 
-	MC6847_PAL(config, m_vdg, XTAL(4'433'619));
+	M5C6847P1(config, m_vdg, XTAL(4'433'619), true);
 	m_vdg->set_screen("screen");
-	m_vdg->fsync_wr_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0).invert();
+	m_vdg->fsync_wr_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0, HOLD_LINE).invert();
 	m_vdg->input_callback().set(FUNC(phc25_state::video_ram_r));
 	m_vdg->set_get_char_rom(FUNC(phc25_state::char_rom_r));
-	m_vdg->set_get_fixed_mode(mc6847_pal_device::MODE_GM2 | mc6847_pal_device::MODE_GM1 | mc6847_pal_device::MODE_INTEXT);
+	m_vdg->set_get_fixed_mode(mc6847_device::MODE_GM2 | mc6847_device::MODE_GM1 | mc6847_device::MODE_INTEXT);
 	// other lines not connected
 
 	/* sound hardware (Synthesizer PSG-01 add-on) */
@@ -669,12 +669,12 @@ void phc25_state::phc25j(machine_config &config)
 {
 	phc25(config);
 
-	MC6847_NTSC(config.replace(), m_vdg, XTAL(3'579'545));
+	M5C6847P1(config.replace(), m_vdg, XTAL(3'579'545));
 	m_vdg->set_screen("screen");
-	m_vdg->fsync_wr_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0).invert();
+	m_vdg->fsync_wr_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0, HOLD_LINE).invert();
 	m_vdg->input_callback().set(FUNC(phc25_state::video_ram_r));
 	m_vdg->set_get_char_rom(FUNC(phc25_state::char_rom_r));
-	m_vdg->set_get_fixed_mode(mc6847_ntsc_device::MODE_GM2 | mc6847_ntsc_device::MODE_GM1 | mc6847_ntsc_device::MODE_INTEXT);
+	m_vdg->set_get_fixed_mode(mc6847_device::MODE_GM2 | mc6847_device::MODE_GM1 | mc6847_device::MODE_INTEXT);
 	// other lines not connected
 }
 

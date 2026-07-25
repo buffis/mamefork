@@ -125,7 +125,6 @@ Notes:
 #include "pgmcrypt.h"
 
 #include "cpu/arm7/arm7.h"
-#include "cpu/arm7/arm7core.h"
 #include "cpu/m68000/m68000.h"
 #include "machine/nvram.h"
 #include "machine/timer.h"
@@ -150,7 +149,7 @@ public:
 private:
 	required_device<cpu_device> m_maincpu;
 
-	void host_map(address_map &map);
+	void host_map(address_map &map) ATTR_COLD;
 };
 
 class extension_state : public driver_device
@@ -170,7 +169,7 @@ public:
 	void init_mgcs2l();
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -179,8 +178,8 @@ private:
 
 	TIMER_DEVICE_CALLBACK_MEMBER(interrupt);
 
-	void cjsll_map(address_map &map);
-	void mgcs2l_map(address_map &map);
+	void cjsll_map(address_map &map) ATTR_COLD;
+	void mgcs2l_map(address_map &map) ATTR_COLD;
 
 	void decrypt();
 };
@@ -325,7 +324,7 @@ void host_state::host(machine_config &config)
 
 //  NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
-	IGS025(config, "igs025", 0);
+	IGS025(config, "igs025");
 }
 
 void extension_state::cjsll(machine_config &config)
@@ -345,14 +344,14 @@ void extension_state::cjsll(machine_config &config)
 	m_screen->set_screen_update("igs017_igs031", FUNC(igs017_igs031_device::screen_update));
 	m_screen->set_palette("igs017_igs031:palette");
 
-	IGS025(config, "igs025", 0);
+	IGS025(config, "igs025");
 
-	IGS017_IGS031(config, m_igs017_igs031, 0);
+	IGS017_IGS031(config, m_igs017_igs031);
 	m_igs017_igs031->set_text_reverse_bits(true);
 
 	SPEAKER(config, "mono").front_center();
 
-	OKIM6295(config, "oki", 22_MHz_XTAL / 22, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 0.5);
+	OKIM6295(config, "oki", 22_MHz_XTAL / 22, okim6295_device::PIN7_HIGH).add_route(ALL_OUTPUTS, "mono", 1.0);
 }
 
 void extension_state::mgcs2l(machine_config &config)
@@ -492,9 +491,9 @@ void extension_state::init_mgcs2l()
 
 
 // hosts
-GAME( 1999, mgcs2h, 0, host, host, host_state, empty_init, ROT0, "IGS", "Manguan Caishen 2 (link version, host)", MACHINE_IS_SKELETON )
-GAME( 1999, cjslh,  0, host, host, host_state, empty_init, ROT0, "IGS", "Cai Jin Shen Long (link version, host)", MACHINE_IS_SKELETON )
+GAME( 1999, mgcs2h, 0, host, host, host_state, empty_init, ROT0, "IGS", "Manguan Caishen 2 (link version, host)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 1999, cjslh,  0, host, host, host_state, empty_init, ROT0, "IGS", "Cai Jin Shen Long (link version, host)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
 
 // extensions
-GAME( 1999, mgcs2l, 0, mgcs2l, extension, extension_state, init_mgcs2l, ROT0, "IGS", "Manguan Caishen 2 (link version, extension, S110CN)", MACHINE_IS_SKELETON )
-GAME( 1999, cjsll,  0, cjsll,  extension, extension_state, init_cjsll,  ROT0, "IGS", "Cai Jin Shen Long (link version, extension, S111CN)", MACHINE_IS_SKELETON )
+GAME( 1999, mgcs2l, 0, mgcs2l, extension, extension_state, init_mgcs2l, ROT0, "IGS", "Manguan Caishen 2 (link version, extension, S110CN)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 1999, cjsll,  0, cjsll,  extension, extension_state, init_cjsll,  ROT0, "IGS", "Cai Jin Shen Long (link version, extension, S111CN)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

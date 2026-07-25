@@ -13,7 +13,6 @@
 #include "emuopts.h"
 #include "render.h"
 #include "screen.h"
-#include "uiinput.h"
 #include "ui/uimain.h"
 
 // OSD headers
@@ -322,10 +321,8 @@ void sdl_window_info::mouse_left(unsigned device)
 		return;
 
 	// leaving implicitly releases buttons, so check hold/drag if necessary
-	if (BIT(info->buttons, 0))
+	if (BIT(info->buttons, 0) && (0 < info->clickcnt))
 	{
-		assert(0 <= info->clickcnt);
-
 		auto const now(std::chrono::steady_clock::now());
 		auto const exp(std::chrono::milliseconds(250) + info->pressed);
 		int const dx(info->x - info->pressedx);
@@ -336,8 +333,7 @@ void sdl_window_info::mouse_left(unsigned device)
 	}
 
 	// push to UI manager
-	machine().ui_input().push_pointer_leave(
-			target(),
+	target()->push_pointer_leave(
 			osd::ui_event_handler::pointer::MOUSE,
 			info->index,
 			device,
@@ -380,8 +376,7 @@ void sdl_window_info::mouse_down(unsigned device, int x, int y, unsigned button)
 	info->x = x;
 	info->y = y;
 	info->buttons |= pressed;
-	machine().ui_input().push_pointer_update(
-			target(),
+	target()->push_pointer_update(
 			osd::ui_event_handler::pointer::MOUSE,
 			info->index,
 			device,
@@ -416,8 +411,7 @@ void sdl_window_info::mouse_up(unsigned device, int x, int y, unsigned button)
 	info->x = x;
 	info->y = y;
 	info->buttons &= ~released;
-	machine().ui_input().push_pointer_update(
-			target(),
+	target()->push_pointer_update(
 			osd::ui_event_handler::pointer::MOUSE,
 			info->index,
 			device,
@@ -447,8 +441,7 @@ void sdl_window_info::mouse_moved(unsigned device, int x, int y)
 	// update info and push to UI manager
 	info->x = x;
 	info->y = y;
-	machine().ui_input().push_pointer_update(
-			target(),
+	target()->push_pointer_update(
 			osd::ui_event_handler::pointer::MOUSE,
 			info->index,
 			device,
@@ -466,7 +459,7 @@ void sdl_window_info::mouse_wheel(unsigned device, int y)
 		return;
 
 	// push to UI manager
-	machine().ui_input().push_mouse_wheel_event(target(), info->x, info->y, y, 3);
+	target()->push_mouse_wheel_event(info->x, info->y, y, 3);
 }
 
 void sdl_window_info::finger_down(SDL_FingerID finger, unsigned device, int x, int y)
@@ -490,8 +483,7 @@ void sdl_window_info::finger_down(SDL_FingerID finger, unsigned device, int x, i
 	info->x = x;
 	info->y = y;
 	info->buttons = 1;
-	machine().ui_input().push_pointer_update(
-			target(),
+	target()->push_pointer_update(
 			osd::ui_event_handler::pointer::TOUCH,
 			info->index,
 			device,
@@ -545,15 +537,13 @@ void sdl_window_info::finger_up(SDL_FingerID finger, unsigned device, int x, int
 	}
 
 	// push to UI manager
-	machine().ui_input().push_pointer_update(
-			target(),
+	target()->push_pointer_update(
 			osd::ui_event_handler::pointer::TOUCH,
 			info->index,
 			device,
 			x, y,
 			0, 0, 1, info->clickcnt);
-	machine().ui_input().push_pointer_leave(
-			target(),
+	target()->push_pointer_leave(
 			osd::ui_event_handler::pointer::TOUCH,
 			info->index,
 			device,
@@ -585,8 +575,7 @@ void sdl_window_info::finger_moved(SDL_FingerID finger, unsigned device, int x, 
 		// update info and push to UI manager
 		info->x = x;
 		info->y = y;
-		machine().ui_input().push_pointer_update(
-				target(),
+		target()->push_pointer_update(
 				osd::ui_event_handler::pointer::TOUCH,
 				info->index,
 				device,
@@ -1235,9 +1224,9 @@ osd_dim sdl_window_info::get_min_bounds(int constrain)
 
 osd_dim sdl_window_info::get_size()
 {
-	int w=0; int h=0;
+	int w = 0; int h = 0;
 	SDL_GetWindowSize(platform_window(), &w, &h);
-	return osd_dim(w,h);
+	return osd_dim(w, h);
 }
 
 

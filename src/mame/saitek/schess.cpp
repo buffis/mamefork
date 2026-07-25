@@ -25,10 +25,10 @@ Hardware notes:
 - buzzer, 64+12 leds, button chessboard
 - expansion slot at top-right (dummy empty cartridge by default)
 
-Expansion modules: (* denotes not dumped)
+Expansion modules:
 - Strong Play Module
 - Classical Style Super Strong
-- *Hyper Modern Super Strong
+- Hyper Modern Super Strong
 
 *******************************************************************************/
 
@@ -66,7 +66,7 @@ public:
 	void schess(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -80,7 +80,7 @@ private:
 	u8 m_led_data = 0;
 
 	// address maps
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void update_display();

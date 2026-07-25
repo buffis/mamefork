@@ -139,7 +139,7 @@ void abc99_device::mouse_mem(address_map &map)
 void abc99_device::device_add_mconfig(machine_config &config)
 {
 	// keyboard CPU
-	I8035(config, m_maincpu, 0); // from Z5 T0 output
+	I8035(config, m_maincpu, 0); // clock comes from Z5 T0 output
 	m_maincpu->set_addrmap(AS_PROGRAM, &abc99_device::keyboard_mem);
 	m_maincpu->set_addrmap(AS_IO, &abc99_device::keyboard_io);
 	m_maincpu->p1_out_cb().set(FUNC(abc99_device::z2_p1_w));
@@ -159,11 +159,11 @@ void abc99_device::device_add_mconfig(machine_config &config)
 	WATCHDOG_TIMER(config, m_watchdog).set_time(attotime::from_hz(0));
 
 	// mouse
-	LUXOR_R8(config, m_mouse, 0);
+	LUXOR_R8(config, m_mouse);
 
 	// sound hardware
 	SPEAKER(config, "mono").front_center();
-	SPEAKER_SOUND(config, m_speaker, 0).add_route(ALL_OUTPUTS, "mono", 0.25);
+	SPEAKER_SOUND(config, m_speaker).add_route(ALL_OUTPUTS, "mono", 0.25);
 }
 
 
@@ -184,7 +184,7 @@ INPUT_CHANGED_MEMBER( abc99_device::keyboard_reset )
 //  INPUT_PORTS( abc99 )
 //-------------------------------------------------
 
-CUSTOM_INPUT_MEMBER( abc99_device::cursor_x4_r )
+ioport_value abc99_device::cursor_x4_r()
 {
 	u8 cursor = m_cursor->read();
 	u8 data = 0;
@@ -205,7 +205,7 @@ CUSTOM_INPUT_MEMBER( abc99_device::cursor_x4_r )
 	return data;
 }
 
-CUSTOM_INPUT_MEMBER( abc99_device::cursor_x6_r )
+ioport_value abc99_device::cursor_x6_r()
 {
 	u8 cursor = m_cursor->read();
 	u8 data = 0;
@@ -272,7 +272,7 @@ static INPUT_PORTS_START( abc99 )
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("PF15") PORT_CODE(KEYCODE_PAUSE)
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("DEL") PORT_CODE(KEYCODE_DEL) PORT_CHAR(UCHAR_MAMEKEY(DEL))
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x30, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_CUSTOM_MEMBER(abc99_device, cursor_x4_r)
+	PORT_BIT( 0x30, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_CUSTOM_MEMBER(FUNC(abc99_device::cursor_x4_r))
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_X) PORT_CHAR('x') PORT_CHAR('X')
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_UNUSED )
 
@@ -291,7 +291,7 @@ static INPUT_PORTS_START( abc99 )
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("PF14") PORT_CODE(KEYCODE_SCRLOCK)
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("INS") PORT_CODE(KEYCODE_INSERT) PORT_CHAR(UCHAR_MAMEKEY(INSERT))
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x30, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_CUSTOM_MEMBER(abc99_device, cursor_x6_r)
+	PORT_BIT( 0x30, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_CUSTOM_MEMBER(FUNC(abc99_device::cursor_x6_r))
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("CTRL") PORT_CODE(KEYCODE_LCONTROL) PORT_CHAR(UCHAR_MAMEKEY(LCONTROL))
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK") PORT_CODE(KEYCODE_CAPSLOCK) PORT_CHAR(UCHAR_MAMEKEY(CAPSLOCK))
 
@@ -406,7 +406,7 @@ static INPUT_PORTS_START( abc99 )
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME(u8"\u2192") PORT_CODE(KEYCODE_RIGHT) PORT_CHAR(UCHAR_MAMEKEY(RIGHT)) // U+2192 = →
 
 	PORT_START("J4")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Keyboard Reset") PORT_CHANGED_MEMBER(DEVICE_SELF, abc99_device, keyboard_reset, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("Keyboard Reset") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(abc99_device::keyboard_reset), 0)
 INPUT_PORTS_END
 
 
@@ -438,8 +438,8 @@ void abc99_device::serial_input()
 
 TIMER_CALLBACK_MEMBER(abc99_device::serial_clock)
 {
-	m_slot->trxc_w(1);
-	m_slot->trxc_w(0);
+	m_slot->trxc_w(m_rxtxc);
+	m_rxtxc = !m_rxtxc;
 }
 
 
@@ -483,11 +483,9 @@ abc99_device::abc99_device(const machine_config &mconfig, const char *tag, devic
 
 void abc99_device::device_start()
 {
-	m_leds.resolve();
-
 	// allocate timers
 	m_serial_timer = timer_alloc(FUNC(abc99_device::serial_clock), this);
-	attotime serial_clock = MCS48_ALE_CLOCK(m_mousecpu->get_t0_clock()); // 8333 bps
+	attotime serial_clock = MCS48_ALE_CLOCK(m_mousecpu->get_t0_clock() * 2); // 8333 bps x16
 	m_serial_timer->adjust(serial_clock, 0, serial_clock);
 
 	// state saving
@@ -500,6 +498,7 @@ void abc99_device::device_start()
 	save_item(NAME(m_t1_z5));
 	save_item(NAME(m_led_en));
 	save_item(NAME(m_reset));
+	save_item(NAME(m_rxtxc));
 }
 
 
@@ -514,6 +513,7 @@ void abc99_device::device_reset()
 	m_mousecpu->set_input_line(MCS48_INPUT_EA, ASSERT_LINE);
 
 	m_slot->write_rx(1);
+	m_rxtxc = 0;
 }
 
 

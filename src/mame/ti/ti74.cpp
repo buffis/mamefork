@@ -100,14 +100,14 @@ public:
 		m_segs(*this, "seg%u", 0U)
 	{ }
 
-	void ti74(machine_config &config);
-	void ti95(machine_config &config);
+	void ti74(machine_config &config) ATTR_COLD;
+	void ti95(machine_config &config) ATTR_COLD;
 
 	DECLARE_INPUT_CHANGED_MEMBER(battery_status_changed);
 
 protected:
-	virtual void machine_reset() override;
-	virtual void machine_start() override;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<tms70c46_device> m_maincpu;
@@ -131,7 +131,7 @@ private:
 	DECLARE_DEVICE_IMAGE_LOAD_MEMBER(cart_load);
 	HD44780_PIXEL_UPDATE(ti74_pixel_update);
 	HD44780_PIXEL_UPDATE(ti95_pixel_update);
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -142,8 +142,6 @@ private:
 
 void ti74_state::machine_start()
 {
-	m_segs.resolve();
-
 	if (m_cart->exists())
 		m_maincpu->space(AS_PROGRAM).install_read_handler(0x4000, 0xbfff, read8sm_delegate(*m_cart, FUNC(generic_slot_device::read_rom)));
 
@@ -328,7 +326,7 @@ INPUT_CHANGED_MEMBER(ti74_state::battery_status_changed)
 
 static INPUT_PORTS_START( ti74 )
 	PORT_START("BATTERY")
-	PORT_CONFNAME( 0x01, 0x01, "Battery Status" ) PORT_CHANGED_MEMBER(DEVICE_SELF, ti74_state, battery_status_changed, 0)
+	PORT_CONFNAME( 0x01, 0x01, "Battery Status" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(ti74_state::battery_status_changed), 0)
 	PORT_CONFSETTING(    0x00, "Low" )
 	PORT_CONFSETTING(    0x01, DEF_STR( Normal ) )
 
@@ -418,7 +416,7 @@ INPUT_PORTS_END
 
 static INPUT_PORTS_START( ti95 )
 	PORT_START("BATTERY")
-	PORT_CONFNAME( 0x01, 0x01, "Battery Status" ) PORT_CHANGED_MEMBER(DEVICE_SELF, ti74_state, battery_status_changed, 0)
+	PORT_CONFNAME( 0x01, 0x01, "Battery Status" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(ti74_state::battery_status_changed), 0)
 	PORT_CONFSETTING(    0x00, "Low" )
 	PORT_CONFSETTING(    0x01, DEF_STR( Normal ) )
 

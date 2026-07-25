@@ -178,7 +178,7 @@ class z80sio_channel : public device_t
 	friend class mk68564_device;
 
 public:
-	z80sio_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	z80sio_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	// read register handlers
 	uint8_t do_sioreg_rr0();
@@ -287,9 +287,9 @@ protected:
 			uint8_t rr1_auto_reset);
 
 	// device_t implementation
-	virtual void device_resolve_objects() override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_resolve_objects() override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	void update_dtr_rts_break();
 	void set_dtr(int state);
@@ -359,7 +359,7 @@ protected:
 	void out_txd_cb(int state);
 	void out_rts_cb(int state);
 	void out_dtr_cb(int state);
-	void set_ready(bool ready);
+	void update_wait_ready();
 	bool receive_allowed() const;
 	virtual bool transmit_allowed() const;
 
@@ -370,7 +370,9 @@ protected:
 	void receive_data();
 	void queue_received(uint16_t data, uint32_t error);
 	void advance_rx_fifo();
+	void update_rr1();
 	uint8_t get_special_rx_mask() const;
+	void update_rx_int();
 
 	bool is_tx_idle() const;
 	void transmit_enable();
@@ -397,7 +399,7 @@ protected:
 class z80dart_channel : public z80sio_channel
 {
 public:
-	z80dart_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	z80dart_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 protected:
 	virtual void enter_hunt_mode() override;
@@ -414,7 +416,7 @@ protected:
 class i8274_channel : public z80sio_channel
 {
 public:
-	i8274_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	i8274_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 };
 
 
@@ -425,11 +427,11 @@ class mk68564_channel : public z80sio_channel
 	friend class mk68564_device;
 
 public:
-	mk68564_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	mk68564_channel(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	virtual bool transmit_allowed() const override;
 
@@ -473,7 +475,7 @@ class z80sio_device :  public device_t,
 
 public:
 	// construction/destruction
-	z80sio_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	z80sio_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	auto out_txda_callback() { return m_out_txd_cb[0].bind(); }
 	auto out_txdb_callback() { return m_out_txd_cb[1].bind(); }
@@ -530,9 +532,9 @@ protected:
 
 	// device_t implementation
 	virtual void device_validity_check(validity_checker &valid) const override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	// device_z80daisy_interface implementation
 	virtual int z80daisy_irq_state() override;
@@ -578,20 +580,20 @@ protected:
 class z80dart_device : public z80sio_device
 {
 public:
-	z80dart_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	z80dart_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void ria_w(int state) { m_chanA->sync_w(state); }
 	void rib_w(int state) { m_chanB->sync_w(state); }
 
 protected:
 	// device_t overrides
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 };
 
 class i8274_device : public z80sio_device
 {
 public:
-	i8274_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	i8274_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	uint8_t inta_r() { return m1_r(); }
 
@@ -599,7 +601,7 @@ protected:
 	i8274_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
 	// device_t implementation
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	// device_z80daisy_interface implementation
 	virtual int z80daisy_irq_ack() override;
@@ -612,13 +614,13 @@ protected:
 class upd7201_device : public i8274_device
 {
 public:
-	upd7201_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	upd7201_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 };
 
 class mk68564_device : public i8274_device
 {
 public:
-	mk68564_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	mk68564_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void set_xtal(uint32_t clock);
 	void set_xtal(const XTAL &clock) { set_xtal(clock.value()); }
@@ -628,7 +630,7 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 private:
 	void vectrg_w(uint8_t data);

@@ -46,15 +46,15 @@ DEFINE_DEVICE_TYPE(DSBZ80, dsbz80_device, "dsbz80_device", "Sega Z80-based Digit
 
 void dsbz80_device::device_add_mconfig(machine_config &config)
 {
-	Z80(config, m_ourcpu, 4000000);     // unknown clock, but probably pretty slow considering the z80 does like nothing
+	Z80(config, m_ourcpu, 4'000'000);     // unknown clock, but probably pretty slow considering the z80 does like nothing
 	m_ourcpu->set_addrmap(AS_PROGRAM, &dsbz80_device::dsbz80_map);
 	m_ourcpu->set_addrmap(AS_IO, &dsbz80_device::dsbz80io_map);
 
-	I8251(config, m_uart, 4000000);
+	I8251(config, m_uart, 4'000'000);
 	m_uart->rxrdy_handler().set_inputline(m_ourcpu, INPUT_LINE_IRQ0);
 	m_uart->txd_handler().set(FUNC(dsbz80_device::output_txd));
 
-	clock_device &uart_clock(CLOCK(config, "uart_clock", 500000)); // 16 times 31.25MHz (standard Sega/MIDI sound data rate)
+	clock_device &uart_clock(CLOCK(config, "uart_clock", 500'000)); // 16 times 31.25MHz (standard Sega/MIDI sound data rate)
 	uart_clock.signal_handler().set("uart", FUNC(i8251_device::write_rxc));
 	uart_clock.signal_handler().append("uart", FUNC(i8251_device::write_txc));
 }
@@ -267,12 +267,9 @@ void dsbz80_device::mpeg_stereo_w(uint8_t data)
 	m_mp_pan = data & 3;  // 0 = stereo, 1 = left on both channels, 2 = right on both channels
 }
 
-void dsbz80_device::sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs)
+void dsbz80_device::sound_stream_update(sound_stream &stream)
 {
-	auto &out_l = outputs[0];
-	auto &out_r = outputs[1];
-
-	int samples = out_l.samples();
+	int samples = stream.samples();
 	int sampindex = 0;
 	for (;;)
 	{
@@ -281,20 +278,20 @@ void dsbz80_device::sound_stream_update(sound_stream &stream, std::vector<read_s
 			switch (m_mp_pan)
 			{
 				case 0: // stereo
-					out_l.put_int(sampindex, m_audio_buf[m_audio_pos*2] * m_mp_vol, 32768 * 128);
-					out_r.put_int(sampindex, m_audio_buf[m_audio_pos*2+1] * m_mp_vol, 32768 * 128);
+					stream.put_int(0, sampindex, m_audio_buf[m_audio_pos*2] * m_mp_vol, 32768 * 128);
+					stream.put_int(1, sampindex, m_audio_buf[m_audio_pos*2+1] * m_mp_vol, 32768 * 128);
 					sampindex++;
 					break;
 
 				case 1: // left only
-					out_l.put_int(sampindex, m_audio_buf[m_audio_pos*2] * m_mp_vol, 32768 * 128);
-					out_r.put_int(sampindex, m_audio_buf[m_audio_pos*2] * m_mp_vol, 32768 * 128);
+					stream.put_int(0, sampindex, m_audio_buf[m_audio_pos*2] * m_mp_vol, 32768 * 128);
+					stream.put_int(1, sampindex, m_audio_buf[m_audio_pos*2] * m_mp_vol, 32768 * 128);
 					sampindex++;
 					break;
 
 				case 2: // right only
-					out_l.put_int(sampindex, m_audio_buf[m_audio_pos*2+1] * m_mp_vol, 32768 * 128);
-					out_r.put_int(sampindex, m_audio_buf[m_audio_pos*2+1] * m_mp_vol, 32768 * 128);
+					stream.put_int(0, sampindex, m_audio_buf[m_audio_pos*2+1] * m_mp_vol, 32768 * 128);
+					stream.put_int(1, sampindex, m_audio_buf[m_audio_pos*2+1] * m_mp_vol, 32768 * 128);
 					sampindex++;
 					break;
 			}
@@ -309,8 +306,6 @@ void dsbz80_device::sound_stream_update(sound_stream &stream, std::vector<read_s
 
 		if (m_mp_state == 0)
 		{
-			out_l.fill(0, sampindex);
-			out_r.fill(0, sampindex);
 			break;
 
 		}

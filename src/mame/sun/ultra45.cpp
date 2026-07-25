@@ -66,7 +66,7 @@ ROM_START(ultra45)
 	    Watchdog = Disabled
 	    Power-up timer = Disabled
 	    MCLR pin = Disabled
-	    Brown-out Reset enabled and always on */    
+	    Brown-out Reset enabled and always on */
 	ROM_REGION(0x004000, "pic1", 0)
 	ROM_LOAD("972a_pic16f777.u13",                     0x000000, 0x004000, CRC(a1d4b342) SHA1(564926990cf28a1f88a8a374f16ac172f7b8c8f7) )
 
@@ -80,4 +80,4 @@ ROM_END
 } // anonymous namespace
 
 //    YEAR, NAME,    PARENT, COMPAT, MACHINE, INPUT,   CLASS,         INIT,       COMPANY,            FULLNAME,   FLAGS
-COMP( 1996, ultra45, 0,      0,      ultra45, ultra45, ultra45_state, empty_init, "Sun Microsystems", "Ultra 45", MACHINE_IS_SKELETON )
+COMP( 1996, ultra45, 0,      0,      ultra45, ultra45, ultra45_state, empty_init, "Sun Microsystems", "Ultra 45", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

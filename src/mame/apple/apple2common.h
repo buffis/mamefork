@@ -7,8 +7,8 @@
     Apple II stuff shared between apple2/apple2e/apple2gs.
 
 *********************************************************************/
-#ifndef MAME_APPLE_APPLE2_COMMON_H
-#define MAME_APPLE_APPLE2_COMMON_H
+#ifndef MAME_APPLE_APPLE2COMMON_H
+#define MAME_APPLE_APPLE2COMMON_H
 
 #pragma once
 
@@ -29,7 +29,7 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	virtual void device_validity_check(validity_checker &valid) const override;
 
 private:
@@ -41,6 +41,8 @@ private:
 	double m_joystick_x2_time = 0;
 	double m_joystick_y2_time = 0;
 
+	template <typename T> const T* find_symbol(const T* symbols, const T* end, decltype(T{}.addr) address);
+
 	offs_t com_2byte_op(std::ostream &stream, offs_t pc, const util::disasm_interface::data_buffer &opcodes, const char *opname);
 	offs_t com_3byte_op(std::ostream &stream, offs_t pc, const util::disasm_interface::data_buffer &opcodes, const char *opname);
 	offs_t com_long_op(std::ostream &stream, offs_t pc, const util::disasm_interface::data_buffer &opcodes, const char *opname);
@@ -51,4 +53,4 @@ private:
 DECLARE_DEVICE_TYPE(APPLE2_COMMON, apple2_common_device)
 
 
-#endif // MAME_APPLE_APPLE2_COMMON_H
+#endif // MAME_APPLE_APPLE2COMMON_H

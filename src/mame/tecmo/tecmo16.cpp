@@ -76,7 +76,7 @@ public:
 	void riot(machine_config &config);
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -128,10 +128,10 @@ private:
 	void screen_vblank(int state);
 
 	void save_state();
-	void common_map(address_map& map);
-	void fstarfrc_map(address_map &map);
-	void ginkun_map(address_map &map);
-	void sound_map(address_map &map);
+	void common_map(address_map &map) ATTR_COLD;
+	void fstarfrc_map(address_map &map) ATTR_COLD;
+	void ginkun_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -687,9 +687,9 @@ void tecmo16_state::base(machine_config &config)
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_tecmo16);
 	PALETTE(config, m_palette, palette_device::BLACK).set_format(palette_device::xBGR_444, 4096);
 
-	TECMO_SPRITE(config, m_sprgen, 0, m_palette, gfx_tecmo16_spr);
+	TECMO_SPRITE(config, m_sprgen, m_palette, gfx_tecmo16_spr);
 
-	TECMO_MIXER(config, m_mixer, 0);
+	TECMO_MIXER(config, m_mixer);
 	m_mixer->set_mixer_shifts(10, 9, 4);
 	m_mixer->set_blendcols(   0x0400 + 0x300, 0x0400 + 0x200, 0x0400 + 0x100, 0x0400 + 0x000 );
 	m_mixer->set_regularcols( 0x0000 + 0x300, 0x0000 + 0x200, 0x0000 + 0x100, 0x0000 + 0x000 );
@@ -698,19 +698,18 @@ void tecmo16_state::base(machine_config &config)
 	m_mixer->set_bgpen(0x000 + 0x300, 0x400 + 0x300);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	GENERIC_LATCH_8(config, "soundlatch").data_pending_callback().set_inputline(m_audiocpu, INPUT_LINE_NMI);
 
 	ym2151_device &ymsnd(YM2151(config, "ymsnd", MASTER_CLOCK/6)); // 4 MHz
 	ymsnd.irq_handler().set_inputline(m_audiocpu, 0);
-	ymsnd.add_route(0, "lspeaker", 0.60);
-	ymsnd.add_route(1, "rspeaker", 0.60);
+	ymsnd.add_route(0, "speaker", 0.60, 0);
+	ymsnd.add_route(1, "speaker", 0.60, 1);
 
 	okim6295_device &oki(OKIM6295(config, "oki", OKI_CLOCK / 8, okim6295_device::PIN7_HIGH)); // sample rate 1 MHz / 132
-	oki.add_route(ALL_OUTPUTS, "lspeaker", 0.40);
-	oki.add_route(ALL_OUTPUTS, "rspeaker", 0.40);
+	oki.add_route(ALL_OUTPUTS, "speaker", 0.40, 0);
+	oki.add_route(ALL_OUTPUTS, "speaker", 0.40, 1);
 }
 
 void tecmo16_state::ginkun(machine_config &config)

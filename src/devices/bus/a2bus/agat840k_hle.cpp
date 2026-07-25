@@ -53,9 +53,9 @@ static const floppy_interface agat840k_hle_floppy_interface =
 
 void a2bus_agat840k_hle_device::device_add_mconfig(machine_config &config)
 {
-	legacy_floppy_image_device &floppy0(LEGACY_FLOPPY(config, m_floppy_image[0], 0, &agat840k_hle_floppy_interface));
+	legacy_floppy_image_device &floppy0(LEGACY_FLOPPY(config, m_floppy_image[0], &agat840k_hle_floppy_interface));
 	floppy0.out_idx_cb().set(FUNC(a2bus_agat840k_hle_device::index_0_w));
-	legacy_floppy_image_device &floppy1(LEGACY_FLOPPY(config, m_floppy_image[1], 0, &agat840k_hle_floppy_interface));
+	legacy_floppy_image_device &floppy1(LEGACY_FLOPPY(config, m_floppy_image[1], &agat840k_hle_floppy_interface));
 	floppy1.out_idx_cb().set(FUNC(a2bus_agat840k_hle_device::index_1_w));
 
 	I8255(config, m_d14);
@@ -226,6 +226,12 @@ void a2bus_agat840k_hle_device::device_reset()
 
 	m_mxcs |= MXCSR_SYNC;
 	m_mxcs &= ~MXCSR_TR;
+}
+
+void a2bus_agat840k_hle_device::reset_from_bus()
+{
+	m_d14->reset();
+	m_d15->reset();
 }
 
 TIMER_CALLBACK_MEMBER(a2bus_agat840k_hle_device::timer_wait_tick)

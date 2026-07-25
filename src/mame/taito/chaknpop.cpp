@@ -157,9 +157,9 @@ public:
 	void chaknpop(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	// devices
@@ -216,7 +216,7 @@ private:
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void draw_bitmap(bitmap_ind16 &bitmap, const rectangle &cliprect);
 
-	void prg_map(address_map &map);
+	void prg_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -247,10 +247,9 @@ void chaknpop_state::palette(palette_device &palette) const
 		int const g = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
 
 		// blue component
-		bit0 = 0;
-		bit1 = BIT(col, 6);
-		bit2 = BIT(col, 7);
-		int const b = 0x21 * bit0 + 0x47 * bit1 + 0x97 * bit2;
+		bit0 = BIT(col, 6);
+		bit1 = BIT(col, 7);
+		int const b = 0x52 * bit0 + 0xad * bit1;
 
 		palette.set_pen_color(i, rgb_t(r, g, b));
 	}
@@ -750,5 +749,5 @@ ROM_END
 } // anonymous namespace
 
 
-//  ( YEAR  NAME      PARENT    MACHINE   INPUT     STATE           INIT        MONITOR  COMPANY              FULLNAME       FLAGS )
-GAME( 1983, chaknpop, 0,        chaknpop, chaknpop, chaknpop_state, empty_init, ROT0,    "Taito Corporation", "Chack'n Pop", MACHINE_SUPPORTS_SAVE )
+//  ( YEAR  NAME      PARENT    MACHINE   INPUT     STATE           INIT        MONITOR  COMPANY  FULLNAME       FLAGS )
+GAME( 1983, chaknpop, 0,        chaknpop, chaknpop, chaknpop_state, empty_init, ROT0,    "Taito", "Chack'n Pop", MACHINE_SUPPORTS_SAVE )

@@ -10,6 +10,10 @@ Tiger Electronics K-2-8 (model 7-232) Sold in Hong Kong, distributed in US as:
 1981 K-2-8 models 7-230 and 7-231 are on different hardware, having a different
 keyboard, VFD, and the SC-01-A speech chip, emulated in k28o.cpp.
 
+To make it get words from an inserted module, press the module button before
+entering a skill level (there is no visual or audible confirmation that the
+module is active, other than a different word library of course).
+
 Hardware notes:
 - PCB label: 201223A (main), REV0 ET828D (LCD)
 - TMS1400 MP7324 (die label: TMS1400, MP7324, 28L 01D D000 R100)
@@ -54,13 +58,13 @@ public:
 		m_digits(*this, "digit%u", 0U)
 	{ }
 
-	void k28(machine_config &config);
+	void k28(machine_config &config) ATTR_COLD;
 
 	DECLARE_INPUT_CHANGED_MEMBER(power_on);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -90,8 +94,6 @@ private:
 
 void k28_state::machine_start()
 {
-	m_digits.resolve();
-
 	// register for savestates
 	save_item(NAME(m_power_on));
 	save_item(NAME(m_inp_mux));
@@ -235,7 +237,7 @@ static INPUT_PORTS_START( k28 )
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_S) PORT_CHAR('S')
 
 	PORT_START("IN.1") // O1
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_F1) PORT_CHANGED_MEMBER(DEVICE_SELF, k28_state, power_on, 0) PORT_NAME("On")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_F1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(k28_state::power_on), 0) PORT_NAME("On")
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_B) PORT_CODE(KEYCODE_2) PORT_CODE(KEYCODE_2_PAD) PORT_CHAR('B') PORT_NAME("B/2")
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_K) PORT_CODE(KEYCODE_PLUS_PAD) PORT_CHAR('K') PORT_NAME("K/+")
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_T) PORT_CHAR('T')

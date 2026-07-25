@@ -77,8 +77,8 @@ public:
 	void rz1(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<upd7811_device> m_maincpu;
@@ -96,9 +96,9 @@ private:
 	output_finder<> m_led_pattern;
 	output_finder<> m_led_startstop;
 
-	void map(address_map &map);
-	void pg0_map(address_map &map);
-	void pg1_map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
+	void pg0_map(address_map &map) ATTR_COLD;
+	void pg1_map(address_map &map) ATTR_COLD;
 
 	uint8_t key_r();
 
@@ -382,12 +382,6 @@ void rz1_state::port_c_w(uint8_t data)
 
 void rz1_state::machine_start()
 {
-	// resolve output finders
-	m_led_sampling.resolve();
-	m_led_song.resolve();
-	m_led_pattern.resolve();
-	m_led_startstop.resolve();
-
 	// register for save states
 	save_item(NAME(m_port_a));
 	save_item(NAME(m_port_b));

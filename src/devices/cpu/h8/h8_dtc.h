@@ -17,6 +17,8 @@
 
 #include <list>
 
+class h8_cpu_base;
+
 struct h8_dtc_state {
 	u32 m_base, m_sra, m_dar, m_cr;
 	s32 m_incs, m_incd;
@@ -55,14 +57,14 @@ public:
 
 protected:
 	static const int vector_to_enable[];
-	required_device<h8_device> m_cpu;
-	required_device<h8_intc_device> m_intc;
+	required_device<h8_cpu_base> m_cpu;
+	required_device<h8_intc_base> m_intc;
 	const char *m_intc_tag;
 	int m_irq;
 	h8_dtc_state m_states[92];
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	u8 m_dtcer[6], m_dtvecr;
 	int m_cur_active_vector;

@@ -41,14 +41,20 @@ class x1_keyboard_device :  public device_t,
 {
 public:
 	// construction/destruction
-	x1_keyboard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	x1_keyboard_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
+
+	auto flag_cb() { return m_flag_cb.bind(); }
+	auto ack_cb() { return m_ack_cb.bind(); }
 
 private:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	// z80daisy_interface overrides
 	virtual int z80daisy_irq_state() override;
 	virtual int z80daisy_irq_ack() override;
 	virtual void z80daisy_irq_reti() override;
+
+	devcb_read_line m_flag_cb;
+	devcb_read8 m_ack_cb;
 };
 
 class x1_state : public driver_device
@@ -132,9 +138,9 @@ public:
 	void x1_portb_w(uint8_t data);
 	void x1_portc_w(uint8_t data);
 	void init_x1_kanji();
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 	uint32_t screen_update_x1(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	DECLARE_INPUT_CHANGED_MEMBER(ipl_reset);
@@ -170,10 +176,10 @@ public:
 	uint8_t m_key_irq_flag;       /**< Keyboard IRQ pending. */
 	uint8_t m_key_irq_vector;     /**< Keyboard IRQ vector. */
 
-	void x1_io(address_map &map);
-	void x1_io_banks(address_map &map);
-	void x1_io_banks_common(address_map &map);
-	void x1_mem(address_map &map);
+	void x1_io(address_map &map) ATTR_COLD;
+	void x1_io_banks(address_map &map) ATTR_COLD;
+	void x1_io_banks_common(address_map &map) ATTR_COLD;
+	void x1_mem(address_map &map) ATTR_COLD;
 protected:
 	struct scrn_reg_t
 	{
@@ -209,6 +215,9 @@ protected:
 	int priority_mixer_pri(int color);
 	void cmt_command( uint8_t cmd );
 	uint16_t jis_convert(int kanji_addr);
+
+	int key_irq_flag_r() { return m_key_irq_flag; }
+	uint8_t key_irq_ack_r();
 
 	required_device<address_map_bank_device> m_iobank;
 	optional_device<ym2151_device> m_ym; // turbo-only
@@ -338,9 +347,9 @@ public:
 
 	void x1turbo(machine_config &config);
 protected:
-	void x1turbo_io_banks(address_map &map);
-	void x1turbo_mem(address_map &map);
-	virtual void machine_reset() override;
+	void x1turbo_io_banks(address_map &map) ATTR_COLD;
+	void x1turbo_mem(address_map &map) ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<z80dma_device> m_dma;

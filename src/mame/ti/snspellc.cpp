@@ -77,7 +77,7 @@ Touch & Tell modules:
 English:
 - Alphabet Fun: VSM: 4KB CD2611
 - Animal Friends: VSM: 16KB CD2355
-- Number Fun: VSM: 4KB CD2612*, CD2612A
+- Number Fun: VSM: 4KB CD2612* or CD2612A
 - All About Me: VSM: 4KB CD2613
 - World of Transportation: VSM: 16KB CD2361
 - Little Creatures: VSM: 16KB CD2362
@@ -191,7 +191,8 @@ public:
 		m_tms6100(*this, "tms6100"),
 		m_cart(*this, "cartslot"),
 		m_inputs(*this, "IN.%u", 0),
-		m_power_on(*this, "power")
+		m_power_on(*this, "power"),
+		m_overlay_code_output(*this, "overlay_code")
 	{ }
 
 	// machine configs
@@ -205,8 +206,8 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(power_on);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	// devices/pointers
 	required_device<tms1100_cpu_device> m_maincpu;
@@ -215,6 +216,7 @@ protected:
 	optional_device<generic_slot_device> m_cart;
 	required_ioport_array<10> m_inputs;
 	output_finder<> m_power_on;
+	output_finder<> m_overlay_code_output;
 
 	u8 *m_cart_base = nullptr;
 	u16 m_o = 0;
@@ -230,8 +232,6 @@ protected:
 
 void snspellc_state::machine_start()
 {
-	m_power_on.resolve();
-
 	// register for savestates
 	save_item(NAME(m_o));
 	save_item(NAME(m_r));
@@ -255,7 +255,7 @@ public:
 	void init_tntell();
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	virtual u8 read_k() override;
 
@@ -273,7 +273,6 @@ void tntell_state::machine_start()
 {
 	snspellc_state::machine_start();
 
-	m_overlay_out.resolve();
 	save_item(NAME(m_overlay_code));
 }
 
@@ -401,10 +400,11 @@ TIMER_DEVICE_CALLBACK_MEMBER(tntell_state::get_overlay)
 	m_overlay_code = m_overlay_inp->read();
 
 	// try to get it from (external) layout
+	// FIXME: replace this with a layout script that sets an input value for the current page
 	if (m_overlay_code == 0x20)
 	{
 		// as output value, eg. with defstate (in decimal)
-		m_overlay_code = output().get_value("overlay_code") & 0x1f;
+		m_overlay_code = m_overlay_code_output & 0x1f;
 
 		// and from current view name ($ + 2 hex digits)
 		render_target *target = machine().render().first_target();
@@ -520,7 +520,7 @@ static INPUT_PORTS_START( snspellc )
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_QUOTE) PORT_CHAR('\'')
 
 	PORT_START("IN.9") // Vss
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_5) PORT_CODE(KEYCODE_F1) PORT_NAME("Spell/On") PORT_CHANGED_MEMBER(DEVICE_SELF, snspellc_state, power_on, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_5) PORT_CODE(KEYCODE_F1) PORT_NAME("Spell/On") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(snspellc_state::power_on), 0)
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_UNUSED )
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) // speech chip data
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_F2) PORT_NAME("Off") // -> auto_power_off
@@ -530,7 +530,7 @@ static INPUT_PORTS_START( snwrite )
 	PORT_INCLUDE( snspellc )
 
 	PORT_MODIFY("IN.9")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_5) PORT_CODE(KEYCODE_F1) PORT_NAME("Write/On") PORT_CHANGED_MEMBER(DEVICE_SELF, snspellc_state, power_on, 0) // just the label changed from Spell to Write
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_CODE(KEYCODE_5) PORT_CODE(KEYCODE_F1) PORT_NAME("Write/On") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(snspellc_state::power_on), 0) // just the label changed from Spell to Write
 INPUT_PORTS_END
 
 
@@ -584,7 +584,7 @@ static INPUT_PORTS_START( mathsmag )
 	PORT_BIT( 0x0f, IP_ACTIVE_HIGH, IPT_UNUSED )
 
 	PORT_START("IN.9") // Vss
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_F1) PORT_NAME("Marche / Calcule") PORT_CHANGED_MEMBER(DEVICE_SELF, snspellc_state, power_on, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_F1) PORT_NAME("Marche / Calcule") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(snspellc_state::power_on), 0)
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_F2) PORT_NAME(u8"Arrét") // -> auto_power_off
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_UNUSED )
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_UNUSED )
@@ -650,7 +650,7 @@ static INPUT_PORTS_START( tntell )
 
 	PORT_START("IN.9") // Vss
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_N) PORT_CODE(KEYCODE_F1) PORT_NAME("Grid 6-6 (On)") PORT_CHANGED_MEMBER(DEVICE_SELF, tntell_state, power_on, 0)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_N) PORT_CODE(KEYCODE_F1) PORT_NAME("Grid 6-6 (On)") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(tntell_state::power_on), 0)
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) // speech chip data
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_UNUSED )
 INPUT_PORTS_END

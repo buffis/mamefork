@@ -53,7 +53,7 @@ class a7150_state : public driver_device
 public:
 	a7150_state(const machine_config &mconfig, device_type type, const char *tag)
 		: driver_device(mconfig, type, tag)
-		, m_bus(*this, "slot")
+		, m_bus(*this, "bus")
 		, m_maincpu(*this, "maincpu")
 		, m_uart8251(*this, "uart8251")
 		, m_pit8253(*this, "pit8253")
@@ -64,8 +64,8 @@ public:
 	void a7150(machine_config &config);
 
 protected:
-	virtual void machine_reset() override;
-	virtual void machine_start() override;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void ppi_c_w(uint8_t data);
@@ -79,8 +79,8 @@ private:
 	required_device<pic8259_device> m_pic8259;
 	required_device<rs232_port_device> m_rs232;
 
-	void io_map(address_map &map);
-	void mem_map(address_map &map);
+	void io_map(address_map &map) ATTR_COLD;
+	void mem_map(address_map &map) ATTR_COLD;
 
 	u8 bus_pio_r(offs_t offset) { return m_bus->space(AS_IO).read_byte(offset); }
 	void bus_pio_w(offs_t offset, u8 data) { m_bus->space(AS_IO).write_byte(offset, data); }
@@ -121,11 +121,9 @@ void a7150_state::io_map(address_map &map)
 
 static DEVICE_INPUT_DEFAULTS_START( kbd_rs232_defaults )
 	DEVICE_INPUT_DEFAULTS( "RS232_TXBAUD", 0xff, RS232_BAUD_28800 )
-	DEVICE_INPUT_DEFAULTS( "RS232_RXBAUD", 0xff, RS232_BAUD_28800 )
 	DEVICE_INPUT_DEFAULTS( "RS232_DATABITS", 0xff, RS232_DATABITS_8 )
 	DEVICE_INPUT_DEFAULTS( "RS232_PARITY", 0xff, RS232_PARITY_NONE )
 	DEVICE_INPUT_DEFAULTS( "RS232_STOPBITS", 0xff, RS232_STOPBITS_2 )
-	DEVICE_INPUT_DEFAULTS( "FLOW_CONTROL", 0x01, 0x01 )
 DEVICE_INPUT_DEFAULTS_END
 
 void a7150_state::machine_reset()
@@ -157,7 +155,7 @@ void a7150_state::a7150(machine_config &config)
 	m_bus->int_callback<1>().set(m_pic8259, FUNC(pic8259_device::ir1_w));
 	m_bus->int_callback<6>().set(m_pic8259, FUNC(pic8259_device::ir6_w));
 	m_bus->int_callback<7>().set(m_pic8259, FUNC(pic8259_device::ir7_w));
-	MULTIBUS_SLOT(config, "slot:1", m_bus, a7150_cards, "kgs", false);
+	MULTIBUS_SLOT(config, "slot1", m_bus, a7150_cards, "kgs", false);
 
 	// ZRE board
 
@@ -173,7 +171,7 @@ void a7150_state::a7150(machine_config &config)
 	i8087.irq().set(m_pic8259, FUNC(pic8259_device::ir0_w));
 	i8087.busy().set_inputline("maincpu", INPUT_LINE_TEST);
 
-	PIC8259(config, m_pic8259, 0);
+	PIC8259(config, m_pic8259);
 	m_pic8259->out_int_callback().set_inputline(m_maincpu, 0);
 
 	// IFSP port (IRQ 4)
@@ -182,7 +180,7 @@ void a7150_state::a7150(machine_config &config)
 //  ppi.out_pb_callback().set("cent_data_out", output_latch_device::write));
 	ppi.out_pc_callback().set(FUNC(a7150_state::ppi_c_w));
 
-	PIT8253(config, m_pit8253, 0);
+	PIT8253(config, m_pit8253);
 	m_pit8253->set_clk<0>(14.7456_MHz_XTAL / 4);
 	m_pit8253->out_handler<0>().set(m_pic8259, FUNC(pic8259_device::ir2_w));
 	m_pit8253->set_clk<1>(14.7456_MHz_XTAL / 4);
@@ -190,7 +188,7 @@ void a7150_state::a7150(machine_config &config)
 	m_pit8253->out_handler<2>().set([this] (bool state) { m_uart8251->write_rxc(state); m_uart8251->write_txc(state); });
 
 	// IFSS port -- keyboard runs at 28800 8N2
-	I8251(config, m_uart8251, 0);
+	I8251(config, m_uart8251);
 	m_uart8251->txd_handler().set([this] (bool state) { if (m_ifss_loopback) m_uart8251->write_rxd(state); else m_rs232->write_txd(state); });
 	m_uart8251->dtr_handler().set([this] (bool state) { if (m_ifss_loopback) m_uart8251->write_dsr(state); else m_rs232->write_dtr(state); });
 	m_uart8251->rts_handler().set([this] (bool state) { m_ifss_loopback = !state; });

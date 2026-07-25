@@ -18,6 +18,7 @@
           LED backlight isn't visually correct. The area outside the 96x8
           matrix should be brighter than that shining through the gap
           between the digits.
+
 **********************************************************************/
 
 #include "emu.h"
@@ -208,10 +209,6 @@ bfm_gu96x8m_k657c2_device::bfm_gu96x8m_k657c2_device(const machine_config &mconf
 
 void bfm_gu96x8m_k657c2_device::device_start()
 {
-	m_vfd_background.resolve();
-	m_dotmatrix.resolve();
-	m_duty.resolve();
-
 	m_frame_timer = timer_alloc(FUNC(bfm_gu96x8m_k657c2_device::frame_update_callback), this);
 
 	save_item(NAME(m_cursor_pos));
@@ -282,7 +279,6 @@ void bfm_gu96x8m_k657c2_device::device_reset()
 	std::fill(m_udf[0], m_udf[0]+(16*6),0);
 	std::fill(std::begin(m_graphics_data), std::end(m_graphics_data), 0);
 
-
 	for(int i = 0; i < 32; i++)
 	{
 		m_charset_offset[i] = i | 0x40;
@@ -306,14 +302,14 @@ void bfm_gu96x8m_k657c2_device::update_display()
 {
 	if(m_led_flash_enabled && m_led_flash_blank)
 	{
-		m_vfd_background[0] = 0;
+		m_vfd_background = 0;
 	}
 	else
 	{
-		m_vfd_background[0] = m_led_colour;
+		m_vfd_background = m_led_colour;
 	}
 
-	for(int pos = 0;pos < 16;pos++)
+	for(int pos = 0; pos < 16; pos++)
 	{
 		uint8_t const *char_data;
 		bool dp = false;
@@ -677,9 +673,11 @@ void bfm_gu96x8m_k657c2_device::write_char(int data)
 				break;
 
 			case 0xc0:
+			{
 				static const uint8_t flash_rates[]={0, 6, 9, 15, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84};
 				m_flash_rate = flash_rates[data & 0x0f];
 				break;
+			}
 
 			case 0xd0:
 				if(data <= 0xd3)
@@ -805,7 +803,7 @@ void bfm_gu96x8m_k657c2_device::write_char(int data)
 void bfm_gu96x8m_k657c2_device::setdata(int data)
 {
 	int move = 0;
-	int change =0;
+	int change = 0;
 
 	switch(data)
 	{
@@ -848,9 +846,10 @@ void bfm_gu96x8m_k657c2_device::setdata(int data)
 		m_pcursor_pos = m_cursor_pos;
 
 		if(m_window_size == 0)
-		{ // if no window selected default to equivalent rotate mode
-				if(mode == 2)      mode = 0;
-				else if(mode == 3) mode = 1;
+		{
+			// if no window selected default to equivalent rotate mode
+			if(mode == 2)      mode = 0;
+			else if(mode == 3) mode = 1;
 		}
 		switch(mode)
 		{

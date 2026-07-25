@@ -23,7 +23,7 @@ Undocumented buttons:
 
 #include "bus/generic/slot.h"
 #include "bus/generic/carts.h"
-#include "cpu/m6502/m65sc02.h"
+#include "cpu/m6502/g65sc02.h"
 #include "cpu/m6502/r65c02.h"
 #include "machine/74259.h"
 #include "machine/nvram.h"
@@ -61,12 +61,12 @@ public:
 	{ }
 
 	// machine configs
-	void smondial2(machine_config &config);
-	void mega4(machine_config &config);
-	void smondialb(machine_config &config);
+	void smondial2(machine_config &config) ATTR_COLD;
+	void mega4(machine_config &config) ATTR_COLD;
+	void smondialb(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	// devices/pointers
 	required_device<cpu_device> m_maincpu;
@@ -82,8 +82,8 @@ protected:
 	u8 m_board_mux = 0;
 
 	// address maps
-	void smondialb_mem(address_map &map);
-	void smondial2_mem(address_map &map);
+	void smondialb_mem(address_map &map) ATTR_COLD;
+	void smondial2_mem(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	template<int N> void lcd_output_w(u32 data);
@@ -96,8 +96,6 @@ protected:
 
 void smondialb_state::machine_start()
 {
-	m_digits.resolve();
-
 	save_item(NAME(m_led_data));
 	save_item(NAME(m_board_mux));
 }
@@ -115,7 +113,7 @@ public:
 	void smondiala(machine_config &config);
 
 private:
-	void smondiala_mem(address_map &map);
+	void smondiala_mem(address_map &map) ATTR_COLD;
 
 	// led row/column is switched around, do a trampoline here instead of making a different .lay file
 	virtual void led_w(u8 data) override { smondialb_state::led_w(bitswap<8>(data, 7,6,3,2,5,4,1,0)); }
@@ -279,7 +277,7 @@ INPUT_PORTS_END
 void smondialb_state::smondialb(machine_config &config)
 {
 	// basic machine hardware
-	M65SC02(config, m_maincpu, 4_MHz_XTAL);
+	G65SC02(config, m_maincpu, 4_MHz_XTAL);
 	m_maincpu->set_addrmap(AS_PROGRAM, &smondialb_state::smondialb_mem);
 
 	const attotime nmi_period = attotime::from_hz(4_MHz_XTAL / 0x2000);
@@ -405,7 +403,7 @@ SYST( 1986, smondial,   0,        0,      smondiala, smondial,  smondiala_state,
 SYST( 1986, smondialab, smondial, 0,      smondiala, smondial,  smondiala_state, empty_init, "Hegener + Glaser", "Mephisto Super Mondial (ver. AB)", MACHINE_SUPPORTS_SAVE )
 SYST( 1986, smondialb,  smondial, 0,      smondialb, smondial,  smondialb_state, empty_init, "Hegener + Glaser", "Mephisto Super Mondial (ver. B)",  MACHINE_SUPPORTS_SAVE )
 
-SYST( 1988, smondial2,  0,        0,      smondial2, smondial2, smondialb_state, empty_init, "Hegener + Glaser", "Mephisto Super Mondial II", MACHINE_SUPPORTS_SAVE )
+SYST( 1989, smondial2,  0,        0,      smondial2, smondial2, smondialb_state, empty_init, "Hegener + Glaser", "Mephisto Super Mondial II", MACHINE_SUPPORTS_SAVE )
 
 SYST( 1988, mega4,      0,        0,      mega4,     smondial,  smondialb_state, empty_init, "Hegener + Glaser", "Mephisto Mega IV (set 1)",  MACHINE_SUPPORTS_SAVE )
 SYST( 1988, mega4a,     mega4,    0,      mega4,     smondial,  smondialb_state, empty_init, "Hegener + Glaser", "Mephisto Mega IV (set 2)",  MACHINE_SUPPORTS_SAVE )

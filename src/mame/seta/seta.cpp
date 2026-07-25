@@ -32,7 +32,8 @@ P0-055D                 90 Thunder & Lightning                  Romstar / Visco
 Promat PCB              94 Wiggie Waggie(5)                     --
 Promat PCB              94 Super Bar(5)                         --
 P0-058A                 90 Jockey Club                          Visco
-P0-058C                 98 International Toote (6)              Coinmaster (bootleg)
+P0-058C                 98 International Toote (6)              Coinmaster (hack)
+P0-058C                 98 Sport of Kings (6)                   Coinmaster (hack)
 P0-063A                 91 Rezon                                Allumer
 P0-068B  (M6100723A)    92 Block Carnival                       Visco
 P0-072-2 (prototype)    92 Blandia (prototype)                  Allumer
@@ -65,14 +66,14 @@ P0-122A  (SZR-001)      95 Zombie Raid                          American Sammy
 ?                       96 Crazy Fight                          Subsino
 -------------------------------------------------------------------------------
 (3) Same board as "Ultraman Club" despite the different PCB number
-(4) this is a bootleg of Oishii Puzzle, in english, is there an official
+(4) this is a bootleg of Oishii Puzzle, in English, is there an official
     version?  the sound system has been replaced with an OKI M6295
     hardware is definitely bootleg. standard simple layout board with no
-    custom chips and no manufacturer on the pcb.
+    custom chips and no manufacturer on the PCB.
 (5) The game code is based on Thunder and Lightning but the PCB is custom
     there are a few gfx emulation bugs (flipping of some border tiles and
     sprites not leaving the screen correctly) its possible the custom hw
-    doesn't behave *exactly* the same as the original seta hw
+    doesn't behave *exactly* the same as the original Seta hw
 (6) To enter test mode press O (open door), then F2 (turn function key), then E (bet 3-4).
 (7) Bad tilemaps colors in demo mode are real game bug. Fade-in and fade-out "bad" colors are also right.
     Bad sprites priorities are real game bugs. The bad-looking colors in Jurane stage are right.
@@ -1260,6 +1261,7 @@ Note: on screen copyright is (c)1998 Coinmaster.
 
 #include "diserial.h"
 #include "emupal.h"
+#include "input.h" // for video debug keys
 #include "screen.h"
 #include "speaker.h"
 #include "tilemap.h"
@@ -1294,55 +1296,55 @@ public:
 		m_palette(*this, "palette")
 	{ }
 
-	void madshark(machine_config &config);
-	void madsharkbl(machine_config &config);
-	void jjsquawb(machine_config &config);
-	void oisipuzl(machine_config &config);
-	void zingzipbl(machine_config &config);
-	void eightfrc(machine_config &config);
-	void gundhara(machine_config &config);
-	void triplfun(machine_config &config);
-	void blandiap(machine_config &config);
-	void wits(machine_config &config);
-	void msgundam(machine_config &config);
-	void msgundamb(machine_config &config);
-	void extdwnhl(machine_config &config);
-	void zingzip(machine_config &config);
-	void wiggie(machine_config &config);
-	void umanclub(machine_config &config);
-	void daioh(machine_config &config);
-	void atehate(machine_config &config);
-	void blockcarb(machine_config &config);
-	void wrofaero(machine_config &config);
-	void blockcar(machine_config &config);
-	void drgnunit(machine_config &config);
-	void stg(machine_config &config);
-	void qzkklogy(machine_config &config);
-	void orbs(machine_config &config);
-	void daiohp(machine_config &config);
-	void krzybowl(machine_config &config);
-	void qzkklgy2(machine_config &config);
-	void kamenrid(machine_config &config);
-	void superbar(machine_config &config);
-	void jjsquawk(machine_config &config);
-	void blandia(machine_config &config);
-	void utoukond(machine_config &config);
-	void rezon(machine_config &config);
+	void madshark(machine_config &config) ATTR_COLD;
+	void madsharkbl(machine_config &config) ATTR_COLD;
+	void jjsquawb(machine_config &config) ATTR_COLD;
+	void oisipuzl(machine_config &config) ATTR_COLD;
+	void zingzipbl(machine_config &config) ATTR_COLD;
+	void eightfrc(machine_config &config) ATTR_COLD;
+	void gundhara(machine_config &config) ATTR_COLD;
+	void triplfun(machine_config &config) ATTR_COLD;
+	void blandiap(machine_config &config) ATTR_COLD;
+	void wits(machine_config &config) ATTR_COLD;
+	void msgundam(machine_config &config) ATTR_COLD;
+	void msgundamb(machine_config &config) ATTR_COLD;
+	void extdwnhl(machine_config &config) ATTR_COLD;
+	void zingzip(machine_config &config) ATTR_COLD;
+	void wiggie(machine_config &config) ATTR_COLD;
+	void umanclub(machine_config &config) ATTR_COLD;
+	void daioh(machine_config &config) ATTR_COLD;
+	void atehate(machine_config &config) ATTR_COLD;
+	void blockcarb(machine_config &config) ATTR_COLD;
+	void wrofaero(machine_config &config) ATTR_COLD;
+	void blockcar(machine_config &config) ATTR_COLD;
+	void drgnunit(machine_config &config) ATTR_COLD;
+	void stg(machine_config &config) ATTR_COLD;
+	void qzkklogy(machine_config &config) ATTR_COLD;
+	void orbs(machine_config &config) ATTR_COLD;
+	void daiohp(machine_config &config) ATTR_COLD;
+	void krzybowl(machine_config &config) ATTR_COLD;
+	void qzkklgy2(machine_config &config) ATTR_COLD;
+	void kamenrid(machine_config &config) ATTR_COLD;
+	void superbar(machine_config &config) ATTR_COLD;
+	void jjsquawk(machine_config &config) ATTR_COLD;
+	void blandia(machine_config &config) ATTR_COLD;
+	void utoukond(machine_config &config) ATTR_COLD;
+	void rezon(machine_config &config) ATTR_COLD;
 
-	void init_wiggie();
-	void init_bankx1();
-	void init_madsharkbl();
+	void init_wiggie() ATTR_COLD;
+	void init_bankx1() ATTR_COLD;
+	void init_madsharkbl() ATTR_COLD;
 
-	void palette_init_RRRRRGGGGGBBBBB_proms(palette_device &palette) const;
+protected:
+	void palette_init_RRRRRGGGGGBBBBB_proms(palette_device &palette) const ATTR_COLD;
 
 	X1_001_SPRITE_GFXBANK_CB_MEMBER(setac_gfxbank_callback);
 
 	u32 screen_update_seta_layers(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
-protected:
 	void set_tilemaps_flip(int val) { m_tilemaps_flip = val; }
 
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	optional_device<cpu_device> m_audiocpu;
@@ -1397,39 +1399,39 @@ protected:
 	void seta_layers_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int sprite_bank_size);
 	void pit_out0(int state);
 
-	void atehate_map(address_map &map);
-	void blandia_map(address_map &map);
-	void blandia_x1_map(address_map &map);
-	void blandiap_map(address_map &map);
-	void blockcar_map(address_map &map);
-	void blockcarb_map(address_map &map);
-	void blockcarb_sound_map(address_map &map);
-	void daioh_map(address_map &map);
-	void daiohp_map(address_map &map);
-	void drgnunit_map(address_map &map);
-	void extdwnhl_map(address_map &map);
-	void jjsquawb_map(address_map &map);
-	void kamenrid_map(address_map &map);
-	void krzybowl_map(address_map &map);
-	void madshark_map(address_map &map);
-	void madsharkbl_map(address_map &map);
-	void madsharkbl_oki_map(address_map &map);
-	void msgundam_map(address_map &map);
-	void msgundamb_map(address_map &map);
-	void oisipuzl_map(address_map &map);
-	void orbs_map(address_map &map);
-	void rezon_map(address_map &map);
-	void triplfun_map(address_map &map);
-	void umanclub_map(address_map &map);
-	void utoukond_map(address_map &map);
-	void utoukond_sound_io_map(address_map &map);
-	void utoukond_sound_map(address_map &map);
-	void wiggie_map(address_map &map);
-	void wiggie_sound_map(address_map &map);
-	void wits_map(address_map &map);
-	void wrofaero_map(address_map &map);
-	void zingzip_map(address_map &map);
-	void zingzipbl_map(address_map &map);
+	void atehate_map(address_map &map) ATTR_COLD;
+	void blandia_map(address_map &map) ATTR_COLD;
+	void blandia_x1_map(address_map &map) ATTR_COLD;
+	void blandiap_map(address_map &map) ATTR_COLD;
+	void blockcar_map(address_map &map) ATTR_COLD;
+	void blockcarb_map(address_map &map) ATTR_COLD;
+	void blockcarb_sound_map(address_map &map) ATTR_COLD;
+	void daioh_map(address_map &map) ATTR_COLD;
+	void daiohp_map(address_map &map) ATTR_COLD;
+	void drgnunit_map(address_map &map) ATTR_COLD;
+	void extdwnhl_map(address_map &map) ATTR_COLD;
+	void jjsquawb_map(address_map &map) ATTR_COLD;
+	void kamenrid_map(address_map &map) ATTR_COLD;
+	void krzybowl_map(address_map &map) ATTR_COLD;
+	void madshark_map(address_map &map) ATTR_COLD;
+	void madsharkbl_map(address_map &map) ATTR_COLD;
+	void madsharkbl_oki_map(address_map &map) ATTR_COLD;
+	void msgundam_map(address_map &map) ATTR_COLD;
+	void msgundamb_map(address_map &map) ATTR_COLD;
+	void oisipuzl_map(address_map &map) ATTR_COLD;
+	void orbs_map(address_map &map) ATTR_COLD;
+	void rezon_map(address_map &map) ATTR_COLD;
+	void triplfun_map(address_map &map) ATTR_COLD;
+	void umanclub_map(address_map &map) ATTR_COLD;
+	void utoukond_map(address_map &map) ATTR_COLD;
+	void utoukond_sound_io_map(address_map &map) ATTR_COLD;
+	void utoukond_sound_map(address_map &map) ATTR_COLD;
+	void wiggie_map(address_map &map) ATTR_COLD;
+	void wiggie_sound_map(address_map &map) ATTR_COLD;
+	void wits_map(address_map &map) ATTR_COLD;
+	void wrofaero_map(address_map &map) ATTR_COLD;
+	void zingzip_map(address_map &map) ATTR_COLD;
+	void zingzipbl_map(address_map &map) ATTR_COLD;
 };
 
 class thunderl_state : public seta_state
@@ -1439,19 +1441,19 @@ public:
 		seta_state(mconfig, type, tag)
 	{ }
 
-	void thunderl(machine_config &config);
-	void thunderlbl(machine_config &config);
+	void thunderl(machine_config &config) ATTR_COLD;
+	void thunderlbl(machine_config &config) ATTR_COLD;
 
 protected:
 	u16 thunderl_protection_r();
 	void thunderl_protection_w(offs_t offset, u16 data);
 
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
-	void thunderl_map(address_map &map);
-	void thunderlbl_map(address_map &map);
-	void thunderlbl_sound_map(address_map &map);
-	void thunderlbl_sound_portmap(address_map &map);
+	void thunderl_map(address_map &map) ATTR_COLD;
+	void thunderlbl_map(address_map &map) ATTR_COLD;
+	void thunderlbl_sound_map(address_map &map) ATTR_COLD;
+	void thunderlbl_sound_portmap(address_map &map) ATTR_COLD;
 
 private:
 	u8 m_thunderl_protection_reg = 0;
@@ -1465,15 +1467,15 @@ public:
 		m_leds(*this, "led%u", 0U)
 	{ }
 
-	void magspeed(machine_config &config);
+	void magspeed(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void lights_w(offs_t offset, u16 data, u16 mem_mask = ~0);
 
-	void magspeed_map(address_map &map);
+	void magspeed_map(address_map &map) ATTR_COLD;
 
 	output_finder<48> m_leds;
 
@@ -1488,10 +1490,10 @@ public:
 		m_coins(*this, "COINS")
 	{ }
 
-	void keroppi(machine_config &config);
+	void keroppi(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	u16 protection_r();
@@ -1500,7 +1502,7 @@ private:
 	void prize_w(u16 data);
 	TIMER_CALLBACK_MEMBER(prize_hop_callback);
 
-	void keroppi_map(address_map &map);
+	void keroppi_map(address_map &map) ATTR_COLD;
 
 	required_ioport m_coins;
 
@@ -1520,19 +1522,16 @@ public:
 		m_gun_recoil(*this, "Player%u_Gun_Recoil", 1U)
 	{ }
 
-	void zombraid(machine_config &config);
-	void init_zombraid();
-
-protected:
-	virtual void machine_start() override;
+	void zombraid(machine_config &config) ATTR_COLD;
+	void init_zombraid() ATTR_COLD;
 
 private:
 	double adc_cb(u8 input);
 	u16 gun_r();
 	void gun_w(u16 data);
 
-	void zombraid_map(address_map &map);
-	void zombraid_x1_map(address_map &map);
+	void zombraid_map(address_map &map) ATTR_COLD;
+	void zombraid_x1_map(address_map &map) ATTR_COLD;
 
 	required_device<adc083x_device> m_adc;
 	required_ioport_array<4> m_gun_inputs;
@@ -1550,17 +1549,17 @@ public:
 		m_leds(*this, "led%u", 0U)
 	{ }
 
-	void setaroul(machine_config &config);
+	void setaroul(machine_config &config) ATTR_COLD;
+	void setaroulm(machine_config &config) ATTR_COLD;
 
 	DECLARE_INPUT_CHANGED_MEMBER(coin_drop_start);
-	DECLARE_CUSTOM_INPUT_MEMBER(coin_sensors_r);
-	DECLARE_CUSTOM_INPUT_MEMBER(hopper_sensors_r);
+	ioport_value coin_sensors_r();
+	ioport_value hopper_sensors_r();
 
 	void screen_vblank(int state);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	void rtc_w(u16 data);
@@ -1582,9 +1581,9 @@ private:
 	void setaroul_palette(palette_device &palette) const;
 	u32 screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
-	TIMER_DEVICE_CALLBACK_MEMBER(interrupt);
+	template <uint8_t Irq1, uint8_t Irq2> TIMER_DEVICE_CALLBACK_MEMBER(interrupt);
 
-	void setaroul_map(address_map &map);
+	void setaroul_map(address_map &map) ATTR_COLD;
 
 	required_device<upd4992_device> m_rtc;  // ! Actually D4911C !
 	required_device<ticket_dispenser_device> m_hopper;
@@ -1610,13 +1609,13 @@ public:
 	void pairlove(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 protected:
 	u16 prot_r(offs_t offset);
 	void prot_w(offs_t offset, u16 data);
 
-	void pairlove_map(address_map &map);
+	void pairlove_map(address_map &map) ATTR_COLD;
 
 	std::unique_ptr<u16 []> m_protram;
 	std::unique_ptr<u16 []> m_protram_old;
@@ -1636,38 +1635,29 @@ private:
 	void coin_counter_w(u8 data);
 	void outputs_w(u8 data);
 
-	void crazyfgt_map(address_map &map);
+	void crazyfgt_map(address_map &map) ATTR_COLD;
 
 	required_device<ds2430a_device> m_eeprom;
 };
 
-class jockeyc_state : public seta_state
+class jockeyc_state_base : public seta_state
 {
-public:
-	jockeyc_state(const machine_config &mconfig, device_type type, const char *tag) :
+protected:
+	jockeyc_state_base(const machine_config &mconfig, device_type type, const char *tag) :
 		seta_state(mconfig, type, tag),
 		m_rtc(*this, "rtc"),
 		m_hopper1(*this, "hopper1"), m_hopper2(*this, "hopper2"),
-		m_inttoote_700000(*this, "inttoote_700000"),
 		m_key1(*this, "KEY1.%u", 0), m_key2(*this, "KEY2.%u", 0),
 		m_dsw1(*this, "DSW1"),
 		m_dsw2_3(*this, "DSW2_3"),
-		m_cabinet(*this, "CABINET"),
-		m_p1x(*this, "P1X"),
-		m_p1y(*this, "P1Y"),
-		m_out_cancel(*this, "cancel%u", 1U),
-		m_out_payout(*this, "payout%u", 1U),
-		m_out_start(*this, "start%u", 1U),
-		m_out_help(*this, "help"),
-		m_out_itstart(*this, "start")
+		m_cabinet(*this, "CABINET")
 	{ }
 
-	void inttoote(machine_config &config);
-	void jockeyc(machine_config &config);
+protected:
+	virtual void machine_start() override ATTR_COLD;
 
-	void init_inttoote();
+	void jockeyc_base(machine_config &config) ATTR_COLD;
 
-private:
 	void rtc_w(u16 data);
 	u16 rtc_r(offs_t offset);
 
@@ -1675,44 +1665,77 @@ private:
 	u16 comm_r();
 
 	u16 mux_r();
+
+	void update_hoppers();
+	void show_outputs();
+
+	u16 m_mux = 0;
+	u16 m_out = 0;
+
+private:
+	TIMER_DEVICE_CALLBACK_MEMBER(interrupt);
+
+	required_device<upd4992_device> m_rtc;  // ! Actually D4911C !
+	required_device<ticket_dispenser_device> m_hopper1, m_hopper2; // the 2nd hopper is optional
+
+	required_ioport_array<5> m_key1, m_key2;
+	required_ioport m_dsw1, m_dsw2_3;
+	optional_ioport m_cabinet;
+};
+
+class jockeyc_state : public jockeyc_state_base
+{
+public:
+	jockeyc_state(const machine_config &mconfig, device_type type, const char *tag) :
+		jockeyc_state_base(mconfig, type, tag),
+		m_p1x(*this, "P1X"),
+		m_p1y(*this, "P1Y"),
+		m_out_cancel(*this, "cancel%u", 1U),
+		m_out_payout(*this, "payout%u", 1U),
+		m_out_start(*this, "start%u", 1U)
+	{ }
+
+	void jockeyc(machine_config &config) ATTR_COLD;
+
+private:
 	void jockeyc_mux_w(offs_t offset, u16 data, u16 mem_mask = ~0);
 	void jockeyc_out_w(offs_t offset, u16 data, u16 mem_mask = ~0);
 
 	u16 trackball_r(offs_t offset);
 
-	DECLARE_MACHINE_START(jockeyc);
-	DECLARE_MACHINE_START(inttoote);
+	void jockeyc_map(address_map &map) ATTR_COLD;
 
-	TIMER_DEVICE_CALLBACK_MEMBER(interrupt);
+	optional_ioport m_p1x;
+	optional_ioport m_p1y;
+	output_finder<2> m_out_cancel;
+	output_finder<2> m_out_payout;
+	output_finder<2> m_out_start;
+};
 
+class inttoote_state : public jockeyc_state_base
+{
+public:
+	inttoote_state(const machine_config &mconfig, device_type type, const char *tag) :
+		jockeyc_state_base(mconfig, type, tag),
+		m_inttoote_700000(*this, "inttoote_700000"),
+		m_out_help(*this, "help"),
+		m_out_start(*this, "start")
+	{ }
+
+	void inttoote(machine_config &config) ATTR_COLD;
+
+	void init_inttoote() ATTR_COLD;
+
+private:
 	void inttoote_mux_w(offs_t offset, u16 data, u16 mem_mask = ~0);
 	void inttoote_out_w(offs_t offset, u16 data, u16 mem_mask = ~0);
 	u16 inttoote_700000_r(offs_t offset);
 
-	void inttoote_map(address_map &map);
-	void jockeyc_map(address_map &map);
+	void inttoote_map(address_map &map) ATTR_COLD;
 
-	required_device<upd4992_device> m_rtc;  // ! Actually D4911C !
-	required_device<ticket_dispenser_device> m_hopper1, m_hopper2; // the 2nd hopper is optional
-
-	optional_shared_ptr<u16> m_inttoote_700000;
-	required_ioport_array<5> m_key1, m_key2;
-	required_ioport m_dsw1, m_dsw2_3;
-	optional_ioport m_cabinet;
-	optional_ioport m_p1x;
-	optional_ioport m_p1y;
-
-	output_finder<2> m_out_cancel;
-	output_finder<2> m_out_payout;
-	output_finder<2> m_out_start;
+	required_shared_ptr<u16> m_inttoote_700000;
 	output_finder<> m_out_help;
-	output_finder<> m_out_itstart;
-
-	u16 m_mux = 0;
-	u16 m_out = 0;
-
-	void update_hoppers();
-	void show_outputs();
+	output_finder<> m_out_start;
 };
 
 
@@ -2786,13 +2809,6 @@ void seta_state::drgnunit_map(address_map &map)
                                 The Roulette
 ***************************************************************************/
 
-void setaroul_state::machine_start()
-{
-	seta_state::machine_start();
-
-	m_leds.resolve();
-}
-
 // Coin drop
 void setaroul_state::machine_reset()
 {
@@ -2807,7 +2823,7 @@ INPUT_CHANGED_MEMBER( setaroul_state::coin_drop_start )
 		m_coin_start_cycles = m_maincpu->total_cycles();
 }
 
-CUSTOM_INPUT_MEMBER( setaroul_state::coin_sensors_r )
+ioport_value setaroul_state::coin_sensors_r()
 {
 	u8 data = 0x03;
 
@@ -3630,7 +3646,7 @@ void crazyfgt_state::crazyfgt_map(address_map &map)
 ***************************************************************************/
 
 // RTC (To do: write a D4911C device)
-u16 jockeyc_state::rtc_r(offs_t offset)
+u16 jockeyc_state_base::rtc_r(offs_t offset)
 {
 	if (offset >= 7)
 		++offset;
@@ -3639,30 +3655,27 @@ u16 jockeyc_state::rtc_r(offs_t offset)
 	return (m_rtc->read(offset / 2) >> ((offset & 1) * 4)) & 0xf;
 }
 
-void jockeyc_state::rtc_w(u16 data)
+void jockeyc_state_base::rtc_w(u16 data)
 {
 }
 
 // Outputs
-void jockeyc_state::show_outputs()
+void jockeyc_state_base::show_outputs()
 {
 #ifdef MAME_DEBUG
 	popmessage("Mux: %04X Out: %04X", m_mux & (~0xf8), m_out);
 #endif
 }
 
-u16 jockeyc_state::mux_r()
+u16 jockeyc_state_base::mux_r()
 {
-	switch (m_mux & 0xf8)
+	u16 result = 0xffff;
+	for (unsigned i = 0; 5 > i; ++i)
 	{
-		case 0x08:  return (m_key2[0]->read() << 8) | m_key1[0]->read();
-		case 0x10:  return (m_key2[1]->read() << 8) | m_key1[1]->read();
-		case 0x20:  return (m_key2[2]->read() << 8) | m_key1[2]->read();
-		case 0x40:  return (m_key2[3]->read() << 8) | m_key1[3]->read();
-		case 0x80:  return (m_key2[4]->read() << 8) | m_key1[4]->read();
+		if (BIT(m_mux, i + 3))
+			result &= (m_key2[i]->read() << 8) | m_key1[i]->read();
 	}
-	logerror("%06X: unknown key read, mux = %04x\n", m_maincpu->pc(), m_mux);
-	return 0xffff;
+	return result;
 }
 
 void jockeyc_state::jockeyc_mux_w(offs_t offset, u16 data, u16 mem_mask)
@@ -3715,15 +3728,15 @@ void jockeyc_state::jockeyc_out_w(offs_t offset, u16 data, u16 mem_mask)
 	m_out_start[0] = BIT(data, 14);
 	m_out_cancel[1] = BIT(data, 5);
 
-	machine().bookkeeping().coin_counter_w(6, data  & 0x2000); // coin 2/4
-	machine().bookkeeping().coin_counter_w(5, data  & 0x1000); // p1 hopper coin out
-	machine().bookkeeping().coin_counter_w(2, data  & 0x0200); // coin 1/3
+	machine().bookkeeping().coin_counter_w(6, BIT(data, 13)); // coin 2/4
+	machine().bookkeeping().coin_counter_w(5, BIT(data, 12)); // p1 hopper coin out
+	machine().bookkeeping().coin_counter_w(2, BIT(data,  9)); // coin 1/3
 
 	update_hoppers();
 	show_outputs();
 }
 
-void jockeyc_state::update_hoppers()
+void jockeyc_state_base::update_hoppers()
 {
 	if (!m_cabinet)
 		return;
@@ -3741,7 +3754,7 @@ void jockeyc_state::update_hoppers()
 	}
 }
 
-u16 jockeyc_state::dsw_r(offs_t offset)
+u16 jockeyc_state_base::dsw_r(offs_t offset)
 {
 	const int shift = offset * 4;
 	return  ((((m_dsw1->read()   >> shift)     & 0xf)) << 0) |
@@ -3749,7 +3762,7 @@ u16 jockeyc_state::dsw_r(offs_t offset)
 			((((m_dsw2_3->read() >> (shift+8)) & 0xf)) << 8) ;
 }
 
-u16 jockeyc_state::comm_r()
+u16 jockeyc_state_base::comm_r()
 {
 	return 0xffff;//machine().rand();
 }
@@ -3825,7 +3838,7 @@ void jockeyc_state::jockeyc_map(address_map &map)
 
 // Same as Jockey Club but with additional protection
 
-void jockeyc_state::inttoote_mux_w(offs_t offset, u16 data, u16 mem_mask)
+void inttoote_state::inttoote_mux_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	COMBINE_DATA(&m_mux);
 
@@ -3834,13 +3847,13 @@ void jockeyc_state::inttoote_mux_w(offs_t offset, u16 data, u16 mem_mask)
 	// 0x0800 lamp (start button)
 
 	m_out_help = BIT(data, 12);
-	m_out_itstart = BIT(data, 11);
+	m_out_start = BIT(data, 11);
 
 	update_hoppers();
 	show_outputs();
 }
 
-void jockeyc_state::inttoote_out_w(offs_t offset, u16 data, u16 mem_mask)
+void inttoote_state::inttoote_out_w(offs_t offset, u16 data, u16 mem_mask)
 {
 	COMBINE_DATA(&m_out);
 
@@ -3850,27 +3863,27 @@ void jockeyc_state::inttoote_out_w(offs_t offset, u16 data, u16 mem_mask)
 	// 0x0100 meter (key out)
 	// 0x0080 ? set when there are credits
 
-	machine().bookkeeping().coin_counter_w(0, data  & 0x2000); // key in
-	machine().bookkeeping().coin_counter_w(1, data  & 0x1000); // coin out
-	machine().bookkeeping().coin_counter_w(2, data  & 0x0800); // coin in
-	machine().bookkeeping().coin_counter_w(3, data  & 0x0100); // key out
+	machine().bookkeeping().coin_counter_w(0, BIT(data, 13)); // key in
+	machine().bookkeeping().coin_counter_w(1, BIT(data, 12)); // coin out
+	machine().bookkeeping().coin_counter_w(2, BIT(data, 11)); // coin in
+	machine().bookkeeping().coin_counter_w(3, BIT(data,  8)); // key out
 
 	update_hoppers();
 	show_outputs();
 }
 
-u16 jockeyc_state::inttoote_700000_r(offs_t offset)
+u16 inttoote_state::inttoote_700000_r(offs_t offset)
 {
 	return m_inttoote_700000[offset] & 0x3f;
 }
 
-void jockeyc_state::inttoote_map(address_map &map)
+void inttoote_state::inttoote_map(address_map &map)
 {
 	map(0x000000, 0x1fffff).rom(); // ROM (up to 2MB)
 
-	map(0x200000, 0x200001).rw(FUNC(jockeyc_state::mux_r), FUNC(jockeyc_state::inttoote_mux_w));
+	map(0x200000, 0x200001).rw(FUNC(inttoote_state::mux_r), FUNC(inttoote_state::inttoote_mux_w));
 	map(0x200002, 0x200003).portr("COIN");
-	map(0x200010, 0x200011).portr("SERVICE").w(FUNC(jockeyc_state::inttoote_out_w));
+	map(0x200010, 0x200011).portr("SERVICE").w(FUNC(inttoote_state::inttoote_out_w));
 
 	map(0x300000, 0x300001).w(m_watchdog, FUNC(watchdog_timer_device::reset16_w));
 
@@ -3879,11 +3892,11 @@ void jockeyc_state::inttoote_map(address_map &map)
 	map(0x300040, 0x300041).nopw();    // lev4 ack
 	map(0x300060, 0x300061).nopw();    // lev6 ack
 
-	map(0x500000, 0x500003).r(FUNC(jockeyc_state::dsw_r)); // DSW x 3
+	map(0x500000, 0x500003).r(FUNC(inttoote_state::dsw_r)); // DSW x 3
 
-	map(0x700000, 0x700101).ram().r(FUNC(jockeyc_state::inttoote_700000_r)).share("inttoote_700000");
+	map(0x700000, 0x700101).ram().r(FUNC(inttoote_state::inttoote_700000_r)).share(m_inttoote_700000);
 
-	map(0x800000, 0x80001f).rw(FUNC(jockeyc_state::rtc_r), FUNC(jockeyc_state::rtc_w));
+	map(0x800000, 0x80001f).rw(FUNC(inttoote_state::rtc_r), FUNC(inttoote_state::rtc_w));
 
 	map(0x900000, 0x903fff).rw(m_x1snd, FUNC(x1_010_device::word_r), FUNC(x1_010_device::word_w));   // Sound
 
@@ -4483,9 +4496,9 @@ static INPUT_PORTS_START( drgnunit )
 	PORT_DIPSETTING(      0x0030, "3" )
 	PORT_DIPSETTING(      0x0020, "5" )
 	PORT_DIPUNUSED_DIPLOC( 0x0040, 0x0040, "SW1:7" )    // Labeled "Don't Touch" in manual
-	PORT_DIPNAME( 0x0080, 0x0080, "Unknown 1-8*" ) PORT_DIPLOCATION("SW1:8")    // Labeled "Don't Touch" in manual (seems to be used though)
-	PORT_DIPSETTING(      0x0080, DEF_STR( Off ) )
-	PORT_DIPSETTING(      0x0000, DEF_STR( On ) )
+	PORT_DIPNAME( 0x0080, 0x0080, "Stage Time" ) PORT_DIPLOCATION("SW1:8")    // Labeled "Don't Touch" in manual but it seems to work fine
+	PORT_DIPSETTING(      0x0080, DEF_STR( Normal ) )
+	PORT_DIPSETTING(      0x0000, "Extra 20s" )
 
 	PORT_DIPUNUSED_DIPLOC( 0x0100, 0x0100, "SW2:1" )    // Labeled "Don't Touch" in manual
 	PORT_DIPNAME( 0x0200, 0x0200, DEF_STR( Flip_Screen ) ) PORT_DIPLOCATION("SW2:2")
@@ -4577,7 +4590,7 @@ static INPUT_PORTS_START( setaroul )
 	PORT_SERVICE( 0x08, 0x08 )                          PORT_DIPLOCATION("SW2:1") // service mode
 
 	PORT_START("COIN") // d40009.b
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_CUSTOM  ) PORT_READ_LINE_DEVICE_MEMBER("hopper", ticket_dispenser_device, line_r) // medal (causes hopper over run / empty if the dsw is on)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_CUSTOM  ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r)) // medal (causes hopper over run / empty if the dsw is on)
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_SERVICE1 ) PORT_NAME("Reset")         // rst     (button SW5? Press twice quickly to enter the keyboard test)
 	PORT_DIPNAME( 0x04, 0x04, "Credit Meter" )    PORT_DIPLOCATION("SW6:1")  // crt.mtr (switch SW6? Shows stats screen. With added menus, if their dsw is on)
 	PORT_DIPSETTING(    0x04, DEF_STR( Off ) )
@@ -4585,10 +4598,10 @@ static INPUT_PORTS_START( setaroul )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_SERVICE2 ) PORT_NAME("Attendant Pay") // att.pay (clears error)
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_COIN3    ) PORT_NAME("Note")          // note    (same as 100 coins)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_COIN2    ) PORT_NAME("Coupon")        // cupon   (same as  10 coins)
-	PORT_BIT( 0xc0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(setaroul_state, coin_sensors_r)
+	PORT_BIT( 0xc0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(setaroul_state::coin_sensors_r))
 
 	PORT_START("COIN1") // start the coin drop sequence (see coin_sensors_r)
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, setaroul_state, coin_drop_start, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(setaroul_state::coin_drop_start), 0)
 
 	PORT_START("DOOR") // d4000b.b
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -4649,7 +4662,7 @@ static INPUT_PORTS_START( setaroul )
 	PORT_DIPSETTING(    0x0c, DEF_STR( 1C_1C ) )
 	PORT_DIPSETTING(    0x08, DEF_STR( 1C_2C ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( 1C_5C ) )
-	PORT_DIPSETTING(    0x00, "1 Coin/10 Credits" )
+	PORT_DIPSETTING(    0x00, DEF_STR( 1C_10C ) )
 	PORT_DIPNAME( 0x10, 0x10, "Menu 1:Time 2:Payout" ) PORT_DIPLOCATION("SW3:4") // dsw3 4 (enable menus 1 & 2 in stats screen)
 	PORT_DIPSETTING(    0x10, DEF_STR( Yes ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( No ) )
@@ -4662,6 +4675,15 @@ static INPUT_PORTS_START( setaroul )
 	PORT_DIPNAME( 0x80, 0x00, "Hopper Sensor" )        PORT_DIPLOCATION("SW3:1")
 	PORT_DIPSETTING(    0x80, "Active Low (Error)"  ) // "Hopper Over Run" error
 	PORT_DIPSETTING(    0x00, "Active High" )
+INPUT_PORTS_END
+
+static INPUT_PORTS_START( setaroulm )
+	PORT_INCLUDE( setaroul )
+
+	PORT_MODIFY("DSW2-B")
+	PORT_DIPNAME( 0x01, 0x01, "Show Reels" ) PORT_DIPLOCATION("SW2:4")
+	PORT_DIPSETTING(    0x01, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
 INPUT_PORTS_END
 
 
@@ -5647,7 +5669,7 @@ static INPUT_PORTS_START( rezon )
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_IMPULSE(5)
 	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_IMPULSE(5)
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_SERVICE1 )
-	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_TILT1 )
+	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_TILT )
 	PORT_CONFNAME( 0x0010, 0x0010, "Licensee" )
 	PORT_CONFSETTING(      0x0010, "Allumer" )
 	PORT_CONFSETTING(      0x0000, "Taito" )
@@ -6702,7 +6724,7 @@ static INPUT_PORTS_START( crazyfgt )
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", ds2430a_device, data_r)
+	PORT_BIT( 0x0080, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(ds2430a_device::data_r))
 
 	PORT_START("UNK") //? - $610002.w
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -6888,7 +6910,7 @@ static INPUT_PORTS_START( jockeyc )
 	PORT_START("COIN") // 200002.w
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_CUSTOM ) // Coin Drop - 1P
 	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_CUSTOM ) // Hopper Overflow - 1P
-	PORT_BIT( 0x0004, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper1", ticket_dispenser_device, line_r) // Hopper Coin Out - 1P
+	PORT_BIT( 0x0004, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper1", FUNC(ticket_dispenser_device::line_r)) // Hopper Coin Out - 1P
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_OTHER   ) // Attendant Pay - 1P
 	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_NAME("Coin B - 1P")
 	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_NAME("Coin A - 1P")
@@ -6896,7 +6918,7 @@ static INPUT_PORTS_START( jockeyc )
 	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_CUSTOM ) // Coin Sense 1 - 1P
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_CUSTOM ) // Coin Drop - 2P
 	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_CUSTOM ) // Sel Sense (single hopper mode) / Hopper Overflow - 2P (double hopper mode)
-	PORT_BIT( 0x0400, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper2", ticket_dispenser_device, line_r) // Hopper Coin Out - 2P (double hopper mode)
+	PORT_BIT( 0x0400, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper2", FUNC(ticket_dispenser_device::line_r)) // Hopper Coin Out - 2P (double hopper mode)
 	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_OTHER   ) // Attendant Pay - 2P
 	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_COIN4 ) PORT_NAME("Coin B - 2P")
 	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_COIN3 ) PORT_NAME("Coin A - 2P")
@@ -6904,7 +6926,7 @@ static INPUT_PORTS_START( jockeyc )
 	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) // Coin Sense 1 - 2P
 
 	PORT_START("SERVICE") // 200010.w
-	PORT_BIT( 0x0001, IP_ACTIVE_HIGH, IPT_GAMBLE_DOOR ) PORT_TOGGLE
+	PORT_BIT( 0x0001, IP_ACTIVE_HIGH, IPT_DOOR ) PORT_TOGGLE
 	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_TILT ) PORT_CODE(KEYCODE_L)
@@ -6965,7 +6987,7 @@ static INPUT_PORTS_START( jockeyc )
 	PORT_DIPSETTING(      0x00c0, DEF_STR( 1C_1C ) )
 	PORT_DIPSETTING(      0x0080, DEF_STR( 1C_2C ) )
 	PORT_DIPSETTING(      0x0040, DEF_STR( 1C_5C ) )
-	PORT_DIPSETTING(      0x0000, "1 Coin/10 Credits" )
+	PORT_DIPSETTING(      0x0000, DEF_STR( 1C_10C ) )
 
 	PORT_DIPUNKNOWN_DIPLOC(0x0100, 0x0100, "SW3:1")
 	PORT_DIPUNKNOWN_DIPLOC(0x0200, 0x0200, "SW3:2")
@@ -7021,7 +7043,7 @@ static INPUT_PORTS_START( inttoote )
 	PORT_BIT( 0x0080, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_CUSTOM )  // P2 coin out
+	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_CUSTOM ) // P2 coin out
 	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -7029,7 +7051,7 @@ static INPUT_PORTS_START( inttoote )
 	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("SERVICE") // 200010.w
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_GAMBLE_DOOR ) PORT_TOGGLE // open the door when in function menu to access the test mode
+	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_DOOR ) PORT_TOGGLE // open the door when in function menu to access the test mode
 	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_START1  )
 	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_BUTTON3 ) PORT_NAME("Help") // press together with one of 1-2, 1-3, 1-4, 1-5, 1-6, 2-3, 2-4 to set clock
 	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -7061,9 +7083,9 @@ static INPUT_PORTS_START( inttoote )
 	PORT_DIPSETTING(    0x14, DEF_STR( 1C_3C ) )
 	PORT_DIPSETTING(    0x10, DEF_STR( 1C_4C ) )
 	PORT_DIPSETTING(    0x0c, DEF_STR( 1C_5C ) )
-	PORT_DIPSETTING(    0x08, "1 Coin/10 Credits" )
-	PORT_DIPSETTING(    0x04, "1 Coin/20 Credits" )
-	PORT_DIPSETTING(    0x00, "1 Coin/50 Credits" )
+	PORT_DIPSETTING(    0x08, DEF_STR( 1C_10C ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( 1C_20C ) )
+	PORT_DIPSETTING(    0x00, DEF_STR( 1C_50C ) )
 	PORT_DIPNAME( 0x20, 0x20, "Unknown SW1:6" )           PORT_DIPLOCATION("SW1:6")
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
@@ -7764,15 +7786,16 @@ void seta_state::qzkklgy2(machine_config &config)
                                 The Roulette
 ***************************************************************************/
 
+template <uint8_t Irq1, uint8_t Irq2>
 TIMER_DEVICE_CALLBACK_MEMBER(setaroul_state::interrupt)
 {
 	int scanline = param;
 
 	if ((scanline % 32) == 0) // every 2ms?
-		m_maincpu->set_input_line(2, HOLD_LINE); // read 1 board column (out of 26) every other call
+		m_maincpu->set_input_line(Irq1, HOLD_LINE); // read 1 board column (out of 26) every other call
 
 	if (scanline == 248)
-		m_maincpu->set_input_line(4, HOLD_LINE); // vblank
+		m_maincpu->set_input_line(Irq2, HOLD_LINE); // vblank
 
 	// lev 6: RS232
 }
@@ -7782,23 +7805,23 @@ void setaroul_state::setaroul(machine_config &config)
 	// basic machine hardware
 	M68000(config, m_maincpu, 16_MHz_XTAL / 2); // 8 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &setaroul_state::setaroul_map);
-	TIMER(config, "scantimer").configure_scanline(FUNC(setaroul_state::interrupt), "screen", 0, 1);
+	TIMER(config, "scantimer").configure_scanline(*this, NAME((&setaroul_state::interrupt<2, 4>)), "screen", 0, 1);
 
 	WATCHDOG_TIMER(config, m_watchdog);
 
 	X1_001(config, m_spritegen, 16_MHz_XTAL, m_palette, gfx_setaroul_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(seta_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(setaroul_state::setac_gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(0, 7); // unknown (flipped offsets are unused: game handles flipping manually without setting the flip bit)
 	m_spritegen->set_fg_yoffsets(-0x12, 0x0e);
 	m_spritegen->set_bg_yoffsets(0, -0x1);
 	m_spritegen->set_bg_xoffsets(0, 0x2);
 
-	NVRAM(config, "nvram", nvram_device::DEFAULT_RANDOM);
+	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
 	// devices
 	UPD4992(config, m_rtc, 32'768); // ! Actually D4911C !
-	ACIA6850(config, "acia0", 0);
+	ACIA6850(config, "acia0");
 	TICKET_DISPENSER(config, "hopper", attotime::from_msec(150));
 
 	// video hardware
@@ -7816,15 +7839,21 @@ void setaroul_state::setaroul(machine_config &config)
 	PALETTE(config, m_palette, FUNC(setaroul_state::setaroul_palette), 512);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	X1_010(config, m_x1snd, 16_MHz_XTAL);   // 16 MHz
-	m_x1snd->add_route(0, "lspeaker", 1.0);
-	m_x1snd->add_route(1, "rspeaker", 1.0);
+	m_x1snd->add_route(0, "speaker", 1.0, 0);
+	m_x1snd->add_route(1, "speaker", 1.0, 1);
 
 	// layout
 	config.set_default_layout(layout_setaroul);
+}
+
+void setaroul_state::setaroulm(machine_config &config)
+{
+	setaroul(config);
+
+	TIMER(config.replace(), "scantimer").configure_scanline(*this, NAME((&setaroul_state::interrupt<5, 4>)), "screen", 0, 1);
 }
 
 
@@ -7913,12 +7942,11 @@ void seta_state::extdwnhl(machine_config &config)
 	PALETTE(config, m_palette, FUNC(seta_state::zingzip_palette), 16*32 + 16*32 + 64*32*2, 0x600);    // sprites, layer2, layer1 - layer 1 gfx is 6 planes deep
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	X1_010(config, m_x1snd, 16000000);   // 16 MHz
-	m_x1snd->add_route(0, "lspeaker", 1.0);
-	m_x1snd->add_route(1, "rspeaker", 1.0);
+	m_x1snd->add_route(0, "speaker", 1.0, 0);
+	m_x1snd->add_route(1, "speaker", 1.0, 1);
 }
 
 
@@ -7939,7 +7967,7 @@ void seta_state::gundhara(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta_state::wrofaero_map);
 	TIMER(config, "scantimer").configure_scanline(FUNC(seta_state::seta_interrupt_1_and_2), "screen", 0, 1);
 
-	pit8254_device &pit(PIT8254(config, "pit", 0)); // uPD71054C
+	pit8254_device &pit(PIT8254(config, "pit")); // uPD71054C
 	pit.set_clk<0>(16000000/2/8);
 	pit.out_handler<0>().set(FUNC(seta_state::pit_out0));
 
@@ -7978,13 +8006,6 @@ void seta_state::gundhara(machine_config &config)
 /***************************************************************************
                                 Zombie Raid
 ***************************************************************************/
-
-void zombraid_state::machine_start()
-{
-	seta_state::machine_start();
-
-	m_gun_recoil.resolve();
-}
 
 void zombraid_state::zombraid(machine_config &config)
 {
@@ -8101,7 +8122,7 @@ void seta_state::kamenrid(machine_config &config)
 
 	WATCHDOG_TIMER(config, m_watchdog);
 
-	pit8254_device &pit(PIT8254(config, "pit", 0)); // uPD71054C
+	pit8254_device &pit(PIT8254(config, "pit")); // uPD71054C
 	pit.set_clk<0>(16000000/2/8);
 	pit.out_handler<0>().set(FUNC(seta_state::pit_out0));
 
@@ -8168,12 +8189,11 @@ void seta_state::orbs(machine_config &config)
 	PALETTE(config, m_palette).set_entries(512);    // sprites only
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	X1_010(config, m_x1snd, 14.318181_MHz_XTAL);   // 14.318180 MHz
-	m_x1snd->add_route(0, "lspeaker", 1.0);
-	m_x1snd->add_route(1, "rspeaker", 1.0);
+	m_x1snd->add_route(0, "speaker", 1.0, 0);
+	m_x1snd->add_route(1, "speaker", 1.0, 1);
 }
 
 
@@ -8207,12 +8227,11 @@ void keroppi_state::keroppi(machine_config &config)
 	PALETTE(config, m_palette).set_entries(512);    // sprites only
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	X1_010(config, m_x1snd, 14318180);   // 14.318180 MHz
-	m_x1snd->add_route(0, "lspeaker", 1.0);
-	m_x1snd->add_route(1, "rspeaker", 1.0);
+	m_x1snd->add_route(0, "speaker", 1.0, 0);
+	m_x1snd->add_route(1, "speaker", 1.0, 1);
 }
 
 
@@ -8272,7 +8291,7 @@ void seta_state::madshark(machine_config &config)
 	M68000(config, m_maincpu, 16000000);   // 16 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta_state::madshark_map);
 
-	pit8254_device &pit(PIT8254(config, "pit", 0)); // uPD71054C
+	pit8254_device &pit(PIT8254(config, "pit")); // uPD71054C
 	pit.set_clk<0>(16000000/2/8);
 	pit.out_handler<0>().set(FUNC(seta_state::pit_out0));
 
@@ -8353,8 +8372,6 @@ void magspeed_state::machine_start()
 {
 	seta_state::machine_start();
 
-	m_leds.resolve();
-
 	save_item(NAME(m_lights));
 }
 
@@ -8367,7 +8384,7 @@ void magspeed_state::magspeed(machine_config &config)
 
 	WATCHDOG_TIMER(config, m_watchdog);
 
-	pit8254_device &pit(PIT8254(config, "pit", 0)); // uPD71054C
+	pit8254_device &pit(PIT8254(config, "pit")); // uPD71054C
 	pit.set_clk<0>(16000000/2/8);
 	pit.out_handler<0>().set(FUNC(magspeed_state::pit_out0));
 
@@ -8414,7 +8431,7 @@ void seta_state::msgundam(machine_config &config)
 	M68000(config, m_maincpu, 16000000);   // 16 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta_state::msgundam_map);
 
-	pit8254_device &pit(PIT8254(config, "pit", 0)); // uPD71054C
+	pit8254_device &pit(PIT8254(config, "pit")); // uPD71054C
 	pit.set_clk<0>(16000000/2/8);
 	pit.out_handler<0>().set(FUNC(seta_state::pit_out0));
 
@@ -8492,12 +8509,11 @@ void seta_state::oisipuzl(machine_config &config)
 	set_tilemaps_flip(1); // flip is inverted for the tilemaps
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	X1_010(config, m_x1snd, 16000000);   // 16 MHz
-	m_x1snd->add_route(0, "lspeaker", 1.0);
-	m_x1snd->add_route(1, "rspeaker", 1.0);
+	m_x1snd->add_route(0, "speaker", 1.0, 0);
+	m_x1snd->add_route(1, "speaker", 1.0, 1);
 }
 
 
@@ -8539,12 +8555,11 @@ void seta_state::triplfun(machine_config &config)
 	set_tilemaps_flip(1); // flip is inverted for the tilemaps
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	okim6295_device &oki(OKIM6295(config, "oki", 792000, okim6295_device::PIN7_HIGH)); // clock frequency & pin 7 not verified
-	oki.add_route(ALL_OUTPUTS, "lspeaker", 1.0);
-	oki.add_route(ALL_OUTPUTS, "rspeaker", 1.0);
+	oki.add_route(ALL_OUTPUTS, "speaker", 1.0, 0);
+	oki.add_route(ALL_OUTPUTS, "speaker", 1.0, 1);
 }
 
 
@@ -8850,7 +8865,7 @@ void seta_state::wrofaero(machine_config &config)
 	M68000(config, m_maincpu, 16000000);   // 16 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &seta_state::wrofaero_map);
 
-	pit8254_device &pit(PIT8254(config, "pit", 0)); // uPD71054C
+	pit8254_device &pit(PIT8254(config, "pit")); // uPD71054C
 	pit.set_clk<0>(16000000/2/8);
 	pit.out_handler<0>().set(FUNC(seta_state::pit_out0));
 
@@ -9043,7 +9058,7 @@ void crazyfgt_state::crazyfgt(machine_config &config)
 ***************************************************************************/
 
 // Test mode shows a 16ms and 2ms counters, then there's vblank and presumably ACIA irqs ...
-TIMER_DEVICE_CALLBACK_MEMBER(jockeyc_state::interrupt)
+TIMER_DEVICE_CALLBACK_MEMBER(jockeyc_state_base::interrupt)
 {
 	int scanline = param;
 
@@ -9061,36 +9076,34 @@ TIMER_DEVICE_CALLBACK_MEMBER(jockeyc_state::interrupt)
 		m_maincpu->set_input_line(6, HOLD_LINE);
 }
 
-MACHINE_START_MEMBER(jockeyc_state, jockeyc)
+void jockeyc_state_base::machine_start()
 {
-	m_out_cancel.resolve();
-	m_out_payout.resolve();
-	m_out_start.resolve();
+	seta_state::machine_start();
+
+	save_item(NAME(m_mux));
+	save_item(NAME(m_out));
 }
 
 
-void jockeyc_state::jockeyc(machine_config &config)
+void jockeyc_state_base::jockeyc_base(machine_config &config)
 {
 	// basic machine hardware
-	M68000(config, m_maincpu, XTAL(16'000'000)/2); // TMP68000N-8
-	m_maincpu->set_addrmap(AS_PROGRAM, &jockeyc_state::jockeyc_map);
-	TIMER(config, "scantimer").configure_scanline(FUNC(jockeyc_state::interrupt), "screen", 0, 1);
+	TIMER(config, "scantimer").configure_scanline(FUNC(jockeyc_state_base::interrupt), "screen", 0, 1);
 
 	WATCHDOG_TIMER(config, m_watchdog).set_time(attotime::from_seconds(2.0)); // jockeyc: watchdog test error if over 2.5s
 
 	X1_001(config, m_spritegen, 16000000, m_palette, gfx_sprites);
-	m_spritegen->set_gfxbank_callback(FUNC(seta_state::setac_gfxbank_callback));
+	m_spritegen->set_gfxbank_callback(FUNC(jockeyc_state_base::setac_gfxbank_callback));
 	// position kludges
 	m_spritegen->set_fg_xoffsets(0, 0); // sprites correct? (bets), tilemap correct (test grid)
 	m_spritegen->set_fg_yoffsets(-0x12+8, 0x0e);
 	m_spritegen->set_bg_yoffsets(0x1, -0x1);
 
-	NVRAM(config, "nvram", nvram_device::DEFAULT_RANDOM);
+	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
-	MCFG_MACHINE_START_OVERRIDE(jockeyc_state, jockeyc)
 	// devices
 	UPD4992(config, m_rtc, 32'768); // ! Actually D4911C !
-	ACIA6850(config, "acia0", 0);
+	ACIA6850(config, "acia0");
 	TICKET_DISPENSER(config, "hopper1", attotime::from_msec(150));
 	TICKET_DISPENSER(config, "hopper2", attotime::from_msec(150));
 
@@ -9100,20 +9113,27 @@ void jockeyc_state::jockeyc(machine_config &config)
 	screen.set_vblank_time(ATTOSECONDS_IN_USEC(0));
 	screen.set_size(64*8, 32*8);
 	screen.set_visarea(0*8, 48*8-1, 1*8, 31*8-1);
-	screen.set_screen_update(FUNC(seta_state::screen_update_seta_layers));
+	screen.set_screen_update(FUNC(jockeyc_state_base::screen_update_seta_layers));
 	screen.set_palette(m_palette);
 
 	X1_012(config, m_layers[0], m_palette, gfx_drgnunit).set_xoffsets(126, -2);
 	m_layers[0]->set_screen(m_screen);
-	PALETTE(config, m_palette, FUNC(seta_state::palette_init_RRRRRGGGGGBBBBB_proms), 512 * 1);
+	PALETTE(config, m_palette, FUNC(jockeyc_state_base::palette_init_RRRRRGGGGGBBBBB_proms), 512 * 1);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	X1_010(config, m_x1snd, 16000000);
-	m_x1snd->add_route(0, "lspeaker", 1.0);
-	m_x1snd->add_route(1, "rspeaker", 1.0);
+	m_x1snd->add_route(0, "speaker", 1.0, 0);
+	m_x1snd->add_route(1, "speaker", 1.0, 1);
+}
+
+void jockeyc_state::jockeyc(machine_config &config)
+{
+	jockeyc_base(config);
+
+	M68000(config, m_maincpu, XTAL(16'000'000)/2); // TMP68000N-8
+	m_maincpu->set_addrmap(AS_PROGRAM, &jockeyc_state::jockeyc_map);
 
 	// layout
 	config.set_default_layout(layout_jockeyc);
@@ -9124,20 +9144,12 @@ void jockeyc_state::jockeyc(machine_config &config)
                              International Toote
 ***************************************************************************/
 
-MACHINE_START_MEMBER(jockeyc_state, inttoote)
+void inttoote_state::inttoote(machine_config &config)
 {
-	m_out_help.resolve();
-	m_out_itstart.resolve();
-}
+	jockeyc_base(config);
 
-void jockeyc_state::inttoote(machine_config &config)
-{
-	jockeyc(config);
-
-	M68000(config.replace(), m_maincpu, XTAL(16'000'000)); // TMP68HC000N-16
-	m_maincpu->set_addrmap(AS_PROGRAM, &jockeyc_state::inttoote_map);
-
-	MCFG_MACHINE_START_OVERRIDE(jockeyc_state, inttoote)
+	M68000(config, m_maincpu, XTAL(16'000'000)); // TMP68HC000N-16
+	m_maincpu->set_addrmap(AS_PROGRAM, &inttoote_state::inttoote_map);
 
 	m_layers[0]->set_xoffsets(0, -2);
 
@@ -9145,8 +9157,8 @@ void jockeyc_state::inttoote(machine_config &config)
 	PIA6821(config, "pia0");
 	PIA6821(config, "pia1");
 
-	ACIA6850(config, "acia1", 0);
-	ACIA6850(config, "acia2", 0);
+	ACIA6850(config, "acia1");
+	ACIA6850(config, "acia2");
 
 	// layout
 	config.set_default_layout(layout_inttoote);
@@ -10933,6 +10945,37 @@ ROM_START( inttoote )
 	ROM_LOAD( "ya_011_012.u64", 0x80000, 0x80000, CRC(a8015ce6) SHA1(bb0b589856ec82e1fd42be9af89b07ba1d17e595) )
 ROM_END
 
+ROM_START( spkings ) // Allumer P0-058C + Coinmaster PCB-HRE-000 Horse Race I/O Expansion
+	ROM_REGION( 0x200000, "maincpu", 0 )        // 68000 Code, the first 2 EPROMs had handwritten labels
+	ROM_LOAD16_BYTE( "p436.08_sport_of_kings_even.002", 0x000000, 0x10000, CRC(6de20c3c) SHA1(b736b9294ece9d33ced8171eaa9206b4ce41b51e) ) // 27/8/98 German
+	ROM_LOAD16_BYTE( "p436.08_sport_of_kings_odd.003",  0x000001, 0x10000, CRC(ebef4924) SHA1(5c1d19df2a99950bcbbde9ad5cf6b1e5510acf62) ) // ""
+	ROM_FILL(                                           0x020000, 0xe0000, 0xff )
+	ROM_LOAD16_WORD_SWAP( "ya_002_001.u18",             0x100000, 0x80000, CRC(dd108016) SHA1(1554de4cc1a9436a1e62400cd96c9752a2098f99) )
+	ROM_FILL(                                           0x180000, 0x80000, 0xff )
+
+	ROM_REGION( 0x200000, "gfx1", 0 )   // Sprites
+	ROM_LOAD16_BYTE( "ya_011_007.u27",                                      0x000000, 0x80000, CRC(2dc7a294) SHA1(97f2aa9939a45aaa94d4aeb2fcd5b7f30204b942) )
+	ROM_LOAD16_BYTE( "ya_011_006.u22",                                      0x000001, 0x80000, CRC(bfae01a5) SHA1(3be83972c3987e9bf722cd6db7770f074587301c) )
+	ROM_LOAD16_BYTE( "p436_v04_french_sport_of_kings_charachter_3_fg.u133", 0x0e0001, 0x10000, CRC(008f6024) SHA1(36a3938ff1ad20a841ece00f2a19d0b7f78af40e) )
+	ROM_LOAD16_BYTE( "p436_v04_french_sport_of_kings_charachter_4_fg.u132", 0x0e0000, 0x10000, CRC(a0a9d106) SHA1(19483554298b99ead007f8ec25da64645527d844) )
+	ROM_LOAD16_BYTE( "ya_011_005.u17",                                      0x100000, 0x80000, CRC(4a6c804b) SHA1(b596b9b0b3b453c26f9c7f976ff4d56eac4fac04) )
+	ROM_LOAD16_BYTE( "ya_011_004.u10",                                      0x100001, 0x80000, CRC(eb74d2e0) SHA1(221ff6cc03ce57a7fcbe418f1c12a293990f8a7d) )
+	ROM_LOAD16_BYTE( "p436_v04_french_sport_of_kings_charachter_2_fg.u134", 0x1e0000, 0x10000, CRC(adb131da) SHA1(f3cba89ff0e4c83eb869eb1ba05202dc63f3ca69) )
+	ROM_LOAD16_BYTE( "p436_v04_french_sport_of_kings_charachter_1_fg.u135", 0x1e0001, 0x10000, CRC(90fb20ae) SHA1(881d3c9bb1cbb0584f88ba1cda775f25875290f5) )
+
+	ROM_REGION( 0x80000, "gfx2", 0 )    // Layer 1
+	ROM_LOAD16_BYTE( "ya_011_008.u35",             0x000000, 0x40000, CRC(4b890f83) SHA1(fde6544898a0691b550f3045803f2e81cfeb5fe9) )
+	ROM_LOAD16_BYTE( "ya_011_009.u41",             0x000001, 0x40000, CRC(caa5e3c1) SHA1(63cccc5479040a02872febc8d7f2d46096e138d1) )
+
+	ROM_REGION( 0x400, "proms", 0 ) // Colours
+	ROM_LOAD16_BYTE( "ya-010.prom", 0x000, 0x200, CRC(778094b3) SHA1(270329a0d544dc7a8240d6dab08ccd54ea87ab70) )
+	ROM_LOAD16_BYTE( "ya-011.prom", 0x001, 0x200, CRC(bd4fe2f6) SHA1(83d9f9db3fbfa2d172f5227c397ea4d5a9687015) )
+
+	ROM_REGION( 0x100000, "x1snd", 0 )  // Samples
+	ROM_LOAD( "ya_011_013.u71", 0x00000, 0x80000, CRC(2bccaf47) SHA1(1658643444d575410f11b648e0d7ae6c43fcf1ea) )
+	ROM_LOAD( "ya_011_012.u64", 0x80000, 0x80000, CRC(a8015ce6) SHA1(bb0b589856ec82e1fd42be9af89b07ba1d17e595) )
+ROM_END
+
 // Gran Derby (Spanish hack of Jockey Club)
 // CODERE massive production.
 
@@ -11173,6 +11216,35 @@ ROM_START( setaroula )
 	ROM_LOAD16_BYTE( "uf0-018.u51", 0x001, 0x200, CRC(1c584d5f) SHA1(f1c7e3da8b108d78b459cae53fabb6e28d3a7ee8) )
 ROM_END
 
+ROM_START( setaroulm )
+	ROM_REGION( 0x0c0000, "maincpu", 0 )        // 68000 Code
+	ROM_LOAD16_BYTE( "uf011.002.5a", 0x000000, 0x010000, CRC(285f41ba) SHA1(b5ff09cae1e178526145f113cc3c85892e35ec34) )
+	ROM_LOAD16_BYTE( "uf011.003.7a", 0x000001, 0x010000, CRC(2ab925b0) SHA1(f02de8a6643330c833027dd99006ac2d5d07e2f0) )
+
+	ROM_REGION( 0x020000, "gfx1", 0 )   // Sprites
+	ROM_LOAD16_BYTE( "uf1.005.1j", 0x010001, 0x008000, CRC(12ee9729) SHA1(29f621811d52413ae37137035ad687fabfe9e56e) )
+	ROM_LOAD16_BYTE( "uf1.006.1l", 0x010000, 0x008000, CRC(5eb35519) SHA1(1af240ae725102f310a101829539d1ca5323e96c) )
+	ROM_LOAD16_BYTE( "uf1.007.1n", 0x000001, 0x008000, CRC(b287ddcf) SHA1(70d291fcb6a60be2c45e6ad61f1c3922d45ef7e0) )
+	ROM_LOAD16_BYTE( "uf1.008.1r", 0x000000, 0x008000, CRC(6de9a30b) SHA1(308468079b535d1b0ca437251c3135d7f0c91dce) )
+
+	ROM_REGION( 0x400000, "gfx2", 0 )   // Layer 1 - 8bpp, not dumped for this set, but MASK ROM codes match
+	ROM_LOAD32_BYTE( "uf0-010.u15", 0x000000, 0x080000, CRC(0af13a56) SHA1(c294b7947d004c0e0b280ca44636e4059e05a57e) )
+	ROM_LOAD32_BYTE( "uf0-012.u29", 0x000001, 0x080000, CRC(cba2a6b7) SHA1(8627eda24c6980a0e786fd9dc06176893a33c58f) )
+	ROM_LOAD32_BYTE( "uf0-014.u38", 0x000002, 0x080000, CRC(da2bd4e4) SHA1(244af8705f2fa4ab3f3a002af16a0e4d60e03de8) )
+	ROM_LOAD32_BYTE( "uf0-015.u40", 0x000003, 0x080000, CRC(11dc19fa) SHA1(e7084f61d075a61249d924a523c32e7993d9ae46) )
+	ROM_LOAD32_BYTE( "uf0-009.u13", 0x200000, 0x080000, CRC(20f2d7f5) SHA1(343a8fac76d6ee7f845f9988c491698ebd0150d4) )
+	ROM_LOAD32_BYTE( "uf0-011.u22", 0x200001, 0x080000, CRC(af60adf9) SHA1(6505cbce6e066d75b779fdbe2c034ba4daabbefe) )
+	ROM_LOAD32_BYTE( "uf0-013.u37", 0x200002, 0x080000, CRC(645ec3c3) SHA1(e9b8056c68bf33b0b7130a5ce2bafd11dfd6c29b) )
+	ROM_LOAD32_BYTE( "uf0-016.u48", 0x200003, 0x080000, CRC(10f99fa8) SHA1(7ef9a3f71dd071483cf3513ef57e2fcfe8702994) )
+
+	ROM_REGION( 0x100000, "x1snd", ROMREGION_ERASE00 )  // Samples
+	ROM_LOAD( "uf1-004.14a", 0x040000, 0x020000, CRC(d63ea334) SHA1(93aaf58c90c4f704caae19b63785e471b2c1281a) ) // 1xxxxxxxxxxxxxxxx = 0xFF, possibly bad
+
+	ROM_REGION( 0x400, "proms", 0 ) // not dumped for this set, but stickers match
+	ROM_LOAD16_BYTE( "uf0-017.u50", 0x000, 0x200, CRC(bf50c303) SHA1(31685ed4849e5c27654f02945678db425d54bf5e) )
+	ROM_LOAD16_BYTE( "uf0-018.u51", 0x001, 0x200, CRC(1c584d5f) SHA1(f1c7e3da8b108d78b459cae53fabb6e28d3a7ee8) )
+ROM_END
+
 
 void seta_state::init_bankx1()
 {
@@ -11215,7 +11287,7 @@ void seta_state::init_wiggie()
 	}
 }
 
-void jockeyc_state::init_inttoote()
+void inttoote_state::init_inttoote()
 {
 	// code patches due to unemulated protection (to be removed...)
 	u16 *ROM = (u16 *)memregion( "maincpu" )->base();
@@ -11237,6 +11309,7 @@ void jockeyc_state::init_inttoote()
 
 GAME( 1989?, setaroul,  0,        setaroul,  setaroul,  setaroul_state, empty_init,    ROT270, "Visco",                     "The Roulette (Visco)", 0 )
 GAME( 1989?, setaroula, setaroul, setaroul,  setaroul,  setaroul_state, empty_init,    ROT270, "hack (CODERE)",             "Super Ruleta 36 (Spanish hack of The Roulette)", 0 )
+GAME( 1989?, setaroulm, setaroul, setaroulm, setaroulm, setaroul_state, empty_init,    ROT270, "Visco",                     "The Roulette (Visco, medal)", MACHINE_NOT_WORKING ) // check if game plays correctly, I/O..
 
 GAME( 1989, drgnunit,  0,        drgnunit,  drgnunit,  seta_state,     empty_init,     ROT0,   "Athena / Seta",             "Dragon Unit / Castle of Dragon", 0 ) // Country/License: DSW
 
@@ -11251,8 +11324,9 @@ GAME( 1994, wiggie,    0,        wiggie,    thunderl,  seta_state,     init_wigg
 GAME( 1994, superbar,  wiggie,   superbar,  thunderl,  seta_state,     init_wiggie,    ROT270, "Promat",                    "Super Bar", MACHINE_IMPERFECT_GRAPHICS ) // hack of Thunder & Lightning
 
 GAME( 1990, jockeyc,   0,        jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "Seta (Visco license)",      "Jockey Club (v1.18)", 0 )
-GAME( 1993, inttoote2, jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "bootleg (Coinmaster)",      "International Toote II (v1.24, P387.V01)", 0 )
-GAME( 1998, inttoote,  jockeyc,  inttoote,  inttoote,  jockeyc_state,  init_inttoote,  ROT0,   "bootleg (Coinmaster)",      "International Toote (Germany, P523.V01)", MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION )
+GAME( 1993, inttoote2, jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "hack (Coinmaster)",         "International Toote II (v1.24, P387.V01)", 0 )
+GAME( 1994, spkings,   jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "hack (Coinmaster)",         "Sport of Kings (France, P436.08)", MACHINE_NOT_WORKING )
+GAME( 1998, inttoote,  jockeyc,  inttoote,  inttoote,  inttoote_state, init_inttoote,  ROT0,   "hack (Coinmaster)",         "International Toote (Germany, P523.V01)", MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION )
 GAME( 1990, gderby,    jockeyc,  jockeyc,   jockeyc,   jockeyc_state,  empty_init,     ROT0,   "hack (CODERE)",             "Gran Derby (Spanish hack of Jockey Club)", 0 )
 
 GAME( 1992, rezon,     0,        rezon,     rezon,     seta_state,     empty_init,     ROT0,   "Allumer",                   "Rezon", 0 ) // License: Jumper

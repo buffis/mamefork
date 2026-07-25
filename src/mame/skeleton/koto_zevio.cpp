@@ -2,11 +2,10 @@
 // copyright-holders:David Haywood
 
 // The Zevio SoC was developed by Koto Laboratory, the same company behind the Wonderswan
-
+// is it related to Ponto-1 in epoch_tv_globe.cpp, as Koto is credited there too
 #include "emu.h"
 
 #include "cpu/arm7/arm7.h"
-#include "cpu/arm7/arm7core.h"
 
 #include "screen.h"
 #include "speaker.h"
@@ -26,8 +25,8 @@ public:
 	void zevio(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -38,7 +37,7 @@ private:
 	uint32_t z900b0014_r();
 	uint32_t zb8000024_r();
 
-	void arm_map(address_map &map);
+	void arm_map(address_map &map) ATTR_COLD;
 };
 
 uint32_t zevio_state::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
@@ -93,8 +92,7 @@ void zevio_state::zevio(machine_config &config)
 	m_screen->set_visarea(0, 320-1, 0, 240-1);
 	m_screen->set_screen_update(FUNC(zevio_state::screen_update));
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 }
 
 
@@ -115,5 +113,5 @@ ROM_END
 
 } // anonymous namespace
 
-CONS( 2007, dbzscout,     0,              0,      zevio, zevio, zevio_state, empty_init, "Bandai / Koto", "Dragon Ball Z: Scouter Battle Taikan Kamehameha: Ora to Omee to Scouter (Japan)", MACHINE_IS_SKELETON )
-CONS( 2008, dbzonep,      0,              0,      zevio, zevio, zevio_state, empty_init, "Bandai / Koto", "Dragon Ball Z x One Piece: Battle Taikan Gum-Gum no Kamehameha: Omee no Koe de Ora o Yobu (Japan)", MACHINE_IS_SKELETON )
+CONS( 2007, dbzscout,     0,              0,      zevio, zevio, zevio_state, empty_init, "Bandai / Koto", "Dragon Ball Z: Scouter Battle Taikan Kamehameha: Ora to Omee to Scouter (Japan)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+CONS( 2008, dbzonep,      0,              0,      zevio, zevio, zevio_state, empty_init, "Bandai / Koto", "Dragon Ball Z x One Piece: Battle Taikan Gum-Gum no Kamehameha: Omee no Koe de Ora o Yobu (Japan)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

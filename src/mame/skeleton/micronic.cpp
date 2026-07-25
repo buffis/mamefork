@@ -166,8 +166,8 @@ public:
 	void micronic(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	void nvram_init(nvram_device &nvram, void *data, size_t size);
@@ -185,8 +185,8 @@ private:
 
 	void micronic_palette(palette_device &palette) const;
 
-	void micronic_io(address_map &map);
-	void micronic_mem(address_map &map);
+	void micronic_io(address_map &map) ATTR_COLD;
+	void micronic_mem(address_map &map) ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<hd61830_device> m_lcdc;
@@ -448,7 +448,7 @@ void micronic_state::micronic(machine_config &config)
 
 	/* sound hardware */
 	SPEAKER(config, "mono").front_center();
-	BEEP(config, m_beep, 0).add_route(ALL_OUTPUTS, "mono", 1.00);
+	BEEP(config, m_beep).add_route(ALL_OUTPUTS, "mono", 1.00);
 
 	/* ram banks */
 	RAM(config, RAM_TAG).set_default_size("224K");

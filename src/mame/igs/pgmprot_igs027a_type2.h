@@ -1,5 +1,9 @@
 // license:BSD-3-Clause
 // copyright-holders:David Haywood, ElSemi, Xing Xing
+#ifndef MAME_IGS_PGMPROT_IGS027A_TYPE2_H
+#define MAME_IGS_PGMPROT_IGS027A_TYPE2_H
+
+#pragma once
 
 class pgm_arm_type2_state : public pgm_state
 {
@@ -53,8 +57,8 @@ private:
 	void kov2p_arm_region_w(offs_t offset, u32 data, u32 mem_mask = ~0);
 	u32 ddp2_speedup_r(address_space &space);
 	u16 ddp2_main_speedup_r();
-	void _55857F_arm7_map(address_map &map);
-	void kov2_mem(address_map &map);
+	void _55857F_arm7_map(address_map &map) ATTR_COLD;
+	void kov2_mem(address_map &map) ATTR_COLD;
 };
 
 /* simulations (or missing) */
@@ -62,3 +66,5 @@ INPUT_PORTS_EXTERN( ddp2 );
 INPUT_PORTS_EXTERN( kov2 );
 INPUT_PORTS_EXTERN( martmast );
 INPUT_PORTS_EXTERN( dw2001 );
+
+#endif // MAME_IGS_PGMPROT_IGS027A_TYPE2_H

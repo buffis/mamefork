@@ -18,14 +18,14 @@
 
 #include "emu.h"
 
-// cpu cluster
+// CPU cluster
 #include "cpu/ns32000/ns32000.h"
 #include "machine/ns32081.h"
 #include "machine/ns32202.h"
 
 // other devices
 #include "machine/aic6250.h"
-#include "machine/ds1315.h"
+#include "machine/ds1215.h"
 #include "machine/input_merger.h"
 #include "machine/mc68681.h"
 #include "machine/ncr5380.h"
@@ -33,7 +33,9 @@
 
 // busses and connectors
 #include "bus/rs232/rs232.h"
+#include "bus/nscsi/et532.h"
 #include "bus/nscsi/hd.h"
+#include "bus/nscsi/tape.h"
 
 #define VERBOSE 0
 #include "logmacro.h"
@@ -49,8 +51,8 @@ public:
 		, m_fpu(*this, "fpu")
 		, m_icu(*this, "icu")
 		, m_rtc(*this, "rtc")
-		, m_ncr5380(*this, "slot:7:ncr5380")
-		, m_aic6250(*this, "scsi:0:aic6250")
+		, m_dp8490(*this, "dp8490")
+		, m_aic6250(*this, "aic6250")
 		, m_duart(*this, "duart%u", 0U)
 		, m_serial(*this, "serial%u", 0U)
 		, m_duar(*this, "duar%u", 0U)
@@ -60,21 +62,21 @@ public:
 	{
 	}
 
-	void pc532(machine_config &config);
+	void pc532(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	template <unsigned ST> void cpu_map(address_map &map);
+	template <unsigned ST> void cpu_map(address_map &map) ATTR_COLD;
 
 	required_device<ns32532_device> m_cpu;
 	required_device<ns32381_device> m_fpu;
 	required_device<ns32202_device> m_icu;
 
-	required_device<ds1315_device> m_rtc;
+	required_device<ds1216e_device> m_rtc;
 
-	required_device<ncr5380_device> m_ncr5380;
+	required_device<dp8490_device> m_dp8490;
 	required_device<aic6250_device> m_aic6250;
 
 	required_device_array<scn2681_device, 4> m_duart;
@@ -88,6 +90,11 @@ private:
 	void irq_w(int state);
 	u32 dma_r(offs_t offset, u32 mem_mask);
 	void dma_w(offs_t offset, u32 data, u32 mem_mask);
+
+	// AIC6250 pseudo-DMA (BREQ/BACK), mirrors the DP8490 path above
+	void aic_breq_w(int state);
+	u32 aic_dma_r(offs_t offset, u32 mem_mask);
+	void aic_dma_w(offs_t offset, u32 data, u32 mem_mask);
 
 	memory_view m_swap;
 	memory_view m_select;
@@ -115,16 +122,13 @@ void pc532_state::machine_start()
 {
 	// install phantom rtc using memory taps
 	// TODO: not tested
-	m_cpu->space(AS_PROGRAM).install_read_tap(0x1000'0000, 0x1000'0003, "rtc_w",
+	m_cpu->space(AS_PROGRAM).install_read_tap(0x1000'0000, 0x1000'0007, "rtc_r",
 		[this](offs_t offset, u32 &data, u32 mem_mask)
 		{
-			m_rtc->write_data(offset & 1);
-		});
-	m_cpu->space(AS_PROGRAM).install_read_tap(0x1000'0004, 0x1000'0007, "rtc_r",
-		[this](offs_t offset, u32 &data, u32 mem_mask)
-		{
-			if (m_rtc->chip_enable())
-				data = m_rtc->read_data();
+			if (m_rtc->ceo_r())
+				data = m_rtc->read(offset);
+			else
+				m_rtc->read(offset);
 		});
 }
 
@@ -157,13 +161,13 @@ void pc532_state::drq_w(int state)
 	{
 		switch (m_state)
 		{
-		case RD1: m_dma |= u32(m_ncr5380->dma_r()) << 8; m_state = RD2; break;
-		case RD2: m_dma |= u32(m_ncr5380->dma_r()) << 16; m_state = RD3; break;
-		case RD3: m_dma |= u32(m_ncr5380->dma_r()) << 24; m_state = RD4; break;
+		case RD1: m_dma |= u32(m_dp8490->dma_r()) << 8; m_state = RD2; break;
+		case RD2: m_dma |= u32(m_dp8490->dma_r()) << 16; m_state = RD3; break;
+		case RD3: m_dma |= u32(m_dp8490->dma_r()) << 24; m_state = RD4; break;
 
-		case WR3: m_ncr5380->dma_w(m_dma >> 8); m_state = WR2; break;
-		case WR2: m_ncr5380->dma_w(m_dma >> 16); m_state = WR1; break;
-		case WR1: m_ncr5380->dma_w(m_dma >> 24); m_state = IDLE; break;
+		case WR3: m_dp8490->dma_w(m_dma >> 8); m_state = WR2; break;
+		case WR2: m_dp8490->dma_w(m_dma >> 16); m_state = WR1; break;
+		case WR1: m_dp8490->dma_w(m_dma >> 24); m_state = IDLE; break;
 
 		default:
 			break;
@@ -202,7 +206,6 @@ void pc532_state::irq_w(int state)
 }
 
 // TODO: byte and word accesses
-// TODO: A22 -> EOP
 u32 pc532_state::dma_r(offs_t offset, u32 mem_mask)
 {
 	u32 data = 0;
@@ -215,7 +218,7 @@ u32 pc532_state::dma_r(offs_t offset, u32 mem_mask)
 			if (m_drq && !m_irq)
 			{
 				// buffer empty and SCSI ready to transfer; read SCSI data, enter the read state, and signal the CPU to wait
-				m_dma = m_ncr5380->dma_r();
+				m_dma = m_dp8490->dma_r();
 				m_state = RD1;
 
 				m_cpu->rdy_w(1);
@@ -244,7 +247,6 @@ u32 pc532_state::dma_r(offs_t offset, u32 mem_mask)
 }
 
 // TODO: byte and word accesses
-// TODO: A22 -> EOP
 void pc532_state::dma_w(offs_t offset, u32 data, u32 mem_mask)
 {
 	if (m_state == IDLE)
@@ -252,8 +254,92 @@ void pc532_state::dma_w(offs_t offset, u32 data, u32 mem_mask)
 		if (m_drq)
 		{
 			m_dma = data;
-			m_ncr5380->dma_w(m_dma >> 0);
+			m_dp8490->dma_w(m_dma >> 0);
 			m_state = WR3;
+		}
+	}
+	else
+		m_cpu->rdy_w(1);
+}
+
+/*
+ * AIC6250 pseudo-DMA.  Functionally identical to the DP8490 path above, but the
+ * AIC6250 uses a BREQ/BACK handshake: each byte transferred over the pseudo-DMA
+ * window must be acknowledged with back_w(1), which causes the chip to drop BREQ
+ * and re-assert it (synchronously if its FIFO already holds the next byte, or via
+ * its internal timer otherwise) for the following byte.  Data transfers are whole
+ * sectors (multiples of 4 bytes), so no partial-doubleword completion is needed.
+ */
+void pc532_state::aic_breq_w(int state)
+{
+	if (state)
+	{
+		switch (m_state)
+		{
+		case RD1: m_dma |= u32(m_aic6250->dma_r()) << 8;  m_state = RD2; m_aic6250->back_w(1); break;
+		case RD2: m_dma |= u32(m_aic6250->dma_r()) << 16; m_state = RD3; m_aic6250->back_w(1); break;
+		case RD3: m_dma |= u32(m_aic6250->dma_r()) << 24; m_state = RD4; m_aic6250->back_w(1); break;
+
+		case WR3: m_aic6250->dma_w(m_dma >> 8);  m_state = WR2; m_aic6250->back_w(1); break;
+		case WR2: m_aic6250->dma_w(m_dma >> 16); m_state = WR1; m_aic6250->back_w(1); break;
+		case WR1: m_aic6250->dma_w(m_dma >> 24); m_state = IDLE; m_aic6250->back_w(1); break;
+
+		default:
+			break;
+		}
+	}
+
+	m_drq = state;
+}
+
+u32 pc532_state::aic_dma_r(offs_t offset, u32 mem_mask)
+{
+	u32 data = 0;
+
+	if (!machine().side_effects_disabled())
+	{
+		switch (m_state)
+		{
+		case IDLE:
+			if (m_drq)
+			{
+				m_dma = m_aic6250->dma_r();
+				m_state = RD1;
+				m_aic6250->back_w(1);
+
+				m_cpu->rdy_w(1);
+			}
+			break;
+
+		case RD1:
+		case RD2:
+		case RD3:
+			m_cpu->rdy_w(1);
+			break;
+
+		case RD4:
+			data = m_dma;
+			m_state = IDLE;
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	return data;
+}
+
+void pc532_state::aic_dma_w(offs_t offset, u32 data, u32 mem_mask)
+{
+	if (m_state == IDLE)
+	{
+		if (m_drq)
+		{
+			m_dma = data;
+			m_aic6250->dma_w(m_dma >> 0);
+			m_state = WR3;
+			m_aic6250->back_w(1);
 		}
 	}
 	else
@@ -283,9 +369,10 @@ template <unsigned ST> void pc532_state::cpu_map(address_map &map)
 	if (ST == ns32000::ST_ODT)
 	{
 		map(0x3000'0000, 0x3fff'ffff).view(m_select);
-		m_select[0](0x3000'0000, 0x3000'0007).m(m_ncr5380, FUNC(ncr5380_device::map));
+		m_select[0](0x3000'0000, 0x3000'0007).m(m_dp8490, FUNC(dp8490_device::map));
 		m_select[0](0x3800'0000, 0x3fff'ffff).rw(FUNC(pc532_state::dma_r), FUNC(pc532_state::dma_w));
 		m_select[1](0x3000'0000, 0x3000'0001).rw(m_aic6250, FUNC(aic6250_device::read), FUNC(aic6250_device::write));
+		m_select[1](0x3800'0000, 0x3fff'ffff).rw(FUNC(pc532_state::aic_dma_r), FUNC(pc532_state::aic_dma_w));
 	}
 
 	map(0xffff'fe00, 0xffff'feff).m(m_icu, FUNC(ns32202_device::map<BIT(ST, 1)>));
@@ -293,7 +380,9 @@ template <unsigned ST> void pc532_state::cpu_map(address_map &map)
 
 static void scsi_devices(device_slot_interface &device)
 {
+	device.option_add("et532", ET532_SCSI); // ET532 serial/ethernet coprocessor card (532SC)
 	device.option_add("harddisk", NSCSI_HARDDISK);
+	device.option_add("tape", NSCSI_TAPE);
 }
 
 void pc532_state::pc532(machine_config &config)
@@ -307,38 +396,34 @@ void pc532_state::pc532(machine_config &config)
 	NS32381(config, m_fpu, 50_MHz_XTAL / 2);
 	m_cpu->set_fpu(m_fpu);
 
+	config.set_maximum_quantum(attotime::from_usec(10));   // tight CPU<->DUART/ICU interleave
+
 	NS32202(config, m_icu, 3.6864_MHz_XTAL);
 	m_icu->out_int().set_inputline(m_cpu, INPUT_LINE_IRQ0).invert();
-	m_icu->out_g<0>().set([this](int state) { m_swap.select(state); });
-	m_icu->out_g<7>().set([this](int state) { m_select.select(state); });
+	m_icu->out_g<0>().set([this](int state) { m_swap.select(state); });    // G0 = RAM/ROM boot overlay
+	m_icu->out_g<7>().set([this](int state) { m_select.select(state); });  // G7 = DP8490 / AIC6250 select
 
-	DS1315(config, m_rtc, 32.768_kHz_XTAL);
+	DS1216E(config, m_rtc);
 
-	NSCSI_BUS(config, "slot");
+	auto &slot(NSCSI_BUS(config, "slot"));
 	NSCSI_CONNECTOR(config, "slot:0", scsi_devices, "harddisk", false);
 	NSCSI_CONNECTOR(config, "slot:1", scsi_devices, nullptr, false);
-	NSCSI_CONNECTOR(config, "slot:2", scsi_devices, nullptr, false);
+	NSCSI_CONNECTOR(config, "slot:2", scsi_devices, "tape", false);
 	NSCSI_CONNECTOR(config, "slot:3", scsi_devices, nullptr, false);
-	NSCSI_CONNECTOR(config, "slot:7").option_set("ncr5380", NCR5380).machine_config( // DP8490
-		[this](device_t *device)
-		{
-			ncr5380_device &ncr5380(downcast<ncr5380_device &>(*device));
 
-			ncr5380.drq_handler().set(*this, FUNC(pc532_state::drq_w));
-			ncr5380.irq_handler().append(m_icu, FUNC(ns32202_device::ir_w<4>));
-			ncr5380.irq_handler().append(*this, FUNC(pc532_state::irq_w));
-		});
+	DP8490(config, m_dp8490);
+	slot.set_external_device(7, m_dp8490);
+	m_dp8490->drq_handler().set(DEVICE_SELF, FUNC(pc532_state::drq_w));
+	m_dp8490->irq_handler().append(m_icu, FUNC(ns32202_device::ir_w<4>));
+	m_dp8490->irq_handler().append(DEVICE_SELF, FUNC(pc532_state::irq_w));
 
-	NSCSI_BUS(config, "scsi");
-	NSCSI_CONNECTOR(config, "scsi:0").option_set("aic6250", AIC6250).machine_config(
-		[this](device_t *device)
-		{
-			aic6250_device &aic6250(downcast<aic6250_device &>(*device));
+	auto &scsi(NSCSI_BUS(config, "scsi"));
 
-			aic6250.set_clock(20_MHz_XTAL);
-			aic6250.int_cb().set(m_icu, FUNC(ns32202_device::ir_w<5>));
-			// TODO: drq
-		});
+	AIC6250(config, m_aic6250, 20_MHz_XTAL);
+	scsi.set_external_device(0, m_aic6250);
+	m_aic6250->int_cb().set(m_icu, FUNC(ns32202_device::ir_w<5>));
+	m_aic6250->breq_cb().set(DEVICE_SELF, FUNC(pc532_state::aic_breq_w));
+
 	NSCSI_CONNECTOR(config, "scsi:1", scsi_devices, nullptr, false);
 	NSCSI_CONNECTOR(config, "scsi:2", scsi_devices, nullptr, false);
 	NSCSI_CONNECTOR(config, "scsi:3", scsi_devices, nullptr, false);
@@ -400,9 +485,15 @@ ROM_START(pc532)
 
 	ROM_SYSTEM_BIOS(1, "900328-9600", "Wed Mar 28 09:31:00 PST 1990, Bruce Culbertson, 9600bps")
 	ROMX_LOAD("900328_9600.u44", 0x0000, 0x8000, CRC(63caac86) SHA1(5c7011684b1bce3dd6b5fcf3c81479e40c61c4e3), ROM_BIOS(1))
+
+	ROM_SYSTEM_BIOS(2, "900427-9600", "Fri Apr 27 17:56:11 PDT 1990, Bruce Culbertson (direct exception mode), 9600bps")
+	ROMX_LOAD("culberts_900427_9600.u44", 0x0000, 0x8000, CRC(50724e69) SHA1(d6f140f1a5414892e4dbb5754da667b70ff90ebe), ROM_BIOS(2))
+
+	ROM_SYSTEM_BIOS(3, "dualboot", "Dual-boot loader: AIC6250/System V, DP8490/NetBSD")
+	ROMX_LOAD("pc532_dualboot.u44", 0x0000, 0x8000, CRC(ed5d7a78) SHA1(e4ef70e63d49113baccfe0dbaa71d3e77b92228f), ROM_BIOS(3))
 ROM_END
 
 } // anonymous namespace
 
 /*   YEAR  NAME   PARENT  COMPAT  MACHINE  INPUT  CLASS        INIT        COMPANY           FULLNAME  FLAGS */
-COMP(1989, pc532, 0,      0,      pc532,   0,     pc532_state, empty_init, "George Scolaro", "pc532",  MACHINE_NOT_WORKING | MACHINE_NO_SOUND_HW)
+COMP(1989, pc532, 0,      0,      pc532,   0,     pc532_state, empty_init, "George Scolaro", "pc532",  MACHINE_NO_SOUND_HW)

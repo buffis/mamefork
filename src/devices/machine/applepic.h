@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:AJR
 
-#ifndef MAME_DEVICES_MACHINE_APPLEPIC_H
-#define MAME_DEVICES_MACHINE_APPLEPIC_H
+#ifndef MAME_MACHINE_APPLEPIC_H
+#define MAME_MACHINE_APPLEPIC_H
 
 #pragma once
 
@@ -39,9 +39,9 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	static const std::string_view s_interrupt_names[8];
@@ -78,7 +78,7 @@ private:
 	u8 device_reg_r(offs_t offset);
 	void device_reg_w(offs_t offset, u8 data);
 
-	void internal_map(address_map &map);
+	void internal_map(address_map &map) ATTR_COLD;
 
 	// internal CPU
 	required_device<r65c02_device> m_iopcpu;
@@ -107,4 +107,4 @@ private:
 // device type declaration
 DECLARE_DEVICE_TYPE(APPLEPIC, applepic_device)
 
-#endif // MAME_DEVICES_MACHINE_APPLEPIC_H
+#endif // MAME_MACHINE_APPLEPIC_H

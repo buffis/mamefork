@@ -15,8 +15,15 @@
 
 #include "emu.h"
 #include "sh2.h"
+
+#include "sh2fe.h"
 #include "sh_dasm.h"
+
 #include "cpu/drcumlsh.h"
+
+#include "endianness.h"
+
+#include <bit>
 
 //#define VERBOSE 1
 #include "logmacro.h"
@@ -32,6 +39,10 @@ sh2_device::sh2_device(const machine_config &mconfig, device_type type, const ch
 {
 	m_cpu_type = cpu_type;
 	m_isdrc = allow_drc();
+}
+
+sh2_device::~sh2_device()
+{
 }
 
 void sh2_device::device_start()
@@ -191,7 +202,7 @@ void sh2_device::check_pending_irq(const char *message)
 		int irq = m_sh2_state->internal_irq_level;
 		if (m_sh2_state->pending_irq)
 		{
-			int external_irq = 15 - (count_leading_zeros_32(m_sh2_state->pending_irq) - 16);
+			int external_irq = std::bit_width(m_sh2_state->pending_irq) - 1;
 			if (external_irq >= irq)
 			{
 				irq = external_irq;
@@ -287,6 +298,7 @@ void sh2_device::execute_run()
 
 	if (m_cpu_off)
 	{
+		debugger_wait_hook();
 		m_sh2_state->icount = 0;
 		return;
 	}
@@ -491,7 +503,7 @@ void sh2_device::sh2_exception_internal(const char *message, int irqline, int ve
 /////////
 // DRC
 
-const opcode_desc* sh2_device::get_desclist(offs_t pc)
+const sh2_device::opcode_desc* sh2_device::get_desclist(offs_t pc)
 {
 	return m_drcfe->describe_code(pc);
 }
@@ -690,7 +702,7 @@ void sh2_device::static_generate_memory_accessor(int size, int iswrite, const ch
 
 	UML_LABEL(block, label++);              // label:
 
-	if ((machine().debug_flags & DEBUG_FLAG_ENABLED) == 0)
+	if (!debugger_enabled())
 	{
 		for (auto & elem : m_fastram)
 		{

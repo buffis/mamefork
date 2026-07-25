@@ -38,6 +38,8 @@ TODO:
 
 #include "speaker.h"
 
+#include <bit>
+
 // internal artwork
 #include "novag_zircon2.lh"
 
@@ -59,13 +61,13 @@ public:
 		m_out_digit(*this, "digit%u", 0U)
 	{ }
 
-	void zircon2(machine_config &config);
+	void zircon2(machine_config &config) ATTR_COLD;
 
 	DECLARE_INPUT_CHANGED_MEMBER(power_switch);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override { set_power(true); }
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD { set_power(true); }
 
 private:
 	// devices/pointers
@@ -102,9 +104,6 @@ private:
 
 void zircon2_state::machine_start()
 {
-	m_out_lcd.resolve();
-	m_out_digit.resolve();
-
 	// register for savestates
 	save_item(NAME(m_power));
 	save_item(NAME(m_inp_mux));
@@ -170,7 +169,7 @@ void zircon2_state::update_lcd()
 		for (int i = 0; i < 4; i++)
 		{
 			// 4 commons per digit, 2 output pins per common (analog voltage level)
-			const u8 com = population_count_32(m_lcd_com >> (i * 2) & 3);
+			const u8 com = std::popcount(m_lcd_com >> (i * 2) & 3U);
 			const u16 segs = (com == 0) ? m_lcd_segs : (com == 2) ? ~m_lcd_segs : 0;
 			data = data << 2 | (segs >> (digit * 2) & 3);
 		}
@@ -266,8 +265,8 @@ static INPUT_PORTS_START( zircon2 )
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_I) PORT_NAME("New Game")
 
 	PORT_START("POWER")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_ON) PORT_CHANGED_MEMBER(DEVICE_SELF, zircon2_state, power_switch, 1)
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, zircon2_state, power_switch, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_ON) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(zircon2_state::power_switch), 1)
+	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(zircon2_state::power_switch), 0)
 INPUT_PORTS_END
 
 

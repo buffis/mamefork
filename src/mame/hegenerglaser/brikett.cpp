@@ -25,6 +25,8 @@ Hardware notes:
 - PCB label: DH 4005-101 00
 - CDP1802ACE @ 3.579MHz or 4.194MHz (chess clock runs faster on 4.194MHz)
 - 2*MWS5114E or 2*TC5514P (1KBx4 RAM)
+- optional bridge at _EF4 to GND for English piece notation (this is enabled
+  in the export version of Mephisto ESB II, as shown in the English manual)
 
 3rd model (later Mephisto II, Mephisto III): (listed differences)
 - PCB label: DH 4005-101 01
@@ -75,8 +77,8 @@ ESB II/6000 chessboard:
 ESB 3000 hardware is probably same as ESB 6000.
 There are no other known external port peripherals.
 
-The Brikett (sans PCB) was also used in the 1983 Mephisto Excalibur, but the
-hardware is completely different, based on a 68000.
+The Brikett (sans main PCB) was also used in the 1983 Mephisto Excalibur, but
+the hardware is completely different, based on a 68000 (see excalibur.cpp).
 
 BTANB:
 - bad bug in mephistoj opening library: e4 e6 / d4 d5 / Nd2 c5 / exd5 Qd1xd5,
@@ -86,7 +88,7 @@ BTANB:
 
 #include "emu.h"
 
-#include "mmdisplay1.h"
+#include "mdisplay1.h"
 
 #include "cpu/cosmac/cosmac.h"
 #include "machine/cdp1852.h"
@@ -129,12 +131,12 @@ public:
 	void mephistoj(machine_config &config);
 	void mephisto2(machine_config &config);
 	void mephistoe2(machine_config &config);
-	void mephistoe2a(machine_config &config);
+	void mephistoe2o(machine_config &config);
 	void mephisto3(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override { m_reset = true; }
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD { m_reset = true; }
 
 private:
 	// devices/pointers
@@ -154,14 +156,14 @@ private:
 	u8 m_esb_select = 0;
 
 	// address maps
-	void mephisto_map(address_map &map);
-	void mephistoj_map(address_map &map);
-	void mephisto2_map(address_map &map);
-	void mephistoe2_map(address_map &map);
-	void mephistoe2a_map(address_map &map);
-	void mephisto3_map(address_map &map);
-	void mephisto_io(address_map &map);
-	void mephistoj_io(address_map &map);
+	void mephisto_map(address_map &map) ATTR_COLD;
+	void mephistoj_map(address_map &map) ATTR_COLD;
+	void mephisto2_map(address_map &map) ATTR_COLD;
+	void mephistoe2_map(address_map &map) ATTR_COLD;
+	void mephistoe2o_map(address_map &map) ATTR_COLD;
+	void mephisto3_map(address_map &map) ATTR_COLD;
+	void mephisto_io(address_map &map) ATTR_COLD;
+	void mephistoj_io(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	int clear_r();
@@ -357,7 +359,7 @@ void brikett_state::mephistoe2_map(address_map &map)
 	map(0x3000, 0x3fff).rom();
 }
 
-void brikett_state::mephistoe2a_map(address_map &map)
+void brikett_state::mephistoe2o_map(address_map &map)
 {
 	mephistoe2_map(map);
 	map(0xbf00, 0xbfff).rw(FUNC(brikett_state::esb2_r), FUNC(brikett_state::esb2_w));
@@ -413,20 +415,32 @@ static INPUT_PORTS_START( mephisto )
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_H) PORT_CODE(KEYCODE_8) PORT_CODE(KEYCODE_8_PAD) PORT_NAME("H / 8")
 
 	PORT_START("IN.4") // 3rd model main PCB has 2 XTALs on PCB
-	PORT_CONFNAME( 0x03, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, brikett_state, change_cpu_freq, 0) PORT_CONDITION("IN.4", 0x0c, EQUALS, 0x08)
+	PORT_CONFNAME( 0x03, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(brikett_state::change_cpu_freq), 0) PORT_CONDITION("IN.4", 0x0c, EQUALS, 0x08)
 	PORT_CONFSETTING(    0x00, "3.579MHz (Battery)" )
 	PORT_CONFSETTING(    0x01, "6.144MHz (Mains)" )
-	PORT_CONFNAME( 0x0c, 0x00, "Base Hardware" ) PORT_CHANGED_MEMBER(DEVICE_SELF, brikett_state, change_cpu_freq, 0)
+	PORT_CONFNAME( 0x0c, 0x00, "Base Hardware" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(brikett_state::change_cpu_freq), 0)
 	PORT_CONFSETTING(    0x00, "1st Model (3.579MHz)" ) // or 2nd model with this XTAL
 	PORT_CONFSETTING(    0x04, "2nd Model (4.194MHz)" )
 	PORT_CONFSETTING(    0x08, "3rd Model (2 XTALs)" )
 
+	PORT_START("PIECE")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_UNUSED)
+
 	PORT_START("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_R) PORT_NAME("RES") PORT_CHANGED_MEMBER(DEVICE_SELF, brikett_state, reset_button, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD ) PORT_CODE(KEYCODE_R) PORT_NAME("RES") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(brikett_state::reset_button), 0)
+INPUT_PORTS_END
+
+static INPUT_PORTS_START( mephisto2 )
+	PORT_INCLUDE( mephisto )
+
+	PORT_MODIFY("PIECE")
+	PORT_CONFNAME( 0x01, 0x00, "Piece Notation" )
+	PORT_CONFSETTING(    0x01, DEF_STR( English ) ) // KQRBNP
+	PORT_CONFSETTING(    0x00, DEF_STR( German ) ) // KDTLSB
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( mephistoj )
-	PORT_INCLUDE( mephisto )
+	PORT_INCLUDE( mephisto2 )
 
 	PORT_MODIFY("IN.4") // 1 XTAL
 	PORT_BIT(0xff, IP_ACTIVE_HIGH, IPT_UNUSED)
@@ -436,7 +450,7 @@ static INPUT_PORTS_START( mephistoj )
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( mephistoe2 )
-	PORT_INCLUDE( mephisto )
+	PORT_INCLUDE( mephisto2 )
 
 	PORT_START("IN.5") // optional
 	PORT_CONFNAME( 0x01, 0x01, "ESB 6000 Board" )
@@ -444,7 +458,7 @@ static INPUT_PORTS_START( mephistoe2 )
 	PORT_CONFSETTING(    0x01, DEF_STR( On ) )
 INPUT_PORTS_END
 
-static INPUT_PORTS_START( mephistoe2a )
+static INPUT_PORTS_START( mephistoe2o )
 	PORT_INCLUDE( mephistoe2 )
 
 	PORT_MODIFY("IN.5") // optional
@@ -471,7 +485,7 @@ static INPUT_PORTS_START( mephisto3 )
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_M) PORT_NAME("MEM")
 
 	PORT_MODIFY("IN.4")
-	PORT_CONFNAME( 0x03, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, brikett_state, change_cpu_freq, 0)
+	PORT_CONFNAME( 0x03, 0x01, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(brikett_state::change_cpu_freq), 0)
 	PORT_CONFSETTING(    0x00, "3.579MHz (Battery)" )
 	PORT_CONFSETTING(    0x01, "6.144MHz (Mains)" )
 	PORT_CONFSETTING(    0x02, "12MHz (Special)" )
@@ -491,7 +505,8 @@ void brikett_state::mephistoj(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &brikett_state::mephistoj_map);
 	m_maincpu->set_addrmap(AS_IO, &brikett_state::mephistoj_io);
 	m_maincpu->clear_cb().set(FUNC(brikett_state::clear_r));
-	m_maincpu->q_cb().set(m_display, FUNC(mephisto_display1_device::strobe_w)).invert();
+	m_maincpu->q_cb().set(m_display, FUNC(mephisto_display1_device::common_w));
+	m_maincpu->ef4_cb().set_ioport("PIECE"); // hardwired
 
 	const attotime irq_period = attotime::from_ticks(0x10000, 4.194304_MHz_XTAL); // through SAJ300T
 	CLOCK(config, m_irq_clock).set_period(irq_period);
@@ -535,12 +550,12 @@ void brikett_state::mephisto2(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &brikett_state::mephisto2_map);
 }
 
-void brikett_state::mephistoe2a(machine_config &config)
+void brikett_state::mephistoe2o(machine_config &config)
 {
 	mephisto2(config);
 
 	// basic machine hardware
-	m_maincpu->set_addrmap(AS_PROGRAM, &brikett_state::mephistoe2a_map);
+	m_maincpu->set_addrmap(AS_PROGRAM, &brikett_state::mephistoe2o_map);
 
 	SENSORBOARD(config, m_board).set_type(sensorboard_device::MAGNETS);
 	m_board->init_cb().set(m_board, FUNC(sensorboard_device::preset_chess));
@@ -552,7 +567,7 @@ void brikett_state::mephistoe2a(machine_config &config)
 
 void brikett_state::mephistoe2(machine_config &config)
 {
-	mephistoe2a(config);
+	mephistoe2o(config);
 
 	// basic machine hardware
 	m_maincpu->set_addrmap(AS_PROGRAM, &brikett_state::mephistoe2_map);
@@ -567,7 +582,6 @@ void brikett_state::mephisto3(machine_config &config)
 	// basic machine hardware
 	m_maincpu->set_clock(6.144_MHz_XTAL);
 	m_maincpu->set_addrmap(AS_PROGRAM, &brikett_state::mephisto3_map);
-	m_maincpu->q_cb().set(m_display, FUNC(mephisto_display1_device::strobe_w));
 
 	config.set_default_layout(layout_mephisto_3);
 }
@@ -578,16 +592,27 @@ void brikett_state::mephisto3(machine_config &config)
     ROM Definitions
 *******************************************************************************/
 
-ROM_START( mephisto ) // module s/n 00226xx (898xx Mask ROMs), 01011xx (911xx Mask ROMs)
+ROM_START( mephisto ) // module s/n 01052xx
 	ROM_REGION( 0x10000, "maincpu", 0 )
-	ROM_LOAD("89810", 0x0000, 0x0400, CRC(6816be9e) SHA1(f5f1d5084925fe239f5b2ecf4724751e0dc4fc51) ) // CDP1833CE, also seen with label 91143
-	ROM_LOAD("89811", 0x0400, 0x0400, CRC(15febc73) SHA1(10353a7f021993f2cf7d509a928425617e1786fb) ) // " or 91144
-	ROM_LOAD("89812", 0x0800, 0x0400, CRC(5e45eb65) SHA1(9d46e5f405bd48705d1e29826917522595fc9768) ) // " or 91145
-	ROM_LOAD("89813", 0x0c00, 0x0400, CRC(62da3d89) SHA1(a7f9ada7037e0bd61420358c147b2f57ee47ebcb) ) // " or 91146
-	ROM_LOAD("89814", 0x1000, 0x0400, CRC(8e212d9c) SHA1(5df221ce8ca4fbb74f34f31738db4c2efee7fb01) ) // " or 91163
-	ROM_LOAD("89815", 0x1400, 0x0400, CRC(072e0b01) SHA1(5b1074932b3f21ab01392250061c093de4af3624) ) // " or 91147
-	// 911xx Mask ROMs have the same contents as 898xx Mask ROMs, some modules have both 898xx and 911xx
+	ROM_LOAD("91143", 0x0000, 0x0400, CRC(6816be9e) SHA1(f5f1d5084925fe239f5b2ecf4724751e0dc4fc51) ) // CDP1833CE
+	ROM_LOAD("91144", 0x0400, 0x0400, CRC(15febc73) SHA1(10353a7f021993f2cf7d509a928425617e1786fb) ) // "
+	ROM_LOAD("91145", 0x0800, 0x0400, CRC(5e45eb65) SHA1(9d46e5f405bd48705d1e29826917522595fc9768) ) // "
+	ROM_LOAD("91146", 0x0c00, 0x0400, CRC(62da3d89) SHA1(a7f9ada7037e0bd61420358c147b2f57ee47ebcb) ) // "
+	ROM_LOAD("91184", 0x1000, 0x0400, CRC(5f0b22c1) SHA1(4027751e4c46f34114948a6868510fb827508a7e) ) // " (newer)
+	ROM_LOAD("91147", 0x1400, 0x0400, CRC(072e0b01) SHA1(5b1074932b3f21ab01392250061c093de4af3624) ) // "
 ROM_END
+
+ROM_START( mephistoa ) // module s/n 00226xx (898xx Mask ROMs), 01011xx (911xx Mask ROMs)
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD("91143", 0x0000, 0x0400, CRC(6816be9e) SHA1(f5f1d5084925fe239f5b2ecf4724751e0dc4fc51) ) // CDP1833CE, also seen with label 89810
+	ROM_LOAD("91144", 0x0400, 0x0400, CRC(15febc73) SHA1(10353a7f021993f2cf7d509a928425617e1786fb) ) // " or 89811
+	ROM_LOAD("91145", 0x0800, 0x0400, CRC(5e45eb65) SHA1(9d46e5f405bd48705d1e29826917522595fc9768) ) // " or 89812
+	ROM_LOAD("91146", 0x0c00, 0x0400, CRC(62da3d89) SHA1(a7f9ada7037e0bd61420358c147b2f57ee47ebcb) ) // " or 89813
+	ROM_LOAD("91163", 0x1000, 0x0400, CRC(8e212d9c) SHA1(5df221ce8ca4fbb74f34f31738db4c2efee7fb01) ) // " or 89814
+	ROM_LOAD("91147", 0x1400, 0x0400, CRC(072e0b01) SHA1(5b1074932b3f21ab01392250061c093de4af3624) ) // " or 89815
+	// 898xx Mask ROMs have the same contents as 911xx Mask ROMs, some modules have both 898xx and 911xx
+ROM_END
+
 
 ROM_START( mephisto1x )
 	ROM_REGION( 0x10000, "maincpu", 0 )
@@ -605,9 +630,9 @@ ROM_END
 ROM_START( mephisto2 ) // module s/n 01142xx (HN462532G EPROMs), 00476xx (TC5334P Mask ROMs)
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD("4005_02_351_02.1", 0x0000, 0x1000, CRC(5b13d7bf) SHA1(e1b7dee278a03f75e8a1554715fca4c7fbbc1cb8) ) // HN462532G
-	ROM_LOAD("4005_02_351_02.2", 0x1000, 0x1000, CRC(e93bf521) SHA1(42f9adce0d5e25b1b9d10217f8e3e0994d7b70d5) ) // "
-	ROM_LOAD("4005_02_351_02.3", 0x2000, 0x1000, CRC(430dac62) SHA1(a0e23fcb4cfa27778a9398bd4994a7792e4541d0) ) // "
-	// TC5334P Mask ROM contents is the same (labels 5619 03 351, 5620 03 351, 5621 03 351)
+	ROM_LOAD("4005_02_352_02.2", 0x1000, 0x1000, CRC(e93bf521) SHA1(42f9adce0d5e25b1b9d10217f8e3e0994d7b70d5) ) // "
+	ROM_LOAD("4005_02_353_02.3", 0x2000, 0x1000, CRC(430dac62) SHA1(a0e23fcb4cfa27778a9398bd4994a7792e4541d0) ) // "
+	// TC5334P Mask ROM contents is the same (labels 5619 03 351, 5620 03 352, 5621 03 353)
 ROM_END
 
 ROM_START( mephisto2a ) // module s/n 01085xx
@@ -633,7 +658,15 @@ ROM_START( mephistoe2 ) // module s/n (0)0111xx
 	ROM_LOAD("254-09.4", 0x3000, 0x1000, CRC(d6be47a6) SHA1(3d577036111c026292b6c445efcb126cf7a6a472) ) // "
 ROM_END
 
-ROM_START( mephistoe2a ) // module s/n 00065xx
+ROM_START( mephistoe2a ) // module s/n 00081xx
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD("4005_02_251_06.1", 0x0000, 0x1000, CRC(5578b0d8) SHA1(3190780f9776ebd765f13d4d5601dec4e10b7706) ) // HN462532G
+	ROM_LOAD("4005_02_252_06.2", 0x1000, 0x1000, CRC(be951673) SHA1(bef785f21765b9e357314c8e4417876f86512888) ) // "
+	ROM_LOAD("4005_02_253_06.3", 0x2000, 0x1000, CRC(98a2143e) SHA1(9505e09bbb66b1218895ed20d84468ac7f043ef5) ) // "
+	ROM_LOAD("4005_02_254_06.4", 0x3000, 0x1000, CRC(77e06382) SHA1(6d2d8c8c0c0892eace3c296785c3d00d125a50de) ) // "
+ROM_END
+
+ROM_START( mephistoe2o ) // module s/n 00065xx
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD("5000_00_251_01.1", 0x0000, 0x1000, CRC(cebf66be) SHA1(7793ba80159a8ae857a1b35d270bb6972fef0563) ) // HN462532G
 	ROM_LOAD("5000_00_252_01.2", 0x1000, 0x1000, CRC(66f38992) SHA1(2f9007985ce350a8ee82797a66f37bb9a4de36a4) ) // "
@@ -659,7 +692,13 @@ ROM_START( mephisto3b ) // module s/n 00737xx
 	ROM_LOAD("207", 0x4000, 0x4000, CRC(9b45c350) SHA1(96a11f740c657a915a9ce3fa417a59f4e064a10b) ) // "
 ROM_END
 
-ROM_START( mephisto3c ) // module s/n 00711xx
+ROM_START( mephisto3c ) // module s/n 04001xx
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD("103", 0x0000, 0x4000, CRC(c9fc143a) SHA1(5f3268d9c8c0c0b8fac3e687c30a4871663fbd4f) ) // DQ5143-250 27128-25
+	ROM_LOAD("203", 0x4000, 0x4000, CRC(d565d4b2) SHA1(561584e5ef1db9e9aee67d3c1c1267d210fb7859) ) // "
+ROM_END
+
+ROM_START( mephisto3d ) // module s/n 00711xx
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD("101", 0x0000, 0x4000, CRC(923de04f) SHA1(ca7cb3e29aeb3432a815c9d58bb0ed45e7302581) ) // HN4827128G-45 or D27128-4
 	ROM_LOAD("201", 0x4000, 0x4000, CRC(0c3cb8fa) SHA1(31449422142c19fc71474a057fc5d6af8a86be7d) ) // "
@@ -674,19 +713,22 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME         PARENT      COMPAT  MACHINE      INPUT        STATE          INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1980, mephisto,    0,          0,      mephisto,    mephisto,    brikett_state, empty_init, "Hegener + Glaser", "Mephisto", MACHINE_SUPPORTS_SAVE )
+SYST( 1980, mephisto,    0,          0,      mephisto,    mephisto,    brikett_state, empty_init, "Hegener + Glaser", "Mephisto (set 1)", MACHINE_SUPPORTS_SAVE )
+SYST( 1980, mephistoa,   mephisto,   0,      mephisto,    mephisto,    brikett_state, empty_init, "Hegener + Glaser", "Mephisto (set 2)", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1981, mephisto1x,  0,          0,      mephisto2,   mephisto,    brikett_state, empty_init, "Hegener + Glaser", "Mephisto 1X", MACHINE_SUPPORTS_SAVE )
+SYST( 1981, mephisto1x,  0,          0,      mephisto2,   mephisto2,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto 1X", MACHINE_SUPPORTS_SAVE ) // France
 SYST( 1982, mephistoj,   0,          0,      mephistoj,   mephistoj,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto Junior (1982 version)", MACHINE_SUPPORTS_SAVE ) // there's also a "Mephisto Junior" from 1990
 
-SYST( 1981, mephisto2,   0,          0,      mephisto2,   mephisto,    brikett_state, empty_init, "Hegener + Glaser", "Mephisto II (set 1)", MACHINE_SUPPORTS_SAVE )
-SYST( 1981, mephisto2a,  mephisto2,  0,      mephisto2,   mephisto,    brikett_state, empty_init, "Hegener + Glaser", "Mephisto II (set 2)", MACHINE_SUPPORTS_SAVE )
-SYST( 1981, mephisto2b,  mephisto2,  0,      mephisto2,   mephisto,    brikett_state, empty_init, "Hegener + Glaser", "Mephisto II (set 3)", MACHINE_SUPPORTS_SAVE )
+SYST( 1981, mephisto2,   0,          0,      mephisto2,   mephisto2,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto II (set 1)", MACHINE_SUPPORTS_SAVE )
+SYST( 1981, mephisto2a,  mephisto2,  0,      mephisto2,   mephisto2,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto II (set 2)", MACHINE_SUPPORTS_SAVE )
+SYST( 1981, mephisto2b,  mephisto2,  0,      mephisto2,   mephisto2,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto II (set 3)", MACHINE_SUPPORTS_SAVE )
 
-SYST( 1981, mephistoe2,  0,          0,      mephistoe2,  mephistoe2,  brikett_state, empty_init, "Hegener + Glaser", "Mephisto ESB II (ESB 6000 board)", MACHINE_SUPPORTS_SAVE )
-SYST( 1981, mephistoe2a, mephistoe2, 0,      mephistoe2a, mephistoe2a, brikett_state, empty_init, "Hegener + Glaser", "Mephisto ESB II (ESB II board)", MACHINE_SUPPORTS_SAVE )
+SYST( 1981, mephistoe2,  0,          0,      mephistoe2,  mephistoe2,  brikett_state, empty_init, "Hegener + Glaser", "Mephisto ESB II (ESB 6000 board, set 1)", MACHINE_SUPPORTS_SAVE )
+SYST( 1981, mephistoe2a, mephistoe2, 0,      mephistoe2,  mephistoe2,  brikett_state, empty_init, "Hegener + Glaser", "Mephisto ESB II (ESB 6000 board, set 2)", MACHINE_SUPPORTS_SAVE )
+SYST( 1981, mephistoe2o, mephistoe2, 0,      mephistoe2o, mephistoe2o, brikett_state, empty_init, "Hegener + Glaser", "Mephisto ESB II (ESB II board)", MACHINE_SUPPORTS_SAVE )
 
 SYST( 1983, mephisto3,   0,          0,      mephisto3,   mephisto3,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto III (set 1)", MACHINE_SUPPORTS_SAVE )
 SYST( 1983, mephisto3a,  mephisto3,  0,      mephisto3,   mephisto3,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto III (set 2)", MACHINE_SUPPORTS_SAVE )
 SYST( 1983, mephisto3b,  mephisto3,  0,      mephisto3,   mephisto3,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto III (set 3)", MACHINE_SUPPORTS_SAVE )
 SYST( 1983, mephisto3c,  mephisto3,  0,      mephisto3,   mephisto3,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto III (set 4)", MACHINE_SUPPORTS_SAVE )
+SYST( 1983, mephisto3d,  mephisto3,  0,      mephisto3,   mephisto3,   brikett_state, empty_init, "Hegener + Glaser", "Mephisto III (set 5)", MACHINE_SUPPORTS_SAVE )

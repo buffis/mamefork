@@ -84,12 +84,14 @@ public:
 		, m_outbit(*this, "outbit%u", 0U)
 	{ }
 
-	void rf_3115_base(machine_config &config);
-	void ajofrin(machine_config &config);
-	void babyfrts(machine_config &config);
+	void ajofrin(machine_config &config) ATTR_COLD;
+	void babyfrts(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
+
+	void rf_3115_base(machine_config &config) ATTR_COLD;
+
 	memory_share_creator<uint8_t> m_data_ram;
 
 	required_device<i8035_device> m_maincpu;
@@ -104,11 +106,11 @@ protected:
 	output_finder<50> m_outbit;
 
 private:
-	void main_program_map(address_map &map);
-	void main_io_map(address_map &map);
-	void soundaj_program_map(address_map &map);
-	void soundbf_program_map(address_map &map);
-	void sound_io_map(address_map &map);
+	void main_program_map(address_map &map) ATTR_COLD;
+	void main_io_map(address_map &map) ATTR_COLD;
+	void soundaj_program_map(address_map &map) ATTR_COLD;
+	void soundbf_program_map(address_map &map) ATTR_COLD;
+	void sound_io_map(address_map &map) ATTR_COLD;
 
 	// Main MCU Interface
 	u8 main_io_r(offs_t offset);
@@ -162,7 +164,7 @@ private:
 
 void rfslotsmcs48_state::machine_start()
 {
-	m_outbit.resolve();
+	// TODO: savestates
 }
 
 
@@ -553,7 +555,7 @@ void rfslotsmcs48_state::hopper_decode()
 
 */
 	u8 res = 0xff;
-	if(!BIT(m_hdecode, 0) & (!BIT(m_hdecode, 1)))  // g1&g2=0
+	if(!BIT(m_hdecode, 0, 2))  // active low
 	{
 		u8 a, b, c, d;
 		d = BIT(m_maincpu->p1_r(), 6);
@@ -597,7 +599,7 @@ static INPUT_PORTS_START(babyfrts)
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_UNKNOWN )  // ctrl 4 (display) ?  /   :
 
 	PORT_START("IN2")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_CUSTOM )  PORT_READ_LINE_DEVICE_MEMBER("hopper", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_CUSTOM )  PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN1)    PORT_NAME("Coin In")  PORT_IMPULSE(5)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_UNKNOWN )

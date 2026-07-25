@@ -372,19 +372,19 @@ private:
 	void text_videoram_w(offs_t offset, uint32_t data, uint32_t mem_mask = ~0);
 	template <unsigned Which> TILE_GET_INFO_MEMBER(get_scr_tile_info);
 	TILE_GET_INFO_MEMBER(get_text_tile_info);
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	void screen_vblank(int state);
 	void draw_sprites(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	void draw_layer(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect, int layer, int line, int pri);
 	void irqhandler(int state);
 
-	void es5506_bank1_map(address_map &map);
-	void es5506_bank3_map(address_map &map);
-	void main_map(address_map &map);
-	void sound_map(address_map &map);
+	void es5506_bank1_map(address_map &map) ATTR_COLD;
+	void es5506_bank3_map(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -1016,8 +1016,7 @@ void macrossp_state::macrossp(machine_config &config)
 	PALETTE(config, m_palette).set_format(palette_device::RGBx_888, 4096);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	GENERIC_LATCH_16(config, m_soundlatch);
 
@@ -1026,8 +1025,8 @@ void macrossp_state::macrossp(machine_config &config)
 	ensoniq.set_addrmap(1, &macrossp_state::es5506_bank1_map);
 	ensoniq.set_channels(1);
 	ensoniq.irq_cb().set(FUNC(macrossp_state::irqhandler));
-	ensoniq.add_route(0, "lspeaker", 0.1);
-	ensoniq.add_route(1, "rspeaker", 0.1);
+	ensoniq.add_route(0, "speaker", 1.6, 0);
+	ensoniq.add_route(1, "speaker", 1.6, 1);
 }
 
 void macrossp_state::quizmoon(machine_config &config)

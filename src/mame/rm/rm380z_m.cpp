@@ -31,11 +31,17 @@ void rm380z_state::port_write(offs_t offset, uint8_t data)
 	switch (offset)
 	{
 	case 0xfc:      // PORT0
-		if ((data & 0x01) && !(m_port0 & 0x01))
+		if (!BIT(data, 0))
 		{
-			// only clear keyboard latch if bit has changed value
+			// clear keyboard latch (active low)
 			m_port0_kbd = 0;
 			m_port1 &= ~0x01;
+		}
+
+		if (BIT(data, 1))
+		{
+			// NMIEN is active low (reset counter when high)
+			m_nmi_counter = 0;
 		}
 
 		m_port0 = data;
@@ -295,6 +301,17 @@ void rm380z_state::rm380z_porthi_w(offs_t offset, uint8_t data)
 	//logerror("port write [%x] [%x]\n",offset+0xc5,data);
 }
 
+void rm380z_state::z80_m1_w(uint8_t data)
+{
+	if (!BIT(m_port0, 1))
+	{
+		// increment counter when NMIEN is active (low)
+		m_nmi_counter++;
+		// trigger NMI after the 8th instruction to service front panel "single-step" debugging command
+		m_maincpu->set_input_line(INPUT_LINE_NMI, (m_nmi_counter == 8) ? ASSERT_LINE : CLEAR_LINE);
+	}
+}
+
 void rm380z_state::keyboard_put(u8 data)
 {
 	if (data)
@@ -337,6 +354,7 @@ void rm380z_state::machine_reset()
 	m_port0_kbd = 0x00;
 	m_port1 = 0x00;
 	m_fbfe = 0x00;
+	m_nmi_counter = 0;
 
 	config_memory_map();
 	m_fdc->reset();
@@ -371,15 +389,11 @@ void rm380z_state_cos40_hrg::machine_reset()
 	memset(m_hrg_scratchpad, 0, sizeof(m_hrg_scratchpad));
 }
 
-void rm480z_state::machine_reset()
-{
-}
-
 void rm380z_state::config_memory_map()
 {
 	address_space &program = m_maincpu->space(AS_PROGRAM);
 	uint8_t *rom = memregion(RM380Z_MAINCPU_TAG)->base();
-	uint8_t* m_ram_p = m_messram->pointer();
+	uint8_t *m_ram_p = m_messram->pointer();
 
 	if (ports_enabled_high())
 	{

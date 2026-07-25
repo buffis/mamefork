@@ -70,8 +70,8 @@ The Gambit hardware notes:
 - PCB label: 510-1115A01
 - rest is same as The Classic (model 6079)
 
-The Gambit either has a black/white button panel color theme, or black/red/white,
-which was more commonly seen on newer versions and Gambit Voice.
+The Gambit either has a black/white button panel color theme, or black/red/white.
+The latter was more commonly seen on newer versions and Gambit Voice.
 
 Designer 1500 hardware notes:
 - PCB label: 510.1131A01
@@ -139,8 +139,8 @@ public:
 	void gambitv(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -157,8 +157,8 @@ private:
 	u8 m_speech_data = 0;
 
 	// address maps
-	void msc_map(address_map &map);
-	void sc6_map(address_map &map);
+	void msc_map(address_map &map) ATTR_COLD;
+	void sc6_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void mux_w(u8 data);

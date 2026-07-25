@@ -79,7 +79,7 @@ class rc2014_bus_device : public device_t
 {
 public:
 	// construction/destruction
-	rc2014_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	rc2014_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 	virtual ~rc2014_bus_device();
 
 	void clk_w(int state);
@@ -103,8 +103,8 @@ protected:
 	rc2014_bus_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	using card_vector = std::vector<std::reference_wrapper<device_rc2014_card_interface> >;
@@ -153,18 +153,15 @@ public:
 		: rc2014_slot_device(mconfig, tag, owner, DERIVED_CLOCK(1,1))
 	{
 		m_bus.set_tag(std::forward<T>(bus_tag));
-		option_reset();
-		slot_options(*this);
-		set_default_option(default_option);
-		set_fixed(fixed);
+		set_options(std::forward<U>(slot_options), default_option, fixed);
 	}
 
 protected:
 	rc2014_slot_device(machine_config const &mconfig, device_type type, char const *tag, device_t *owner, u32 clock);
 
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_resolve_objects() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_resolve_objects() override ATTR_COLD;
 
 	required_device<rc2014_bus_device> m_bus;
 };
@@ -180,7 +177,7 @@ class rc2014_ext_bus_device : public rc2014_bus_device
 {
 public:
 	// construction/destruction
-	rc2014_ext_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	rc2014_ext_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void clk2_w(int state);
 	void page_w(int state);
@@ -239,18 +236,15 @@ public:
 		: rc2014_ext_slot_device(mconfig, tag, owner, DERIVED_CLOCK(1,1))
 	{
 		m_bus.set_tag(std::forward<T>(bus_tag));
-		option_reset();
-		slot_options(*this);
-		set_default_option(default_option);
-		set_fixed(fixed);
+		set_options(std::forward<U>(slot_options), default_option, fixed);
 	}
 
 protected:
 	rc2014_ext_slot_device(machine_config const &mconfig, device_type type, char const *tag, device_t *owner, u32 clock);
 
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_resolve_objects() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_resolve_objects() override ATTR_COLD;
 };
 
 //**************************************************************************
@@ -264,7 +258,7 @@ class rc2014_rc80_bus_device : public rc2014_ext_bus_device
 {
 public:
 	// construction/destruction
-	rc2014_rc80_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	rc2014_rc80_bus_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void add_card(device_rc2014_rc80_card_interface &card);
 
@@ -272,7 +266,7 @@ protected:
 	rc2014_rc80_bus_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 private:
 	using card_vector = std::vector<std::reference_wrapper<device_rc2014_rc80_card_interface> >;
@@ -304,16 +298,13 @@ public:
 		: rc2014_rc80_slot_device(mconfig, tag, owner, DERIVED_CLOCK(1,1))
 	{
 		m_bus.set_tag(std::forward<T>(bus_tag));
-		option_reset();
-		slot_options(*this);
-		set_default_option(default_option);
-		set_fixed(fixed);
+		set_options(std::forward<U>(slot_options), default_option, fixed);
 	}
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_resolve_objects() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_resolve_objects() override ATTR_COLD;
 };
 
 

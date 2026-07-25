@@ -764,7 +764,7 @@ static INPUT_PORTS_START( gsword )
 	PORT_DIPSETTING(    0x18, DEF_STR( 1C_2C ) )
 	PORT_DIPSETTING(    0x14, DEF_STR( 1C_4C ) )
 	PORT_DIPSETTING(    0x10, DEF_STR( 1C_5C ) )
-	PORT_DIPSETTING(    0x0c, "1 Coin/10 Credits" )
+	PORT_DIPSETTING(    0x0c, DEF_STR( 1C_10C ) )
 	// FIXME: these three DIP switches are physically present, but may not be connected to anything - turning them on seems to cause problems
 	PORT_DIPNAME( 0x20, 0x20, DEF_STR( Unknown ) )          PORT_DIPLOCATION("A:6")
 	PORT_DIPSETTING(    0x20, DEF_STR( Off ) )
@@ -1230,6 +1230,6 @@ ROM_START( josvolly )
 ROM_END
 
 
-GAME( 1983, josvolly, 0,      josvolly, josvolly, josvolly_state, empty_init,   ROT90, "Allumer / Taito Corporation", "Joshi Volleyball",         MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION | MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-GAME( 1984, gsword,   0,      gsword,   gsword,   gsword_state,   init_gsword,  ROT0,  "Allumer / Taito Corporation", "Great Swordsman (World?)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-GAME( 1984, gsword2,  gsword, gsword,   gsword,   gsword_state,   init_gsword2, ROT0,  "Allumer / Taito Corporation", "Great Swordsman (Japan?)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1983, josvolly, 0,      josvolly, josvolly, josvolly_state, empty_init,   ROT90, "Allumer / Taito", "Joshi Volleyball",         MACHINE_NOT_WORKING | MACHINE_UNEMULATED_PROTECTION | MACHINE_IMPERFECT_GRAPHICS | MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1984, gsword,   0,      gsword,   gsword,   gsword_state,   init_gsword,  ROT0,  "Allumer / Taito", "Great Swordsman (World?)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1984, gsword2,  gsword, gsword,   gsword,   gsword_state,   init_gsword2, ROT0,  "Allumer / Taito", "Great Swordsman (Japan?)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )

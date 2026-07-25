@@ -16,8 +16,10 @@
    - pocketrc locks up if you try to exit testmode (note: it is not related to
      unimplemented C76 internal watchdog timer or software reset)
      Update: now it always locks up in test mode, regression?
+
+  Notes:
    - pocketrc long samples and drum loops go out of sync, it sounds better when
-     the C352 is underclocked to match the one in namcos22. It's possibly a BTANB,
+     the C352 is underclocked to match the one in namcos22. It's a BTANB, however,
      since current C352 frequency is the same as Tekken/Tekken 2 real PCB.
 
 Known Dumps
@@ -450,13 +452,16 @@ It is highly likely Namco's game uses the same sensors and mechanics.
 #include "screen.h"
 #include "speaker.h"
 
-#include <cstdarg>
+#define LOG_LIMITED ( 1U << 1 )
+#define LOG_MORE    ( 1U << 2 )
+
+#define VERBOSE     ( 0 )
+#include "logmacro.h"
 
 
 namespace {
 
-#define C76_SPEEDUP   ( 1 ) /* sound cpu idle skipping */
-#define VERBOSE_LEVEL ( 0 )
+#define C76_SPEEDUP ( 1 ) // sound CPU idle skipping
 
 class namcos11_state : public driver_device
 {
@@ -474,21 +479,21 @@ public:
 	{
 	}
 
-	void coh110(machine_config &config);
-	void coh100(machine_config &config);
-	void myangel3(machine_config &config);
-	void xevi3dg(machine_config &config);
-	void dunkmnia(machine_config &config);
-	void pocketrc(machine_config &config);
-	void ptblank2ua(machine_config &config);
-	void tekken2o(machine_config &config);
-	void danceyes(machine_config &config);
-	void starswep(machine_config &config);
-	void primglex(machine_config &config);
-	void souledge(machine_config &config);
-	void tekken(machine_config &config);
-	void tekken2(machine_config &config);
-	void fambowl(machine_config &config);
+	void coh110(machine_config &config) ATTR_COLD;
+	void coh100(machine_config &config) ATTR_COLD;
+	void myangel3(machine_config &config) ATTR_COLD;
+	void xevi3dg(machine_config &config) ATTR_COLD;
+	void dunkmnia(machine_config &config) ATTR_COLD;
+	void pocketrc(machine_config &config) ATTR_COLD;
+	void ptblank2ua(machine_config &config) ATTR_COLD;
+	void tekken2o(machine_config &config) ATTR_COLD;
+	void danceyes(machine_config &config) ATTR_COLD;
+	void starswep(machine_config &config) ATTR_COLD;
+	void primglex(machine_config &config) ATTR_COLD;
+	void souledge(machine_config &config) ATTR_COLD;
+	void tekken(machine_config &config) ATTR_COLD;
+	void tekken2(machine_config &config) ATTR_COLD;
+	void fambowl(machine_config &config) ATTR_COLD;
 
 private:
 	void rom8_w(offs_t offset, uint16_t data);
@@ -503,11 +508,11 @@ private:
 	TIMER_DEVICE_CALLBACK_MEMBER(mcu_irq0_cb);
 	TIMER_DEVICE_CALLBACK_MEMBER(mcu_irq2_cb);
 
-	void c76_map(address_map &map);
-	void namcos11_map(address_map &map);
-	void ptblank2ua_map(address_map &map);
-	void rom8_64_map(address_map &map);
-	void rom8_map(address_map &map);
+	void c76_map(address_map &map) ATTR_COLD;
+	void namcos11_map(address_map &map) ATTR_COLD;
+	void ptblank2ua_map(address_map &map) ATTR_COLD;
+	void rom8_64_map(address_map &map) ATTR_COLD;
+	void rom8_map(address_map &map) ATTR_COLD;
 
 	virtual void driver_start() override;
 
@@ -523,22 +528,7 @@ private:
 
 	uint32_t m_n_bankoffset;
 	uint8_t m_su_83;
-
-	inline void ATTR_PRINTF(3,4) verboselog( int n_level, const char *s_fmt, ... );
 };
-
-inline void ATTR_PRINTF(3,4) namcos11_state::verboselog( int n_level, const char *s_fmt, ... )
-{
-	if( VERBOSE_LEVEL >= n_level )
-	{
-		va_list v;
-		char buf[ 32768 ];
-		va_start( v, s_fmt );
-		vsprintf( buf, s_fmt, v );
-		va_end( v );
-		logerror( "%s: %s", machine().describe_context(), buf );
-	}
-}
 
 void namcos11_state::rom8_w(offs_t offset, uint16_t data)
 {
@@ -547,14 +537,14 @@ void namcos11_state::rom8_w(offs_t offset, uint16_t data)
 
 void namcos11_state::rom8_64_upper_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 {
-	verboselog(2, "rom8_64_upper_w( %08x, %08x, %08x )\n", offset, data, mem_mask );
+	LOGMASKED(LOG_MORE, "rom8_64_upper_w( %08x, %08x, %08x )\n", offset, data, mem_mask);
 
 	m_n_bankoffset = offset * 16;
 }
 
 void namcos11_state::rom8_64_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 {
-	verboselog(2, "rom8_64_w( %08x, %08x, %08x )\n", offset, data, mem_mask );
+	LOGMASKED(LOG_MORE, "rom8_64_w( %08x, %08x, %08x )\n", offset, data, mem_mask);
 
 	// TODO: verify behaviour
 	m_bank[ offset ]->set_entry( ( ( ( ( data & 0xc0 ) >> 3 ) + ( data & 0x07 ) ) ^ m_n_bankoffset ) );
@@ -570,11 +560,11 @@ void namcos11_state::lightgun_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 		m_recoil[0] = BIT(~data, 1);
 		m_recoil[1] = BIT(~data, 0);
 
-		verboselog(1, "lightgun_w: outputs (%08x %08x)\n", data, mem_mask );
+		LOGMASKED(LOG_LIMITED, "lightgun_w: outputs (%08x %08x)\n", data, mem_mask);
 		break;
 
 	case 1:
-		verboselog(2, "lightgun_w: start reading (%08x %08x)\n", data, mem_mask );
+		LOGMASKED(LOG_MORE, "lightgun_w: start reading (%08x %08x)\n", data, mem_mask);
 		break;
 	}
 }
@@ -609,7 +599,7 @@ uint16_t namcos11_state::lightgun_r(offs_t offset, uint16_t mem_mask)
 		data = m_lightgun_io[3]->read() + 1;
 		break;
 	}
-	verboselog(2, "lightgun_r( %08x, %08x ) %08x\n", offset, mem_mask, data );
+	LOGMASKED(LOG_MORE, "lightgun_r( %08x, %08x ) %08x\n", offset, mem_mask, data);
 	return data;
 }
 
@@ -707,9 +697,6 @@ void namcos11_state::c76_speedup_w(offs_t offset, uint16_t data, uint16_t mem_ma
 
 void namcos11_state::driver_start()
 {
-	m_led.resolve();
-	m_recoil.resolve();
-
 	// C76 idle skipping, large speedboost
 	if (C76_SPEEDUP)
 	{
@@ -775,16 +762,15 @@ void namcos11_state::coh110(machine_config &config)
 
 	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	c352_device &c352(C352(config, "c352", 25401600, 288));
-	c352.add_route(0, "lspeaker", 1.00);
-	c352.add_route(1, "rspeaker", 1.00);
-	//c352.add_route(2, "lspeaker", 1.00); // Second DAC not present.
-	//c352.add_route(3, "rspeaker", 1.00);
+	c352.add_route(0, "speaker", 1.00, 0);
+	c352.add_route(1, "speaker", 1.00, 1);
+	//c352.add_route(2, "speaker", 1.00); // Second DAC not present.
+	//c352.add_route(3, "speaker", 1.00);
 
-	AT28C16(config, "at28c16", 0);
+	AT28C16(config, "at28c16");
 }
 
 void namcos11_state::coh100(machine_config &config)
@@ -802,90 +788,90 @@ void namcos11_state::tekken(machine_config &config)
 	coh100(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
 	// TODO: either allow optional devices in memory maps, add another memory map without keycus or add a dummy keycus for tekken
-	KEYCUS_C406(config, "keycus", 0);
+	KEYCUS_C406(config, "keycus");
 }
 
 void namcos11_state::tekken2o(machine_config &config)
 {
 	coh100(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C406(config, "keycus", 0);
+	KEYCUS_C406(config, "keycus");
 }
 
 void namcos11_state::tekken2(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C406(config, "keycus", 0);
+	KEYCUS_C406(config, "keycus");
 }
 
 void namcos11_state::souledge(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C409(config, "keycus", 0);
+	KEYCUS_C409(config, "keycus");
 }
 
 void namcos11_state::dunkmnia(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C410(config, "keycus", 0);
+	KEYCUS_C410(config, "keycus");
 }
 
 void namcos11_state::primglex(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C411(config, "keycus", 0);
+	KEYCUS_C411(config, "keycus");
 }
 
 void namcos11_state::xevi3dg(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C430(config, "keycus", 0);
+	KEYCUS_C430(config, "keycus");
 }
 
 void namcos11_state::danceyes(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C431(config, "keycus", 0);
+	KEYCUS_C431(config, "keycus");
 }
 
 void namcos11_state::pocketrc(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C432(config, "keycus", 0);
+	KEYCUS_C432(config, "keycus");
 }
 
 void namcos11_state::fambowl(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_map);
-	KEYCUS_C432(config, "keycus", 0);   // no keycus is actually present, but the driver isn't ready for that
+	KEYCUS_C432(config, "keycus");   // no keycus is actually present, but the driver isn't ready for that
 }
 
 void namcos11_state::starswep(machine_config &config)
 {
 	coh110(config);
-	KEYCUS_C442(config, "keycus", 0);
+	KEYCUS_C442(config, "keycus");
 }
 
 void namcos11_state::myangel3(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::rom8_64_map);
-	KEYCUS_C443(config, "keycus", 0);
+	KEYCUS_C443(config, "keycus");
 }
 
 void namcos11_state::ptblank2ua(machine_config &config)
 {
 	coh110(config);
 	m_maincpu->set_addrmap(AS_PROGRAM, &namcos11_state::ptblank2ua_map);
-	KEYCUS_C443(config, "keycus", 0);
+	KEYCUS_C443(config, "keycus");
 }
 
 static INPUT_PORTS_START( namcos11 )

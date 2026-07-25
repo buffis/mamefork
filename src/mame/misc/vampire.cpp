@@ -254,7 +254,7 @@ public:
 	void init_vampire();
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -287,8 +287,8 @@ private:
 	void blitter_w(offs_t offset, u8 data);
 	void blit_trigger(offs_t offset);
 
-	void vampire_memory(address_map &map);
-	void vampire_audio(address_map &map);
+	void vampire_memory(address_map &map) ATTR_COLD;
+	void vampire_audio(address_map &map) ATTR_COLD;
 
 	void pit_out_w0(int state);
 	void pit_out_w1(int state);
@@ -612,7 +612,7 @@ void vampire_state::vampire(machine_config &config)
 	MC6809(config, m_maincpu, 8_MHz_XTAL); // HD68B09P
 	m_maincpu->set_addrmap(AS_PROGRAM, &vampire_state::vampire_memory);
 
-	pit8253_device &pit(PIT8253(config, "pit", 0));
+	pit8253_device &pit(PIT8253(config, "pit"));
 	pit.set_clk<0>(4_MHz_XTAL/2);
 	pit.set_clk<1>(4_MHz_XTAL/2);
 	pit.set_clk<2>(4_MHz_XTAL/2);

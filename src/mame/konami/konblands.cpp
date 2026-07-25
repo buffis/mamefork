@@ -58,14 +58,14 @@ private:
 	INTERRUPT_GEN_MEMBER(timer_irq);
 	void ld_command_strobe_cb(int state);
 
-	void konblands_map(address_map &map);
-	void konblandsh_map(address_map &map);
+	void konblands_map(address_map &map) ATTR_COLD;
+	void konblandsh_map(address_map &map) ATTR_COLD;
 
 	// driver_device overrides
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 	// devices
 	required_device<cpu_device> m_maincpu;
@@ -271,7 +271,7 @@ void konblands_state::konblands(machine_config &config)
 	m_maincpu->set_periodic_int(FUNC(konblands_state::timer_irq), attotime::from_hz(8)); // 8 times per frame
 
 	/* video hardware */
-	PIONEER_LDV1000(config, m_laserdisc, 0);
+	PIONEER_LDV1000(config, m_laserdisc);
 	m_laserdisc->command_strobe_callback().set(FUNC(konblands_state::ld_command_strobe_cb));
 	// TODO: might be different
 	m_laserdisc->set_overlay(512, 256, FUNC(konblands_state::screen_update));

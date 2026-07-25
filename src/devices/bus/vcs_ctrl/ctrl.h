@@ -9,8 +9,8 @@
 
 **********************************************************************/
 
-#ifndef MAME_BUS_CVS_CTRL_CTRL_H
-#define MAME_BUS_CVS_CTRL_CTRL_H
+#ifndef MAME_BUS_VCS_CTRL_CTRL_H
+#define MAME_BUS_VCS_CTRL_CTRL_H
 
 #pragma once
 
@@ -58,10 +58,7 @@ public:
 	vcs_control_port_device(const machine_config &mconfig, const char *tag, device_t *owner, T &&opts, char const* dflt)
 		: vcs_control_port_device(mconfig, tag, owner)
 	{
-		option_reset();
-		opts(*this);
-		set_default_option(dflt);
-		set_fixed(false);
+		set_options(std::forward<T>(opts), dflt, false);
 	}
 	vcs_control_port_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
@@ -94,8 +91,8 @@ public:
 	void trigger_w(int state) { m_write_trigger(state); }
 
 protected:
-	// device-level overrides
-	virtual void device_start() override;
+	// device_t implementation
+	virtual void device_start() override ATTR_COLD;
 
 	device_vcs_control_port_interface *m_device;
 
@@ -109,10 +106,10 @@ inline void device_vcs_control_port_interface::trigger_w(int state)
 }
 
 
-// device type definition
+// device type declaration
 DECLARE_DEVICE_TYPE(VCS_CONTROL_PORT, vcs_control_port_device)
 
 void vcs_control_port_devices(device_slot_interface &device);
 void a800_control_port_devices(device_slot_interface &device);
 
-#endif // MAME_BUS_CVS_CTRL_CTRL_H
+#endif // MAME_BUS_VCS_CTRL_CTRL_H

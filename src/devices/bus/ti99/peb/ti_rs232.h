@@ -38,12 +38,12 @@ public:
 	void cruwrite(offs_t offset, uint8_t data) override;
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_stop() override;
-	virtual const tiny_rom_entry *device_rom_region() const override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_stop() override ATTR_COLD;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 private:
 	void int0_callback(int state);
@@ -131,7 +131,7 @@ private:
 class ti_rs232_attached_device : public device_t, public device_image_interface
 {
 public:
-	ti_rs232_attached_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	ti_rs232_attached_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	bool is_readable()  const noexcept override           { return true; }
 	bool is_writeable() const noexcept override           { return true; }
@@ -161,7 +161,7 @@ class ti_pio_attached_device : public device_t, public device_image_interface
 {
 	friend class ti_rs232_pio_device;
 public:
-	ti_pio_attached_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	ti_pio_attached_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	bool is_readable()  const noexcept override           { return true; }
 	bool is_writeable() const noexcept override           { return true; }

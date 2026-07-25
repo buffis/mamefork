@@ -36,7 +36,6 @@
 #include "bfm_sc4.h"
 #include "bfm_sc45_helper.h"
 
-#include "awpvid.h" //DMD01
 
 #include "cpu/m68000/m68000.h"
 #include "cpu/m6809/m6809.h"
@@ -442,9 +441,6 @@ uint16_t sc4_state::sc4_mem_r(offs_t offset, uint16_t mem_mask)
 
 void bfm_sc45_state::machine_start()
 {
-	m_lamps.resolve();
-	m_matrix.resolve();
-	m_digits.resolve();
 }
 
 void bfm_sc45_state::mux_output_w(offs_t offset, uint8_t data)
@@ -746,13 +742,13 @@ void sc4_state::bfm_sc4_68307_porta_w(address_space &space, bool dedicated, uint
 	if(m_reel[0])
 	{
 		m_reel[0]->update( data    &0x0f);
-		awp_draw_reel(machine(),"reel1", *m_reel[0]);
+		m_reel[0]->draw();
 	}
 
 	if (m_reel[1])
 	{
 		m_reel[1]->update((data>>4)&0x0f);
-		awp_draw_reel(machine(),"reel2", *m_reel[1]);
+		m_reel[1]->draw();
 	}
 }
 
@@ -763,7 +759,7 @@ void sc4_state::bfm_sc4_reel3_w(uint8_t data)
 	if(m_reel[2])
 	{
 		m_reel[2]->update( data    &0x0f);
-		awp_draw_reel(machine(),"reel3", *m_reel[2]);
+		m_reel[2]->draw();
 	}
 }
 
@@ -774,7 +770,7 @@ void sc4_state::bfm_sc4_reel4_w(uint8_t data)
 	if(m_reel[3])
 	{
 		m_reel[3]->update( data    &0x0f);
-		awp_draw_reel(machine(),"reel4", *m_reel[3]);
+		m_reel[3]->draw();
 	}
 }
 
@@ -867,13 +863,13 @@ void sc4_state::bfm_sc4_duart_output_w(uint8_t data)
 	if(m_reel[4])
 	{
 		m_reel[4]->update( data    &0x0f);
-		awp_draw_reel(machine(),"reel5", *m_reel[4]);
+		m_reel[4]->draw();
 	}
 
 	if (m_reel[5])
 	{
 		m_reel[5]->update((data>>4)&0x0f);
-		awp_draw_reel(machine(),"reel6", *m_reel[5]);
+		m_reel[5]->draw();
 	}
 }
 
@@ -1297,7 +1293,7 @@ void sc4_state::sc4dmd(machine_config &config)
 	/* video hardware */
 
 	//config.set_default_layout(layout_sc4_dmd);
-	BFM_DM01(config, m_dm01, 0);
+	BFM_DM01(config, m_dm01);
 	m_dm01->busy_callback().set(FUNC(sc4_state::bfmdm01_busy));
 
 	REEL(config, m_reel[0], STARPOINT_48STEP_REEL, 16, 24, 0x09, 7);
@@ -1826,7 +1822,7 @@ void sc4_state::init_sc4()
 void sc4_state::init_sc4mbus()
 {
 	init_sc4();
-	uint16_t *rom = (uint16_t *)memregion("maincpu")->base();
+	uint16_t *rom = &memregion("maincpu")->as_u16();
 	find_mbus(rom);
 }
 
@@ -25316,16 +25312,16 @@ INPUT_PORTS_START( sc4cvani ) // this structure is generated
 INPUT_PORTS_END
 
 // PR2052 CASHLVANIA         VANIASND           CASH'!'VANIA
-GAMEL( 200?, sc4cvani,  0,        sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvania, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanib, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 3)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanic, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 4)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanid, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 5)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanie, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 6)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanif, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 7)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanig, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 8)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanih, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 9)", MACHINE_FLAGS, layout_sc4cvanif )
-GAMEL( 200?, sc4cvanii, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS","Cashvania (Qps) (Scorpion 4) (set 10)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvani,  0,        sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvania, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanib, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 3)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanic, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 4)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanid, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 5)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanie, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 6)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanif, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 7)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanig, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 8)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanih, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 9)", MACHINE_FLAGS, layout_sc4cvanif )
+GAMEL( 200?, sc4cvanii, sc4cvani, sc4_200_4rb, sc4cvani, sc4_state, init_sc4cvani, ROT0, "QPS", u8"Cash'£'Vania (Qps) (Scorpion 4) (set 10)", MACHINE_FLAGS, layout_sc4cvanif )
 
 
 void sc4_state::init_sc4cvclb()
@@ -25389,16 +25385,16 @@ INPUT_PORTS_START( sc4cvclb ) // this structure is generated
 INPUT_PORTS_END
 
 // PRXXXX CLUBCASHLVANIA V1.0         CLUBVANIASND         CLUB  CASH!VANIA
-GAMEL( 200?, sc4cvclb,  0,        sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS","Cashvania Club (V1.0) (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvclb )
-GAMEL( 200?, sc4cvclba, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS","Cashvania Club (V1.0) (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvclb )
-GAMEL( 200?, sc4cvclbc, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS","Cashvania Club (V1.0) (Qps) (Scorpion 4) (set 3)", MACHINE_FLAGS, layout_sc4cvclb )
-GAMEL( 200?, sc4cvclbd, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS","Cashvania Club (V1.0) (Qps) (Scorpion 4) (set 4)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclb,  0,        sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS", u8"Cash'£'Vania Club (V1.0) (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclba, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS", u8"Cash'£'Vania Club (V1.0) (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclbc, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS", u8"Cash'£'Vania Club (V1.0) (Qps) (Scorpion 4) (set 3)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclbd, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS", u8"Cash'£'Vania Club (V1.0) (Qps) (Scorpion 4) (set 4)", MACHINE_FLAGS, layout_sc4cvclb )
 // PRXXXX CLUBCASHLVANIA V2.0         CLUBVANIASND         CLUB  CASH!VANIA
-GAMEL( 200?, sc4cvclbb, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS","Cashvania Club (V2.0) (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvclb )
-GAMEL( 200?, sc4cvclbe, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS","Cashvania Club (V2.0) (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclbb, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS", u8"Cash'£'Vania Club (V2.0) (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclbe, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb,      ROT0, "QPS", u8"Cash'£'Vania Club (V2.0) (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvclb )
 // PRXXXX CLUBCASHLVANIA 411         CLUBVANIASND         CLUB  CASH!VANIA
-GAMEL( 200?, sc4cvclbf, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb_mbus, ROT0, "QPS","Cashvania Club (V411) (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvclb )
-GAMEL( 200?, sc4cvclbg, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb_mbus, ROT0, "QPS","Cashvania Club (V411) (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclbf, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb_mbus, ROT0, "QPS", u8"Cash'£'Vania Club (V411) (Qps) (Scorpion 4) (set 1)", MACHINE_FLAGS, layout_sc4cvclb )
+GAMEL( 200?, sc4cvclbg, sc4cvclb, sc4_200_4rb, sc4cvclb, sc4_state, init_sc4cvclb_mbus, ROT0, "QPS", u8"Cash'£'Vania Club (V411) (Qps) (Scorpion 4) (set 2)", MACHINE_FLAGS, layout_sc4cvclb )
 
 
 

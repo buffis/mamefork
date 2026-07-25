@@ -51,11 +51,11 @@ public:
 	void tchess(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	// devices/pointers
-	required_device<cpu_device> m_maincpu;
+	required_device<f8_cpu_device> m_maincpu;
 	required_device<f38t56_device> m_psu;
 	required_device<pwm_display_device> m_display;
 	required_device<dac_1bit_device> m_dac;
@@ -67,8 +67,8 @@ private:
 	u8 m_inp_mux = 0;
 	u8 m_digit_data = 0;
 
-	void main_map(address_map &map);
-	void main_io(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void main_io(address_map &map) ATTR_COLD;
 
 	u8 read_inputs();
 	void p0_w(u8 data);
@@ -243,7 +243,7 @@ void chess_state::tchess(machine_config &config)
 	F8(config, m_maincpu, 4500000/2); // approximation
 	m_maincpu->set_addrmap(AS_PROGRAM, &chess_state::main_map);
 	m_maincpu->set_addrmap(AS_IO, &chess_state::main_io);
-	m_maincpu->set_irq_acknowledge_callback(m_psu, FUNC(f38t56_device::int_acknowledge));
+	m_maincpu->int_cycle_callback().set(m_psu, FUNC(f38t56_device::int_acknowledge));
 
 	F38T56(config, m_psu, 4500000/2);
 	m_psu->set_int_vector(0x20);

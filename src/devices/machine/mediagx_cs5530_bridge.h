@@ -21,16 +21,17 @@
 class mediagx_cs5530_bridge_device : public pci_device
 {
 public:
+
 	template <typename T, typename U>
-	mediagx_cs5530_bridge_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, T &&cpu_tag, U &&ide_tag)
-		: mediagx_cs5530_bridge_device(mconfig, tag, owner, clock)
+	mediagx_cs5530_bridge_device(const machine_config &mconfig, const char *tag, device_t *owner, T &&cpu_tag, U &&ide_tag)
+		: mediagx_cs5530_bridge_device(mconfig, tag, owner)
 	{
 		set_ids(0x10780100, 0x00, 0x060100, 0x00000000);
 		set_cpu_tag(std::forward<T>(cpu_tag));
 		set_ide_tag(std::forward<U>(ide_tag));
 	}
 
-	mediagx_cs5530_bridge_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	mediagx_cs5530_bridge_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	auto boot_state_hook() { return m_boot_state_hook.bind(); }
 	auto rtcale() { return m_rtcale.bind(); }
@@ -48,14 +49,14 @@ public:
 protected:
 	virtual void device_add_mconfig(machine_config & config) override;
 	virtual void device_config_complete() override;
-	virtual void device_reset() override;
+	virtual void device_reset() override ATTR_COLD;
 
 	virtual void map_extra(uint64_t memory_window_start, uint64_t memory_window_end, uint64_t memory_offset, address_space *memory_space,
 						   uint64_t io_window_start, uint64_t io_window_end, uint64_t io_offset, address_space *io_space) override;
 
 	virtual bool map_first() const override { return true; }
 
-	virtual void config_map(address_map &map) override;
+	virtual void config_map(address_map &map) override ATTR_COLD;
 private:
 	void at_pit8254_out0_changed(int state);
 	void at_pit8254_out1_changed(int state);
@@ -109,7 +110,7 @@ private:
 	void at_dma8237_2_w(offs_t offset, uint8_t data);
 
 	void map_bios(address_space *memory_space, uint32_t start, uint32_t end);
-	void internal_io_map(address_map &map);
+	void internal_io_map(address_map &map) ATTR_COLD;
 
 	devcb_write8 m_boot_state_hook;
 	devcb_write8 m_rtcale;

@@ -74,11 +74,6 @@
 
 #include "emu.h"
 
-#include "cpu/i386/i386.h"
-#include "machine/pci.h"
-#include "machine/pci-ide.h"
-#include "machine/i82371sb.h"
-#include "machine/i82439hx.h"
 #include "bus/isa/isa_cards.h"
 #include "bus/pci/vision.h"
 //#include "bus/rs232/hlemouse.h"
@@ -86,7 +81,11 @@
 #include "bus/rs232/rs232.h"
 //#include "bus/rs232/sun_kbd.h"
 #include "bus/rs232/terminal.h"
+#include "cpu/i386/i386.h"
+#include "machine/i82371sb.h"
+#include "machine/i82439hx.h"
 #include "machine/pc87306.h"
+#include "machine/pci.h"
 
 
 namespace {
@@ -104,8 +103,8 @@ public:
 private:
 	required_device<pentium_device> m_maincpu;
 
-	void odyssey_map(address_map &map);
-	void odyssey_io(address_map &map);
+	void odyssey_map(address_map &map) ATTR_COLD;
+	void odyssey_io(address_map &map) ATTR_COLD;
 
 	static void national_superio_config(device_t *device);
 };
@@ -283,4 +282,4 @@ ROM_END
 **************************************/
 
 /*    YEAR  NAME      PARENT  MACHINE  INPUT    STATE          INIT        ROT      COMPANY           FULLNAME    FLAGS  */
-GAME( 1998, odyssey,  0,      odyssey, odyssey, odyssey_state, empty_init, ROT270, "Silicon Gaming", "Odyssey",   MACHINE_IS_SKELETON )
+GAME( 1998, odyssey,  0,      odyssey, odyssey, odyssey_state, empty_init, ROT270, "Silicon Gaming", "Odyssey",   MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

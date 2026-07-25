@@ -6,7 +6,6 @@
 
     H8 Serial Communications Interface
 
-
 ***************************************************************************/
 
 #ifndef MAME_CPU_H8_H8_SCI_H
@@ -14,8 +13,9 @@
 
 #pragma once
 
-class h8_device;
-class h8_intc_device;
+#include "h8_intc.h"
+
+class h8_cpu_base;
 
 class h8_sci_device : public device_t {
 public:
@@ -105,8 +105,8 @@ protected:
 		SSR_MPBT = 0x01
 	};
 
-	required_device<h8_device> m_cpu;
-	required_device<h8_intc_device> m_intc;
+	required_device<h8_cpu_base> m_cpu;
+	required_device<h8_intc_base> m_intc;
 	attotime m_external_clock_period;
 	double m_external_to_internal_ratio, m_internal_to_external_ratio;
 	emu_timer *m_sync_timer;
@@ -117,13 +117,13 @@ protected:
 	u32 m_clock_mode;
 	bool m_ext_clock_value, m_rx_value;
 
-	u8 m_rdr, m_tdr, m_smr, m_scr, m_ssr, m_brr, m_rsr, m_tsr;
+	u8 m_rdr, m_tdr, m_smr, m_scr, m_ssr, m_ssr_read, m_brr, m_rsr, m_tsr;
 	u64 m_clock_event, m_clock_step, m_divider;
 
 	std::string m_last_clock_message;
 
-	void device_start() override;
-	void device_reset() override;
+	void device_start() override ATTR_COLD;
+	void device_reset() override ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(sync_tick);
 
@@ -144,7 +144,7 @@ protected:
 	void rx_sync_tick();
 	void rx_sync_step();
 
-	bool is_sync_start() const;
+	void sync_rx_start();
 	bool has_recv_error() const;
 };
 

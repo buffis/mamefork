@@ -219,8 +219,8 @@ public:
 	void ibm6580(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	void pic_latch_w(uint16_t data);
@@ -254,11 +254,11 @@ private:
 
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
-	void ibm6580_io(address_map &map);
-	void ibm6580_mem(address_map &map);
+	void ibm6580_io(address_map &map) ATTR_COLD;
+	void ibm6580_mem(address_map &map) ATTR_COLD;
 
-	void mcu_io(address_map &map);
-	void mcu_mem(address_map &map);
+	void mcu_io(address_map &map) ATTR_COLD;
+	void mcu_mem(address_map &map) ATTR_COLD;
 
 	uint16_t m_gate = 0;
 	uint8_t m_dma0pg = 0;
@@ -907,8 +907,6 @@ void ibm6580_state::machine_start()
 	m_floppy[0].image = m_fdc->subdevice<floppy_connector>("0")->get_device();
 	m_floppy[1].image = m_fdc->subdevice<floppy_connector>("1")->get_device();
 
-	m_leds.resolve();
-
 	memset(m_p_videoram, 0x0, 0x1000);
 }
 
@@ -959,7 +957,7 @@ void ibm6580_state::ibm6580(machine_config &config)
 
 	PALETTE(config, "palette", palette_device::MONOCHROME_HIGHLIGHT);
 
-	PIC8259(config, m_pic8259, 0);
+	PIC8259(config, m_pic8259);
 	m_pic8259->out_int_callback().set_inputline(m_maincpu, 0);
 
 	I8255(config, m_ppi8255);
@@ -969,10 +967,10 @@ void ibm6580_state::ibm6580(machine_config &config)
 	m_ppi8255->tri_pa_callback().set_constant(0);
 	m_ppi8255->tri_pc_callback().set_constant(0);
 
-	PIT8253(config, m_pit8253, 0);
+	PIT8253(config, m_pit8253);
 	m_pit8253->out_handler<0>().set([this] (int state) { m_p40 = (m_p40 & ~1) | state; });
 
-	DW_KEYBOARD(config, m_kbd, 0);
+	DW_KEYBOARD(config, m_kbd);
 	m_kbd->out_data_handler().set(FUNC(ibm6580_state::kb_data_w));
 	m_kbd->out_clock_handler().set(FUNC(ibm6580_state::kb_clock_w));
 	m_kbd->out_strobe_handler().set(FUNC(ibm6580_state::kb_strobe_w));
@@ -985,7 +983,7 @@ void ibm6580_state::ibm6580(machine_config &config)
 	m_dma8257->in_ior_cb<0>().set(m_fdc, FUNC(upd765a_device::dma_r));
 	m_dma8257->out_iow_cb<0>().set(m_fdc, FUNC(upd765a_device::dma_w));
 
-	i8251_device &upd8251a(I8251(config, "upd8251a", 0));
+	i8251_device &upd8251a(I8251(config, "upd8251a"));
 	upd8251a.txd_handler().set("rs232a", FUNC(rs232_port_device::write_txd));
 	upd8251a.dtr_handler().set("rs232a", FUNC(rs232_port_device::write_dtr));
 	upd8251a.rts_handler().set("rs232a", FUNC(rs232_port_device::write_rts));
@@ -997,7 +995,7 @@ void ibm6580_state::ibm6580(machine_config &config)
 	rs232a.dsr_handler().set("upd8251a", FUNC(i8251_device::write_dsr));
 	rs232a.cts_handler().set("upd8251a", FUNC(i8251_device::write_cts));
 
-	i8251_device &upd8251b(I8251(config, "upd8251b", 0));
+	i8251_device &upd8251b(I8251(config, "upd8251b"));
 	upd8251b.txd_handler().set("rs232b", FUNC(rs232_port_device::write_txd));
 	upd8251b.dtr_handler().set("rs232b", FUNC(rs232_port_device::write_dtr));
 	upd8251b.rts_handler().set("rs232b", FUNC(rs232_port_device::write_rts));
@@ -1073,4 +1071,4 @@ ROM_END
 /* Driver */
 
 /*    YEAR  NAME     PARENT  COMPAT  MACHINE  INPUT  CLASS          INIT        COMPANY  FULLNAME                  FLAGS */
-COMP( 1980, ibm6580, 0,      0,      ibm6580, 0,     ibm6580_state, empty_init, "IBM",   "IBM 6580 Displaywriter", MACHINE_IS_SKELETON)
+COMP( 1980, ibm6580, 0,      0,      ibm6580, 0,     ibm6580_state, empty_init, "IBM",   "IBM 6580 Displaywriter", MACHINE_NO_SOUND | MACHINE_NOT_WORKING)

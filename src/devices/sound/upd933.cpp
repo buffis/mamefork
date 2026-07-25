@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <climits>
 #include <cmath>
+#include <numbers>
 
 DEFINE_DEVICE_TYPE(UPD933, upd933_device, "upd933", "NEC uPD933")
 
@@ -29,7 +30,7 @@ void upd933_device::device_start()
 	m_irq_timer = timer_alloc(FUNC(upd933_device::timer_tick), this);
 
 	for (int i = 0; i < 0x800; i++)
-		m_cosine[i] = 0xfff * (1 - cos(2.0 * M_PI * i / 0x7ff)) / 2;
+		m_cosine[i] = 0xfff * (1 - cos(2.0 * std::numbers::pi * i / 0x7ff)) / 2;
 
 	for (int i = 0; i < 0x80; i++)
 	{
@@ -199,8 +200,8 @@ void upd933_device::update_pending_irq()
 	for (int i = 0; i < 8; i++)
 	{
 		env_active |= (m_dca[i].calc_timeout(new_time)
-				   |   m_dco[i].calc_timeout(new_time)
-				   |   m_dcw[i].calc_timeout(new_time));
+				   ||  m_dco[i].calc_timeout(new_time)
+				   ||  m_dcw[i].calc_timeout(new_time));
 	}
 
 	if (env_active)
@@ -371,9 +372,9 @@ u32 upd933_device::env_rate(u8 data) const
 }
 
 /**************************************************************************/
-void upd933_device::sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs)
+void upd933_device::sound_stream_update(sound_stream &stream)
 {
-	for (int i = 0; i < outputs[0].samples(); i++)
+	for (int i = 0; i < stream.samples(); i++)
 	{
 		s32 sample = 0;
 
@@ -385,7 +386,7 @@ void upd933_device::sound_stream_update(sound_stream &stream, std::vector<read_s
 		for (int j : voice_map)
 			sample += update(j);
 
-		outputs[0].put_int_clamp(i, sample, 1 << 15);
+		stream.put_int_clamp(0, i, sample, 1 << 15);
 		m_sample_count++;
 	}
 }

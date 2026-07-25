@@ -405,15 +405,15 @@ static INPUT_PORTS_START( tandy2k )
 	// defined in machine/tandy2kb.c
 	PORT_START("MOUSEBTN")
 	PORT_BIT( 0xff8f, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_CODE(MOUSECODE_BUTTON1) PORT_CHANGED_MEMBER(DEVICE_SELF, tandy2k_state, input_changed, 1)
-	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_CODE(MOUSECODE_BUTTON2) PORT_CHANGED_MEMBER(DEVICE_SELF, tandy2k_state, input_changed, 1)
+	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_CODE(MOUSECODE_BUTTON1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(tandy2k_state::input_changed), 1)
+	PORT_BIT( 0x0020, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_CODE(MOUSECODE_BUTTON2) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(tandy2k_state::input_changed), 1)
 	PORT_BIT( 0x0040, IP_ACTIVE_LOW, IPT_UNUSED )  /* this would be button three but AFAIK no tandy mouse ever had one */
 
 	PORT_START("MOUSEX")
-	PORT_BIT( 0xffff, 0x00, IPT_MOUSE_X ) PORT_SENSITIVITY(50) PORT_KEYDELTA(0) PORT_CHANGED_MEMBER(DEVICE_SELF, tandy2k_state, input_changed, 0)
+	PORT_BIT( 0xffff, 0x00, IPT_MOUSE_X ) PORT_SENSITIVITY(50) PORT_KEYDELTA(0) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(tandy2k_state::input_changed), 0)
 
 	PORT_START("MOUSEY")
-	PORT_BIT( 0xffff, 0x00, IPT_MOUSE_Y ) PORT_SENSITIVITY(50) PORT_KEYDELTA(0) PORT_CHANGED_MEMBER(DEVICE_SELF, tandy2k_state, input_changed, 0)
+	PORT_BIT( 0xffff, 0x00, IPT_MOUSE_Y ) PORT_SENSITIVITY(50) PORT_KEYDELTA(0) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(tandy2k_state::input_changed), 0)
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( tandy2kb_hle )
@@ -459,7 +459,7 @@ public:
 	tandy2kb_hle_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 protected:
-	virtual ioport_constructor device_input_ports() const override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 };
 
 DEFINE_DEVICE_TYPE(TANDY2K_HLE_KEYB, tandy2kb_hle_device, "tandy2kb_hle", "Tandy 2000 Keyboard HLE")
@@ -954,10 +954,7 @@ void tandy2k_state::machine_reset()
 	m_hires_en = 0;
 	m_clkmouse_cnt = 0;
 	m_clkmouse_irq = 0;
-}
 
-void tandy2k_state::device_reset_after_children()
-{
 	m_pc_keyboard->enable(0);
 }
 
@@ -1024,11 +1021,11 @@ void tandy2k_state::tandy2k(machine_config &config)
 	vpac.sld_callback().set(FUNC(tandy2k_state::vpac_sld_w));
 	vpac.set_screen(SCREEN_TAG);
 
-	CRT9212(config, m_drb0, 0);
+	CRT9212(config, m_drb0);
 	m_drb0->set_wen2(1);
 	m_drb0->dout().set(FUNC(tandy2k_state::vidla_w));
 
-	CRT9212(config, m_drb1, 0);
+	CRT9212(config, m_drb1);
 	m_drb1->set_wen2(1);
 	m_drb1->dout().set(FUNC(tandy2k_state::drb_attr_w));
 
@@ -1049,7 +1046,7 @@ void tandy2k_state::tandy2k(machine_config &config)
 	m_i8255a->in_pb_callback().set(FUNC(tandy2k_state::ppi_pb_r));
 	m_i8255a->out_pc_callback().set(FUNC(tandy2k_state::ppi_pc_w));
 
-	I8251(config, m_uart, 0);
+	I8251(config, m_uart);
 	m_uart->txd_handler().set(m_rs232, FUNC(rs232_port_device::write_txd));
 	m_uart->dtr_handler().set(m_rs232, FUNC(rs232_port_device::write_dtr));
 	m_uart->rts_handler().set(m_rs232, FUNC(rs232_port_device::write_rts));
@@ -1062,7 +1059,7 @@ void tandy2k_state::tandy2k(machine_config &config)
 	// TODO pin 15 external transmit clock
 	// TODO pin 17 external receiver clock
 
-	PIT8253(config, m_pit, 0);
+	PIT8253(config, m_pit);
 	m_pit->set_clk<0>(16_MHz_XTAL / 16);
 	m_pit->out_handler<0>().set(FUNC(tandy2k_state::outspkr_w));
 	m_pit->set_clk<1>(16_MHz_XTAL / 8);
@@ -1070,13 +1067,16 @@ void tandy2k_state::tandy2k(machine_config &config)
 	//m_pit->set_clk<2>(16_MHz_XTAL / 8);
 	//m_pit->out_handler<2>().set(FUNC(tandy2k_state::rfrqpulse_w));
 
-	PIC8259(config, m_pic0, 0);
+	PIC8259(config, m_pic0);
 	m_pic0->out_int_callback().set(m_maincpu, FUNC(i80186_cpu_device::int0_w));
 
-	PIC8259(config, m_pic1, 0);
+	PIC8259(config, m_pic1);
 	m_pic1->out_int_callback().set(m_maincpu, FUNC(i80186_cpu_device::int1_w));
 
-	I8272A(config, m_fdc, 16_MHz_XTAL / 4, true);
+	// there were two drive types shipped on the 2k, one sets ready when a disk is inserted
+	// and the door closed, the other disconnects ready on the drive itself
+	// the ready line from the cable is connected to the fdc
+	I8272A(config, m_fdc, 16_MHz_XTAL / 4, false);
 	m_fdc->set_select_lines_connected(true);
 	m_fdc->intrq_wr_callback().set(m_pic0, FUNC(pic8259_device::ir4_w));
 	m_fdc->drq_wr_callback().set(FUNC(tandy2k_state::fdc_drq_w));
@@ -1094,12 +1094,12 @@ void tandy2k_state::tandy2k(machine_config &config)
 	output_latch_device &cent_data_out(OUTPUT_LATCH(config, "cent_data_out"));
 	m_centronics->set_output_latch(cent_data_out);
 
-	TANDY2K_KEYBOARD(config, m_kb, 0);
+	TANDY2K_KEYBOARD(config, m_kb);
 	m_kb->clock_wr_callback().set(FUNC(tandy2k_state::kbdclk_w));
 	m_kb->data_wr_callback().set(FUNC(tandy2k_state::kbddat_w));
 
 	// temporary until the tandy keyboard has a rom dump
-	TANDY2K_HLE_KEYB(config, m_pc_keyboard, 0).keypress().set(I8259A_1_TAG, FUNC(pic8259_device::ir0_w));
+	TANDY2K_HLE_KEYB(config, m_pc_keyboard).keypress().set(I8259A_1_TAG, FUNC(pic8259_device::ir0_w));
 
 	// software lists
 	SOFTWARE_LIST(config, "flop_list").set_original("tandy2k");

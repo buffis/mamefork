@@ -1189,7 +1189,7 @@ void legionna_state::legionna(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &legionna_state::seibu_sound_map);
 	m_audiocpu->set_irq_acknowledge_callback("seibu_sound", FUNC(seibu_sound_device::im0_vector_cb));
 
-	RAIDEN2COP(config, m_raiden2cop, 0);
+	RAIDEN2COP(config, m_raiden2cop);
 	m_raiden2cop->videoramout_cb().set(FUNC(legionna_state::videowrite_cb_w));
 	m_raiden2cop->paletteramout_cb().set(m_palette, FUNC(palette_device::write16));
 	m_raiden2cop->set_host_cpu_tag(m_maincpu);
@@ -1203,7 +1203,7 @@ void legionna_state::legionna(machine_config &config)
 	screen.set_screen_update(FUNC(legionna_state::screen_update_legionna));
 	screen.set_palette(m_palette);
 
-	SEIBU_CRTC(config, m_crtc, 0);
+	SEIBU_CRTC(config, m_crtc);
 	m_crtc->layer_en_callback().set(FUNC(legionna_state::tilemap_enable_w));
 	m_crtc->reg_1a_callback().set(FUNC(legionna_state::tile_vreg_1a_w));
 	m_crtc->layer_scroll_callback().set(FUNC(legionna_state::tile_scroll_w));
@@ -1226,10 +1226,11 @@ void legionna_state::legionna(machine_config &config)
 	OKIM6295(config, m_oki, 20_MHz_XTAL / 20, okim6295_device::PIN7_HIGH);
 	m_oki->add_route(ALL_OUTPUTS, "mono", 0.40);
 
-	SEIBU_SOUND(config, m_seibu_sound, 0);
+	SEIBU_SOUND(config, m_seibu_sound);
 	m_seibu_sound->int_callback().set_inputline(m_audiocpu, 0);
+	m_seibu_sound->coin_io_callback().set_ioport("COIN");
 	m_seibu_sound->set_rom_tag("audiocpu");
-	m_seibu_sound->set_rombank_tag("seibu_bank1");
+	m_seibu_sound->set_rombank_tag("seibu_bank");
 	m_seibu_sound->ym_read_callback().set("ymsnd", FUNC(ym3812_device::read));
 	m_seibu_sound->ym_write_callback().set("ymsnd", FUNC(ym3812_device::write));
 }
@@ -1245,7 +1246,7 @@ void legionna_state::heatbrl(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &legionna_state::seibu_sound_map);
 	m_audiocpu->set_irq_acknowledge_callback("seibu_sound", FUNC(seibu_sound_device::im0_vector_cb));
 
-	RAIDEN2COP(config, m_raiden2cop, 0);
+	RAIDEN2COP(config, m_raiden2cop);
 	m_raiden2cop->videoramout_cb().set(FUNC(legionna_state::videowrite_cb_w));
 	m_raiden2cop->paletteramout_cb().set(m_palette, FUNC(palette_device::write16));
 	m_raiden2cop->set_host_cpu_tag(m_maincpu);
@@ -1259,7 +1260,7 @@ void legionna_state::heatbrl(machine_config &config)
 	screen.set_screen_update(FUNC(legionna_state::screen_update_heatbrl));
 	screen.set_palette(m_palette);
 
-	SEIBU_CRTC(config, m_crtc, 0);
+	SEIBU_CRTC(config, m_crtc);
 	m_crtc->layer_en_callback().set(FUNC(legionna_state::tilemap_enable_w));
 	m_crtc->reg_1a_callback().set(FUNC(legionna_state::tile_vreg_1a_w));
 	m_crtc->layer_scroll_callback().set(FUNC(legionna_state::tile_scroll_w));
@@ -1282,10 +1283,11 @@ void legionna_state::heatbrl(machine_config &config)
 	OKIM6295(config, m_oki, 20_MHz_XTAL / 20, okim6295_device::PIN7_HIGH);
 	m_oki->add_route(ALL_OUTPUTS, "mono", 0.40);
 
-	SEIBU_SOUND(config, m_seibu_sound, 0);
+	SEIBU_SOUND(config, m_seibu_sound);
 	m_seibu_sound->int_callback().set_inputline(m_audiocpu, 0);
+	m_seibu_sound->coin_io_callback().set_ioport("COIN");
 	m_seibu_sound->set_rom_tag("audiocpu");
-	m_seibu_sound->set_rombank_tag("seibu_bank1");
+	m_seibu_sound->set_rombank_tag("seibu_bank");
 	m_seibu_sound->ym_read_callback().set("ymsnd", FUNC(ym3812_device::read));
 	m_seibu_sound->ym_write_callback().set("ymsnd", FUNC(ym3812_device::write));
 }
@@ -1302,7 +1304,7 @@ void legionna_state::godzilla(machine_config &config)
 	m_audiocpu->set_addrmap(AS_IO, &legionna_state::godzilla_sound_io_map);
 	m_audiocpu->set_irq_acknowledge_callback("seibu_sound", FUNC(seibu_sound_device::im0_vector_cb));
 
-	RAIDEN2COP(config, m_raiden2cop, 0);
+	RAIDEN2COP(config, m_raiden2cop);
 	m_raiden2cop->videoramout_cb().set(FUNC(legionna_state::videowrite_cb_w));
 	m_raiden2cop->paletteramout_cb().set(m_palette, FUNC(palette_device::write16));
 	m_raiden2cop->set_host_cpu_tag(m_maincpu);
@@ -1317,7 +1319,7 @@ void legionna_state::godzilla(machine_config &config)
 	screen.set_screen_update(FUNC(legionna_state::screen_update_godzilla));
 	screen.set_palette(m_palette);
 
-	SEIBU_CRTC(config, m_crtc, 0);
+	SEIBU_CRTC(config, m_crtc);
 	m_crtc->layer_en_callback().set(FUNC(legionna_state::tilemap_enable_w));
 	m_crtc->layer_scroll_callback().set(FUNC(legionna_state::tile_scroll_w));
 	m_crtc->reg_1a_callback().set(FUNC(legionna_state::tile_vreg_1a_w));
@@ -1343,10 +1345,11 @@ void legionna_state::godzilla(machine_config &config)
 	OKIM6295(config, m_oki, 20_MHz_XTAL / 20, okim6295_device::PIN7_HIGH);
 	m_oki->add_route(ALL_OUTPUTS, "mono", 0.40);
 
-	SEIBU_SOUND(config, m_seibu_sound, 0);
+	SEIBU_SOUND(config, m_seibu_sound);
 	m_seibu_sound->int_callback().set_inputline(m_audiocpu, 0);
+	m_seibu_sound->coin_io_callback().set_ioport("COIN");
 	m_seibu_sound->set_rom_tag("audiocpu");
-	m_seibu_sound->set_rombank_tag("seibu_bank1");
+	m_seibu_sound->set_rombank_tag("seibu_bank");
 	m_seibu_sound->ym_read_callback().set("ymsnd", FUNC(ym2151_device::read));
 	m_seibu_sound->ym_write_callback().set("ymsnd", FUNC(ym2151_device::write));
 }
@@ -1362,7 +1365,7 @@ void legionna_state::denjinmk(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &legionna_state::seibu_sound_map);
 	m_audiocpu->set_irq_acknowledge_callback("seibu_sound", FUNC(seibu_sound_device::im0_vector_cb));
 
-	RAIDEN2COP(config, m_raiden2cop, 0);
+	RAIDEN2COP(config, m_raiden2cop);
 	m_raiden2cop->videoramout_cb().set(FUNC(legionna_state::videowrite_cb_w));
 	m_raiden2cop->paletteramout_cb().set(m_palette, FUNC(palette_device::write16));
 	m_raiden2cop->set_host_cpu_tag(m_maincpu);
@@ -1376,7 +1379,7 @@ void legionna_state::denjinmk(machine_config &config)
 	screen.set_screen_update(FUNC(legionna_state::screen_update_godzilla));
 	screen.set_palette(m_palette);
 
-	SEIBU_CRTC(config, m_crtc, 0);
+	SEIBU_CRTC(config, m_crtc);
 	m_crtc->layer_en_callback().set(FUNC(legionna_state::tilemap_enable_w));
 	m_crtc->layer_scroll_callback().set(FUNC(legionna_state::tile_scroll_w));
 	m_crtc->reg_1a_callback().set(FUNC(legionna_state::tile_vreg_1a_w));
@@ -1401,10 +1404,11 @@ void legionna_state::denjinmk(machine_config &config)
 	OKIM6295(config, m_oki, 20_MHz_XTAL / 20, okim6295_device::PIN7_HIGH);
 	m_oki->add_route(ALL_OUTPUTS, "mono", 0.40);
 
-	SEIBU_SOUND(config, m_seibu_sound, 0);
+	SEIBU_SOUND(config, m_seibu_sound);
 	m_seibu_sound->int_callback().set_inputline(m_audiocpu, 0);
+	m_seibu_sound->coin_io_callback().set_ioport("COIN");
 	m_seibu_sound->set_rom_tag("audiocpu");
-	m_seibu_sound->set_rombank_tag("seibu_bank1");
+	m_seibu_sound->set_rombank_tag("seibu_bank");
 	m_seibu_sound->ym_read_callback().set("ymsnd", FUNC(ym2151_device::read));
 	m_seibu_sound->ym_write_callback().set("ymsnd", FUNC(ym2151_device::write));
 }
@@ -1420,7 +1424,7 @@ void legionna_state::grainbow(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &legionna_state::seibu_sound_map);
 	m_audiocpu->set_irq_acknowledge_callback("seibu_sound", FUNC(seibu_sound_device::im0_vector_cb));
 
-	RAIDEN2COP(config, m_raiden2cop, 0);
+	RAIDEN2COP(config, m_raiden2cop);
 	m_raiden2cop->videoramout_cb().set(FUNC(legionna_state::videowrite_cb_w));
 	m_raiden2cop->paletteramout_cb().set(m_palette, FUNC(palette_device::write16));
 	m_raiden2cop->set_host_cpu_tag(m_maincpu);
@@ -1434,7 +1438,7 @@ void legionna_state::grainbow(machine_config &config)
 	screen.set_screen_update(FUNC(legionna_state::screen_update_grainbow));
 	screen.set_palette(m_palette);
 
-	SEIBU_CRTC(config, m_crtc, 0);
+	SEIBU_CRTC(config, m_crtc);
 	m_crtc->layer_en_callback().set(FUNC(legionna_state::tilemap_enable_w));
 	m_crtc->layer_scroll_callback().set(FUNC(legionna_state::tile_scroll_w));
 	m_crtc->reg_1a_callback().set(FUNC(legionna_state::tile_vreg_1a_w));
@@ -1459,10 +1463,11 @@ void legionna_state::grainbow(machine_config &config)
 	OKIM6295(config, m_oki, 20_MHz_XTAL / 20, okim6295_device::PIN7_HIGH);
 	m_oki->add_route(ALL_OUTPUTS, "mono", 0.40);
 
-	SEIBU_SOUND(config, m_seibu_sound, 0);
+	SEIBU_SOUND(config, m_seibu_sound);
 	m_seibu_sound->int_callback().set_inputline(m_audiocpu, 0);
+	m_seibu_sound->coin_io_callback().set_ioport("COIN");
 	m_seibu_sound->set_rom_tag("audiocpu");
-	m_seibu_sound->set_rombank_tag("seibu_bank1");
+	m_seibu_sound->set_rombank_tag("seibu_bank");
 	m_seibu_sound->ym_read_callback().set("ymsnd", FUNC(ym2151_device::read));
 	m_seibu_sound->ym_write_callback().set("ymsnd", FUNC(ym2151_device::write));
 }
@@ -1478,7 +1483,7 @@ void legionna_state::cupsoc(machine_config &config)
 	m_audiocpu->set_addrmap(AS_PROGRAM, &legionna_state::seibu_sound_map);
 	m_audiocpu->set_irq_acknowledge_callback("seibu_sound", FUNC(seibu_sound_device::im0_vector_cb));
 
-	RAIDEN2COP(config, m_raiden2cop, 0);
+	RAIDEN2COP(config, m_raiden2cop);
 	m_raiden2cop->videoramout_cb().set(FUNC(legionna_state::videowrite_cb_w));
 	m_raiden2cop->paletteramout_cb().set(m_palette, FUNC(palette_device::write16));
 	m_raiden2cop->set_host_cpu_tag(m_maincpu);
@@ -1496,7 +1501,7 @@ void legionna_state::cupsoc(machine_config &config)
 	screen.set_screen_update(FUNC(legionna_state::screen_update_grainbow));
 	screen.set_palette(m_palette);
 
-	SEIBU_CRTC(config, m_crtc, 0);
+	SEIBU_CRTC(config, m_crtc);
 	m_crtc->layer_en_callback().set(FUNC(legionna_state::tilemap_enable_w));
 	m_crtc->layer_scroll_callback().set(FUNC(legionna_state::tile_scroll_w));
 	m_crtc->reg_1a_callback().set(FUNC(legionna_state::tile_vreg_1a_w));
@@ -1519,10 +1524,11 @@ void legionna_state::cupsoc(machine_config &config)
 	OKIM6295(config, m_oki, 20_MHz_XTAL / 20, okim6295_device::PIN7_HIGH);
 	m_oki->add_route(ALL_OUTPUTS, "mono", 0.40);
 
-	SEIBU_SOUND(config, m_seibu_sound, 0);
+	SEIBU_SOUND(config, m_seibu_sound);
 	m_seibu_sound->int_callback().set_inputline(m_audiocpu, 0);
+	m_seibu_sound->coin_io_callback().set_ioport("COIN");
 	m_seibu_sound->set_rom_tag("audiocpu");
-	m_seibu_sound->set_rombank_tag("seibu_bank1");
+	m_seibu_sound->set_rombank_tag("seibu_bank");
 	m_seibu_sound->ym_read_callback().set("ymsnd", FUNC(ym3812_device::read));
 	m_seibu_sound->ym_write_callback().set("ymsnd", FUNC(ym3812_device::write));
 }
@@ -1694,7 +1700,7 @@ ROM_START( heatbrl )
 	ROM_REGION( 0x200, "proms", 0 )     /* Priority */
 	ROM_LOAD( "heat07.u0910",   0x000000, 0x000200, CRC(265eccc8) SHA1(cf650c69f97b887251b5079e5518497721692af3) ) /* N82S147N type BPROM */
 
-	ROM_REGION( 0x080000, "user1", 0 )  /* SEI300 data rom */
+	ROM_REGION( 0x080000, "copx", 0 )  /* SEI300 data rom */
 	ROM_LOAD( "copx-d2.u0339",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) ) /* not dumped from this PCB assumed to be the same */
 ROM_END
 
@@ -1733,7 +1739,7 @@ ROM_START( heatbrl2 )
 	ROM_REGION( 0x200, "proms", 0 )     /* Priority */
 	ROM_LOAD( "heat07.u0910",   0x000000, 0x000200, CRC(265eccc8) SHA1(cf650c69f97b887251b5079e5518497721692af3) ) /* N82S147N type BPROM */
 
-	ROM_REGION( 0x080000, "user1", 0 )  /* SEI300 data rom */
+	ROM_REGION( 0x080000, "copx", 0 )  /* SEI300 data rom */
 	ROM_LOAD( "copx-d2.u0339",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) ) /* not dumped from this PCB assumed to be the same */
 ROM_END
 
@@ -1772,7 +1778,7 @@ ROM_START( heatbrl3 ) // only the maincpu and audiocpu ROMs were provided for th
 	ROM_REGION( 0x200, "proms", 0 )     /* Priority */
 	ROM_LOAD( "heat07.u0910",   0x000000, 0x000200, CRC(265eccc8) SHA1(cf650c69f97b887251b5079e5518497721692af3) ) /* N82S147N type BPROM */
 
-	ROM_REGION( 0x080000, "user1", 0 )  /* SEI300 data rom */
+	ROM_REGION( 0x080000, "copx", 0 )  /* SEI300 data rom */
 	ROM_LOAD( "copx-d2.u0339",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) ) /* not dumped from this PCB assumed to be the same */
 ROM_END
 
@@ -1816,7 +1822,7 @@ barrel1,2,3,4.BG */
 	ROM_REGION( 0x200, "proms", 0 )     /* Priority */
 	ROM_LOAD( "heat07.u0910",   0x000000, 0x000200, CRC(265eccc8) SHA1(cf650c69f97b887251b5079e5518497721692af3) ) /* N82S147N type BPROM */
 
-	ROM_REGION( 0x080000, "user1", 0 )  /* SEI300 data rom */
+	ROM_REGION( 0x080000, "copx", 0 )  /* SEI300 data rom */
 	ROM_LOAD( "copx-d2.u0339",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) ) /* not dumped from this PCB assumed to be the same */
 ROM_END
 
@@ -1855,7 +1861,7 @@ ROM_START( heatbrlu )
 	ROM_REGION( 0x200, "proms", 0 )     /* Priority */
 	ROM_LOAD( "heat07.u0910",   0x000000, 0x000200, CRC(265eccc8) SHA1(cf650c69f97b887251b5079e5518497721692af3) ) /* N82S147N type BPROM */
 
-	ROM_REGION( 0x080000, "user1", 0 )  /* SEI300 data rom */
+	ROM_REGION( 0x080000, "copx", 0 )  /* SEI300 data rom */
 	ROM_LOAD( "copx-d2.u0339",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) ) /* not dumped from this PCB assumed to be the same */
 ROM_END
 
@@ -1898,7 +1904,7 @@ ROM_START( heatbrle )
 	ROM_REGION( 0x200, "proms", 0 )     /* Priority */
 	ROM_LOAD( "heat07.u0910",   0x000000, 0x000200, CRC(265eccc8) SHA1(cf650c69f97b887251b5079e5518497721692af3) ) /* N82S147N type BPROM */
 
-	ROM_REGION( 0x080000, "user1", 0 )  /* SEI300 data rom */
+	ROM_REGION( 0x080000, "copx", 0 )  /* SEI300 data rom */
 	ROM_LOAD( "copx-d2.u0339",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) ) /* not dumped from this PCB assumed to be the same */
 ROM_END
 
@@ -1987,7 +1993,7 @@ ROM_START( godzilla )
 	ROM_REGION( 0x200, "proms", 0 )
 	ROM_LOAD( "s68e08.844",   0x000000, 0x000200, CRC(96f7646e) SHA1(400a831b83d6ac4d2a46ef95b97b1ee237099e44) ) /* Priority */
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d2.313",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) )
 ROM_END
 
@@ -2036,7 +2042,7 @@ ROM_START( denjinmk )
 	ROM_REGION( 0x200, "proms", 0 )
 	ROM_LOAD( "s68e08.844",  0x000000, 0x000200, CRC(96f7646e) SHA1(400a831b83d6ac4d2a46ef95b97b1ee237099e44) ) /* Priority */
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d2.313", 0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) )
 ROM_END
 
@@ -2151,7 +2157,7 @@ ROM_START( denjinmka )
 	ROM_REGION( 0x200, "proms", 0 )
 	ROM_LOAD( "s68e08.844",   0x000000, 0x000200, CRC(96f7646e) SHA1(400a831b83d6ac4d2a46ef95b97b1ee237099e44) ) /* Priority */
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d2.313",  0x000000, 0x080000, CRC(7c52581b) SHA1(7e668476f886806b0c06fa0bcf4bbc955878c87c) )
 ROM_END
 
@@ -2302,7 +2308,7 @@ ROM_START( cupsoc )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "seibu8.7a", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )
@@ -2337,7 +2343,7 @@ ROM_START( cupsoca )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "seibu8.7a", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )
@@ -2372,7 +2378,7 @@ ROM_START( cupsocb )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "seibu8.7a", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )
@@ -2407,7 +2413,7 @@ ROM_START( cupsocs )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "8_7a.bin", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )
@@ -2444,7 +2450,7 @@ ROM_START( cupsocs2 )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "seibu8.7a", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )
@@ -2479,7 +2485,7 @@ ROM_START( olysoc92 )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "seibu8.7a", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )
@@ -2514,7 +2520,7 @@ ROM_START( olysoc92a )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "seibu8.7a", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )
@@ -2550,7 +2556,7 @@ ROM_START( olysoc92b )
 	ROM_REGION( 0x040000, "oki", 0 )    /* ADPCM samples */
 	ROM_LOAD( "8", 0x000000, 0x040000, CRC(6f594808) SHA1(218aa12068aa587c7656355f6a6b86d97c868774) )
 
-	ROM_REGION( 0x080000, "user1", 0 )
+	ROM_REGION( 0x080000, "copx", 0 )
 	ROM_LOAD( "copx-d1.bin", 0x000000, 0x080000, CRC(029bc402) SHA1(0f64e4c32d95abfa3920b39ed3cf0cc6eb50191b) )
 
 	ROM_REGION( 0x200, "proms", 0 )

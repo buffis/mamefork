@@ -61,7 +61,7 @@ public:
 	void microbx2(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -75,19 +75,19 @@ private:
 	required_device<beep_device> m_beeper;
 	required_ioport m_sw1;
 
-	void upd7220_map(address_map &map);
+	void upd7220_map(address_map &map) ATTR_COLD;
 
 	UPD7220_DISPLAY_PIXELS_MEMBER(display_pixels);
 
-	void mem_map(address_map &map);
-	void ram_map(address_map &map);
-	void rom0_map(address_map &map);
-	void rom1_map(address_map &map);
-	void rom2_map(address_map &map);
-	void io0_map(address_map &map);
-	void io1_map(address_map &map);
-	void io2_map(address_map &map);
-	void boot_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void ram_map(address_map &map) ATTR_COLD;
+	void rom0_map(address_map &map) ATTR_COLD;
+	void rom1_map(address_map &map) ATTR_COLD;
+	void rom2_map(address_map &map) ATTR_COLD;
+	void io0_map(address_map &map) ATTR_COLD;
+	void io1_map(address_map &map) ATTR_COLD;
+	void io2_map(address_map &map) ATTR_COLD;
+	void boot_map(address_map &map) ATTR_COLD;
 
 	static void floppy_formats(format_registration &fr);
 
@@ -302,10 +302,10 @@ void microbx2_state::microbx2(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &microbx2_state::mem_map);
 
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_RASTER));
-	screen.set_raw(16_MHz_XTAL, 1024, 0, 768, 674, 31, 607);
+	screen.set_raw(16_MHz_XTAL / 3, 1024, 0, 768, 674, 31, 607);
 	screen.set_screen_update("gdc", FUNC(upd7220a_device::screen_update));
 
-	upd7220a_device &gdc(UPD7220A(config, "gdc", 16_MHz_XTAL / 8));
+	upd7220a_device &gdc(UPD7220A(config, "gdc", 16_MHz_XTAL / 3)); // unverified clock, hand tuned for ~60 Hz
 	gdc.set_addrmap(0, &microbx2_state::upd7220_map);
 	gdc.set_display_pixels(FUNC(microbx2_state::display_pixels));
 	gdc.set_screen("screen");
@@ -327,7 +327,7 @@ void microbx2_state::microbx2(machine_config &config)
 	m_pia1->writepb_handler().set(FUNC(microbx2_state::pia1_pb_w));
 	m_pia1->cb2_handler().set("centronics", FUNC(centronics_device::write_strobe));
 
-	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard", 0));
+	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard"));
 	keyboard.set_keyboard_callback(FUNC(microbx2_state::kbd_w));
 
 	centronics_device &centronics(CENTRONICS(config, "centronics", centronics_devices, "printer"));

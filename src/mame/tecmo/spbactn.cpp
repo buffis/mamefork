@@ -183,7 +183,7 @@ public:
 	void spbactn(machine_config &config);
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<cpu_device> m_audiocpu;
@@ -208,7 +208,7 @@ protected:
 
 	int draw_video(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect, bool alt_sprites);
 
-	void sound_map(address_map &map);
+	void sound_map(address_map &map) ATTR_COLD;
 
 private:
 	TILE_GET_INFO_MEMBER(get_bg_tile_info);
@@ -220,7 +220,7 @@ private:
 
 	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 };
 
 class spbactnp_state : public spbactn_state
@@ -239,7 +239,7 @@ public:
 	void spbactnp(machine_config &config);
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_extracpu;
@@ -266,8 +266,8 @@ private:
 
 	uint8_t extra_latch_r(offs_t offset);
 
-	void extra_map(address_map &map);
-	void main_map(address_map &map);
+	void extra_map(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -749,9 +749,9 @@ void spbactn_state::spbactn(machine_config &config)
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_spbactn);
 	PALETTE(config, m_palette).set_format(palette_device::xBGR_444, 0x2800 / 2);
 
-	TECMO_SPRITE(config, m_sprgen, 0, m_palette, gfx_spbactn_spr);
+	TECMO_SPRITE(config, m_sprgen, m_palette, gfx_spbactn_spr);
 
-	TECMO_MIXER(config, m_mixer, 0);
+	TECMO_MIXER(config, m_mixer);
 	m_mixer->set_mixer_shifts(8,10,4);
 	m_mixer->set_blendcols(   0x0000 + 0x300, 0x0000 + 0x200, 0x0000 + 0x100, 0x0000 + 0x000 );
 	m_mixer->set_regularcols( 0x0800 + 0x300, 0x0800 + 0x200, 0x0800 + 0x100, 0x0800 + 0x000 );
@@ -815,9 +815,9 @@ void spbactnp_state::spbactnp(machine_config &config)
 
 	config.set_default_layout(layout_spbactnp);
 
-	TECMO_SPRITE(config, m_sprgen, 0, m_palette, gfx_spbactnp_spr);
+	TECMO_SPRITE(config, m_sprgen, m_palette, gfx_spbactnp_spr);
 
-	TECMO_MIXER(config, m_mixer, 0);
+	TECMO_MIXER(config, m_mixer);
 	m_mixer->set_mixer_shifts(12,14,8);
 	m_mixer->set_blendcols(   0x0000 + 0x300, 0x0000 + 0x200, 0x0000 + 0x100, 0x0000 + 0x000 );
 	m_mixer->set_regularcols( 0x0800 + 0x300, 0x0800 + 0x200, 0x0800 + 0x100, 0x0800 + 0x000 );

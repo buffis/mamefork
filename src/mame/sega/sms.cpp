@@ -398,7 +398,7 @@ void gamegear_state::gg_io(address_map &map)
 static INPUT_PORTS_START( sms )
 	PORT_START("PAUSE")
 	PORT_BIT( 0x7f, IP_ACTIVE_LOW, IPT_UNUSED )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME(DEF_STR(Pause)) PORT_CODE(KEYCODE_1) PORT_WRITE_LINE_DEVICE_MEMBER("sms_vdp", sega315_5124_device, n_nmi_in_write)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME(DEF_STR(Pause)) PORT_CODE(KEYCODE_1) PORT_WRITE_LINE_DEVICE_MEMBER("sms_vdp", FUNC(sega315_5124_device::n_nmi_in_write))
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( sg1000m3 )
@@ -975,8 +975,7 @@ void gamegear_state::gamegear(machine_config &config)
 	m_main_scr->set_screen_update(FUNC(gamegear_state::screen_update_gamegear));
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	/* VDP chip of the Gamegear 2 ASIC version */
 	SEGA315_5377(config, m_vdp, MASTER_CLOCK_GG/3);
@@ -984,15 +983,15 @@ void gamegear_state::gamegear(machine_config &config)
 	m_vdp->set_is_pal(false);
 	m_vdp->n_int().set_inputline(m_maincpu, 0);
 	m_vdp->vblank().set(FUNC(gamegear_state::gg_pause_callback));
-	m_vdp->add_route(0, "lspeaker", 1.00);
-	m_vdp->add_route(1, "rspeaker", 1.00);
+	m_vdp->add_route(0, "speaker", 1.00, 0);
+	m_vdp->add_route(1, "speaker", 1.00, 1);
 
 	/* cartridge */
 	GAMEGEAR_CART_SLOT(config, "slot", gg_cart, nullptr).set_must_be_loaded(true);
 
 	SOFTWARE_LIST(config, "cart_list").set_original("gamegear");
 
-	GAMEGEAR_IO_PORT(config, m_gg_ioport, 0);
+	GAMEGEAR_IO_PORT(config, m_gg_ioport);
 	m_gg_ioport->set_in_handler(m_port_gg_ext, FUNC(sms_control_port_device::in_r));
 	m_gg_ioport->set_out_handler(m_port_gg_ext, FUNC(sms_control_port_device::out_w));
 	m_gg_ioport->hl_handler().set(FUNC(gamegear_state::gg_nmi));

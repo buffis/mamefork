@@ -17,6 +17,7 @@
 #include "xmlfile.h"
 
 #include <cctype>
+#include <cstdio>
 
 //**************************************************************************
 //  NETWORK MANAGER
@@ -70,6 +71,7 @@ void network_manager::config_load(config_type cfg_type, config_level cfg_level, 
 		}
 	}
 }
+
 //-------------------------------------------------
 //  config_save - save data to the configuration
 //  file

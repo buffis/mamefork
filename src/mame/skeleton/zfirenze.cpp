@@ -59,8 +59,8 @@ public:
 	void zfirenze(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 };
@@ -105,4 +105,4 @@ ROM_END
 
 
 //    YEAR  NAME       PARENT  COMPAT  MACHINE    INPUT      CLASS           INIT        COMPANY            FULLNAME                     FLAGS
-SYST( 1995, zfirenze,  0,      0,      zfirenze,  zfirenze,  zfirenze_state, empty_init, "Zanussi / Necta", "Firenze (vending machine)", MACHINE_IS_SKELETON )
+SYST( 1995, zfirenze,  0,      0,      zfirenze,  zfirenze,  zfirenze_state, empty_init, "Zanussi / Necta", "Firenze (vending machine)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

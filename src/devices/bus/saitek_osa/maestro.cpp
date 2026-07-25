@@ -3,7 +3,7 @@
 // thanks-to:Berger
 /*******************************************************************************
 
-Saitek OSA Module: Kasparov Maestro/Analyst (1987-1990)
+Saitek OSA: Kasparov Maestro/Analyst Module (1987-1990)
 This is for the newer versions. For Maestro A, see maestroa.*
 
 The hardware and chess engine is similar to the Stratos/Turbo King series.
@@ -64,11 +64,11 @@ public:
 protected:
 	saitekosa_maestro_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
-	virtual const tiny_rom_entry *device_rom_region() const override;
-	virtual ioport_constructor device_input_ports() const override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	memory_share_creator<u8> m_banked_ram;
@@ -80,7 +80,7 @@ protected:
 	bool m_latch_enable = false;
 	u8 m_extrom_bank = 0;
 
-	virtual void main_map(address_map &map);
+	virtual void main_map(address_map &map) ATTR_COLD;
 
 	u8 extrom_r(offs_t offset);
 	template <int N> void stall_w(u8 data = 0);
@@ -118,13 +118,13 @@ public:
 	static auto parent_rom_device_type() { return &OSA_MAESTRO; }
 
 protected:
-	virtual const tiny_rom_entry *device_rom_region() const override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 private:
 	required_device<hd44780_device> m_lcd;
 
-	virtual void main_map(address_map &map) override;
+	virtual void main_map(address_map &map) override ATTR_COLD;
 };
 
 saitekosa_analyst_device::saitekosa_analyst_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock) :
@@ -147,6 +147,7 @@ void saitekosa_maestro_device::device_start()
 
 void saitekosa_maestro_device::device_reset()
 {
+	m_expansion->rts_w(1);
 	control_w(0);
 }
 
@@ -168,7 +169,7 @@ u8 saitekosa_maestro_device::data_r()
 
 void saitekosa_maestro_device::nmi_w(int state)
 {
-	m_maincpu->set_input_line(0, !state ? ASSERT_LINE : CLEAR_LINE);
+	m_maincpu->set_input_line(0, state ? CLEAR_LINE : ASSERT_LINE);
 }
 
 void saitekosa_maestro_device::ack_w(int state)
@@ -215,8 +216,8 @@ u8 saitekosa_maestro_device::rts_r()
 	if (!machine().side_effects_disabled())
 	{
 		// strobe RTS-P
-		m_expansion->rts_w(1);
 		m_expansion->rts_w(0);
+		m_expansion->rts_w(1);
 	}
 
 	return 0xff;
@@ -254,7 +255,7 @@ u8 saitekosa_maestro_device::ack_r()
 {
 	// d6: _Vcc
 	// d7: ACK-P
-	return m_expansion->ack_state() ? 0x80 : 0x00;
+	return m_expansion->ack_state() ? 0 : 0x80;
 }
 
 void saitekosa_maestro_device::main_map(address_map &map)
@@ -282,7 +283,7 @@ void saitekosa_analyst_device::main_map(address_map &map)
 
 static INPUT_PORTS_START( maestro )
 	PORT_START("CPU")
-	PORT_CONFNAME( 0x07, 0x04, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, saitekosa_maestro_device, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x07, 0x04, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(saitekosa_maestro_device::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x00, "4MHz" )
 	PORT_CONFSETTING(    0x01, "5.67MHz" )
 	PORT_CONFSETTING(    0x02, "6MHz" )
@@ -432,5 +433,5 @@ const tiny_rom_entry *saitekosa_analyst_device::device_rom_region() const
 } // anonymous namespace
 
 
-DEFINE_DEVICE_TYPE_PRIVATE(OSA_MAESTRO, device_saitekosa_expansion_interface, saitekosa_maestro_device, "osa_maestro", "Saitek OSA Maestro B-D")
-DEFINE_DEVICE_TYPE_PRIVATE(OSA_ANALYST, device_saitekosa_expansion_interface, saitekosa_analyst_device, "osa_analyst", "Saitek OSA Analyst")
+DEFINE_DEVICE_TYPE_PRIVATE(OSA_MAESTRO, device_saitekosa_expansion_interface, saitekosa_maestro_device, "osa_maestro", "Saitek OSA: Kasparov Maestro B-D Module")
+DEFINE_DEVICE_TYPE_PRIVATE(OSA_ANALYST, device_saitekosa_expansion_interface, saitekosa_analyst_device, "osa_analyst", "Saitek OSA: Kasparov Analyst Module")

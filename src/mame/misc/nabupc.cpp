@@ -196,12 +196,12 @@ public:
 	void nabupc(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
-	void memory_map(address_map &map);
-	void io_map(address_map &map);
+	void memory_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
 	uint8_t read_mem(offs_t offset);
 
 	uint8_t psg_portb_r();
@@ -350,8 +350,6 @@ void nabupc_state::nabupc(machine_config &config)
 // Machine Start
 void nabupc_state::machine_start()
 {
-	m_leds.resolve();
-
 	m_hccauart->write_np(1);
 	m_hccauart->write_nb2(1);
 	m_hccauart->write_nb1(1);

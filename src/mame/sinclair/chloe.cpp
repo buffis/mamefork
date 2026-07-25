@@ -1,5 +1,6 @@
 // license:BSD-3-Clause
 // copyright-holders:Andrei I. Holub
+// thanks-to:Andrew Owen
 /**********************************************************************
     Chloe 280SE
 **********************************************************************/
@@ -9,8 +10,9 @@
 #include "screen_ula.h"
 #include "spec128.h"
 
+#include "bus/spectrum/ay/slot.h"
+#include "machine/8042kbdc.h"
 #include "machine/spi_sdcard.h"
-#include "sound/ay8910.h"
 #include "sound/dac.h"
 
 #include "screen.h"
@@ -49,12 +51,12 @@ public:
 		, m_bank1_view(*this, "bank1_view")
 		, m_regs_map(*this, "regs_map")
 		, m_palette(*this, "palette")
-		, m_ula(*this, "ula")
+		, m_ula_scr(*this, "ula_scr")
 		, m_sdcard(*this, "sdcard")
 		, m_io_line(*this, "IO_LINE%u", 0U)
 		, m_io_mouse(*this, "mouse_input%u", 1U)
-		, m_ay(*this, "ay%u", 0U)
 		, m_covox(*this, "covox")
+		, m_kbdc(*this, "pc_kbdc")
 	{}
 
 	void chloe(machine_config &config);
@@ -66,13 +68,14 @@ protected:
 
 	virtual void machine_start() override ATTR_COLD;
 	virtual void machine_reset() override ATTR_COLD;
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
-	void map_regs(address_map &map);
-	void map_fetch(address_map &map);
-	void map_mem(address_map &map);
-	void map_io(address_map &map);
+	void map_regs(address_map &map) ATTR_COLD;
+	void map_fetch(address_map &map) ATTR_COLD;
+	void map_mem(address_map &map) ATTR_COLD;
+	void map_io(address_map &map) ATTR_COLD;
 
+	void irq_keyboard_w(int state);
 	u8 kbd_fe_r(offs_t offset);
 	u8 divmmc_neutral_r(offs_t offset);
 	u8 divmmc_enable_r(offs_t offset);
@@ -82,7 +85,6 @@ protected:
 	void port_f4_w(u8 data);
 	void port_ff_w(u8 data);
 	void port_e3_w(u8 data);
-	void ay_address_w(u8 data);
 	u8 spi_data_r();
 	void spi_data_w(u8 data);
 	void spi_miso_w(u8 data);
@@ -98,18 +100,16 @@ private:
 	INTERRUPT_GEN_MEMBER(chloe_interrupt);
 
 	memory_access<8, 0, 0, ENDIANNESS_LITTLE>::specific m_uno_regs;
-	memory_access<16, 0, 0, ENDIANNESS_LITTLE>::specific m_program;
-	memory_access<16, 0, 0, ENDIANNESS_LITTLE>::specific m_io;
 	memory_bank_array_creator<8> m_bank_ram;
 	memory_view m_bank0_view, m_bank1_view;
 	required_device<address_map_bank_device> m_regs_map;
 	required_device<device_palette_interface> m_palette;
-	required_device<screen_ula_plus_device> m_ula;
-	required_device<spi_sdcard_sdhc_device> m_sdcard;
+	required_device<screen_ula_plus_device> m_ula_scr;
+	required_device<spi_sdcard_device> m_sdcard;
 	required_ioport_array<8> m_io_line;
-	required_ioport_array<3> m_io_mouse;
-	required_device_array<ay8912_device, 2> m_ay;
+	required_ioport_array<4> m_io_mouse;
 	required_device<dac_byte_interface> m_covox;
+	required_device<kbdc8042_device> m_kbdc;
 
 	u8 m_timex_mmu;
 	u8 m_port_ff_data;
@@ -119,7 +119,6 @@ private:
 	u8 m_divmmc_ctrl;
 	u8 m_uno_regs_data[256];
 	u8 m_palpen_selected;
-	u8 m_ay_selected;
 	bool m_dma_hilo;
 	u8 m_dma_src_latch;
 	u8 m_dma_dst_latch;
@@ -141,7 +140,7 @@ private:
 void chloe_state::update_memory()
 {
 	m_screen->update_now();
-	m_ula->ula_shadow_en_w(BIT(m_port_7ffd_data, 3));
+	m_ula_scr->ula_shadow_en_w(BIT(m_port_7ffd_data, 3));
 
 	const bool ext = BIT(m_port_ff_data, 7); // 0 - DOC 7xxxx=28+; 1 - EXT 6xxxx=24+
 	m_bank0_view.disable();
@@ -227,10 +226,8 @@ u32 chloe_state::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, cons
 	clip256x192 &= cliprect;
 
 	screen.priority().fill(0, cliprect);
-	m_ula->draw_border(bitmap, cliprect, m_port_fe_data & 0x07);
-
-	const bool flash = u64(screen.frame_number() / m_frame_invert_count) & 1;
-	m_ula->draw(screen, bitmap, clip256x192, flash, 0);
+	m_ula_scr->draw_border(screen, bitmap, cliprect, m_port_fe_data & 0x07);
+	m_ula_scr->draw(screen, bitmap, clip256x192, 0);
 
 	return 0;
 }
@@ -248,7 +245,7 @@ void chloe_state::port_7ffd_w(u8 data)
 
 void chloe_state::port_ff_w(u8 data)
 {
-	m_ula->port_ff_reg_w(data);
+	m_ula_scr->port_ff_reg_w(data);
 
 	m_port_ff_data = data;
 	update_memory();
@@ -271,18 +268,6 @@ void chloe_state::port_e3_w(u8 data)
 		m_divmmc_ctrl = data;
 	}
 	update_memory();
-}
-
-void chloe_state::ay_address_w(u8 data)
-{
-	if ((data & 0xfe) == 0xfe)
-	{
-		m_ay_selected = data & 1;
-	}
-	else
-	{
-		m_ay[m_ay_selected]->address_w(data);
-	}
 }
 
 u8 chloe_state::spi_data_r()
@@ -517,12 +502,8 @@ void chloe_state::map_io(address_map &map)
 		}
 	}));
 
-	map(0xbffd, 0xbffd).lw8(NAME([this](u8 data) { return m_ay[m_ay_selected]->data_w(data); }));
-	map(0xfffd, 0xfffd).lr8(NAME([this]()
-	{
-		return m_ay[m_ay_selected]->data_r();
-	})).w(FUNC(chloe_state::ay_address_w));
-
+	map(0xbffd, 0xbffd).w("ay_slot", FUNC(ay_slot_device::data_w));
+	map(0xfffd, 0xfffd).rw("ay_slot", FUNC(ay_slot_device::data_r), FUNC(ay_slot_device::address_w));
 	map(0xbf3b, 0xbf3b).lw8(NAME([this](u8 data)
 	{
 		m_palpen_selected = data;
@@ -543,7 +524,7 @@ void chloe_state::map_io(address_map &map)
 			}
 			else if ((m_palpen_selected & 0xc0) == 0x40)
 			{
-				m_ula->ulap_en_w(data & 1);
+				m_ula_scr->ulap_en_w(data & 1);
 			}
 		}));
 	map(0xfc3b, 0xfc3b).lrw8(NAME([this]() { return m_reg_selected; })
@@ -556,9 +537,9 @@ void chloe_state::map_io(address_map &map)
 	map(0x00df, 0x00df).mirror(0xff00).lrw8(NAME([this]() -> u8 { return m_io_joy2->read() & 0x1f; })  // Kempston 2
 		, NAME([this](u8 data) { m_covox->data_w(data); }));
 	map(0x00b3, 0x00b3).mirror(0xff00).lw8(NAME([this](u8 data) { m_covox->data_w(data); }));
-	map(0xfadf, 0xfadf).lr8(NAME([this]() -> u8 { return 0x80 | (m_io_mouse[2]->read() & 0x07); }));
-	map(0xfbdf, 0xfbdf).lr8(NAME([this]() -> u8 { return  m_io_mouse[0]->read(); }));
-	map(0xffdf, 0xffdf).lr8(NAME([this]() -> u8 { return ~m_io_mouse[1]->read(); }));
+	map(0xfadf, 0xfadf).lr8(NAME([this]() -> u8 { return (m_io_mouse[3]->read() << 4) | m_io_mouse[2]->read(); }));
+	map(0xfbdf, 0xfbdf).lr8(NAME([this]() -> u8 { return m_io_mouse[0]->read(); }));
+	map(0xffdf, 0xffdf).lr8(NAME([this]() -> u8 { return m_io_mouse[1]->read(); }));
 
 	map(0x00f7, 0x00f7).mirror(0xff00).nopw(); // Audio Mixer. No support for now, using default ACB
 	map(0x8e3b, 0x8e3b).nopw(); // PRISMSPEEDCTRL used by software compatible with Prism
@@ -584,6 +565,21 @@ void chloe_state::map_regs(address_map &map)
 		m_uno_regs_data[0x01] = data;
 		LOGMEM("UnoMapper %d\n", data);
 	}));
+	map(0x04, 0x04).lr8(NAME([this]() // SCANCODE
+	{
+		u8 dat = m_kbdc->data_r(0);
+		if (dat == 0xf0)
+		{
+			dat = 0;
+			m_kbdc->data_r(0);
+		}
+		return dat;
+	}));
+	map(0x05, 0x05).lr8(NAME([this]() // KBSTATUS
+	{
+		return m_uno_regs_data[0x05];
+	}));
+	// 0x07 KEYMAP
 	map(0x0b, 0x0b).lw8(NAME([this](u8 data)
 	{
 		m_uno_regs_data[0x0b] = data;
@@ -595,6 +591,14 @@ void chloe_state::map_regs(address_map &map)
 		raster_irq_adjust();
 	}));
 	map(0xa0, 0xa6).w(FUNC(chloe_state::dma_reg_w));
+}
+
+void chloe_state::irq_keyboard_w(int state)
+{
+	if (state)
+		m_uno_regs_data[0x05] |= 5;
+	else
+		m_uno_regs_data[0x05] &= ~5;
 }
 
 u8 chloe_state::kbd_fe_r(offs_t offset)
@@ -686,16 +690,16 @@ INPUT_PORTS_START(chloe)
 	PORT_BIT(0xe720, IP_ACTIVE_LOW, IPT_UNUSED)
 
 	PORT_START("IO_LINE3") /* 0xF7FE */
-	PORT_BIT(0x0001, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("1   Tab   !")  PORT_CODE(KEYCODE_1)       PORT_CHAR(UCHAR_MAMEKEY(F1)) PORT_CHAR('1') PORT_CHAR('!')
-																			PORT_CODE(KEYCODE_F1) PORT_CODE(KEYCODE_TAB) PORT_CODE(KEYCODE_1_PAD)
-	PORT_BIT(0x0002, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("2   CLk   @")  PORT_CODE(KEYCODE_2)       PORT_CHAR(UCHAR_MAMEKEY(F2)) PORT_CHAR('2') PORT_CHAR('@')
-																			PORT_CODE(KEYCODE_F2) PORT_CODE(KEYCODE_CAPSLOCK) PORT_CODE(KEYCODE_2_PAD)
-	PORT_BIT(0x0004, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("3   PgU   #")  PORT_CODE(KEYCODE_3)       PORT_CHAR(UCHAR_MAMEKEY(F3)) PORT_CHAR('3') PORT_CHAR('#')
-																			PORT_CODE(KEYCODE_F3) PORT_CODE(KEYCODE_PGUP) PORT_CODE(KEYCODE_3_PAD)
-	PORT_BIT(0x0008, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("4   PgD   $")  PORT_CODE(KEYCODE_4)       PORT_CHAR(UCHAR_MAMEKEY(F4)) PORT_CHAR('4') PORT_CHAR('$')
-																			PORT_CODE(KEYCODE_F4) PORT_CODE(KEYCODE_PGDN) PORT_CODE(KEYCODE_4_PAD)
-	PORT_BIT(0x0010, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("5   Lft   %")  PORT_CODE(KEYCODE_5)       PORT_CHAR(UCHAR_MAMEKEY(F5)) PORT_CHAR('5') PORT_CHAR('%')
-																			PORT_CODE(KEYCODE_F5) PORT_CODE(KEYCODE_LEFT) PORT_CODE(KEYCODE_5_PAD)
+	PORT_BIT(0x0001, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("1   Tab   !")  PORT_CODE(KEYCODE_1)       PORT_CHAR('1') PORT_CHAR('!')
+																			PORT_CODE(KEYCODE_TAB) PORT_CODE(KEYCODE_1_PAD)
+	PORT_BIT(0x0002, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("2   CLk   @")  PORT_CODE(KEYCODE_2)       PORT_CHAR('2') PORT_CHAR('@')
+																			PORT_CODE(KEYCODE_CAPSLOCK) PORT_CODE(KEYCODE_2_PAD)
+	PORT_BIT(0x0004, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("3   PgU   #")  PORT_CODE(KEYCODE_3)       PORT_CHAR('3') PORT_CHAR('#')
+																			PORT_CODE(KEYCODE_PGUP) PORT_CODE(KEYCODE_3_PAD)
+	PORT_BIT(0x0008, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("4   PgD   $")  PORT_CODE(KEYCODE_4)       PORT_CHAR('4') PORT_CHAR('$')
+																			PORT_CODE(KEYCODE_PGDN) PORT_CODE(KEYCODE_4_PAD)
+	PORT_BIT(0x0010, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("5   Lft   %")  PORT_CODE(KEYCODE_5)       PORT_CHAR('5') PORT_CHAR('%')
+																			PORT_CODE(KEYCODE_LEFT) PORT_CODE(KEYCODE_5_PAD)
 	PORT_BIT(0x0040, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("CS Line3")     PORT_CODE(KEYCODE_TAB) PORT_CODE(KEYCODE_CAPSLOCK) PORT_CODE(KEYCODE_PGUP) PORT_CODE(KEYCODE_PGDN) PORT_CODE(KEYCODE_LEFT)
 	PORT_BIT(0x0080, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("SS Line3")
 	PORT_BIT(0x0100, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("! (SS+KEY)")   PORT_CODE(KEYCODE_1)
@@ -706,16 +710,16 @@ INPUT_PORTS_START(chloe)
 	PORT_BIT(0xe020, IP_ACTIVE_LOW, IPT_UNUSED)
 
 	PORT_START("IO_LINE4") /* 0xEFFE */
-	PORT_BIT(0x0001, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("0   BSp   _")  PORT_CODE(KEYCODE_0)       PORT_CHAR(UCHAR_MAMEKEY(F10)) PORT_CHAR('0') PORT_CHAR('_')
-																			PORT_CODE(KEYCODE_F10) PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_0_PAD)
-	PORT_BIT(0x0002, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("9   Ctr   )")  PORT_CODE(KEYCODE_9)       PORT_CHAR(UCHAR_MAMEKEY(F9)) PORT_CHAR('9') PORT_CHAR(')')
-																			PORT_CODE(KEYCODE_F9) PORT_CODE(KEYCODE_9_PAD) PORT_CODE(KEYCODE_LCONTROL)
-	PORT_BIT(0x0004, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("8   Rgt   (")  PORT_CODE(KEYCODE_8)       PORT_CHAR(UCHAR_MAMEKEY(F8)) PORT_CHAR('8') PORT_CHAR('(')
-																			PORT_CODE(KEYCODE_F8) PORT_CODE(KEYCODE_RIGHT) PORT_CODE(KEYCODE_8_PAD)
-	PORT_BIT(0x0008, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("7   Up    '")  PORT_CODE(KEYCODE_7)       PORT_CHAR(UCHAR_MAMEKEY(F7)) PORT_CHAR('7') PORT_CHAR('\'')
-																			PORT_CODE(KEYCODE_F7) PORT_CODE(KEYCODE_UP) PORT_CODE(KEYCODE_QUOTE) PORT_CODE(KEYCODE_7_PAD)
-	PORT_BIT(0x0010, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("6   Dwn   &")  PORT_CODE(KEYCODE_6)       PORT_CHAR(UCHAR_MAMEKEY(F6)) PORT_CHAR('6') PORT_CHAR('&')
-																			PORT_CODE(KEYCODE_F6) PORT_CODE(KEYCODE_DOWN) PORT_CODE(KEYCODE_6_PAD)
+	PORT_BIT(0x0001, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("0   BSp   _")  PORT_CODE(KEYCODE_0)       PORT_CHAR('0') PORT_CHAR('_')
+																			PORT_CODE(KEYCODE_BACKSPACE) PORT_CODE(KEYCODE_0_PAD)
+	PORT_BIT(0x0002, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("9   Ctr   )")  PORT_CODE(KEYCODE_9)       PORT_CHAR('9') PORT_CHAR(')')
+																			PORT_CODE(KEYCODE_9_PAD) PORT_CODE(KEYCODE_LCONTROL)
+	PORT_BIT(0x0004, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("8   Rgt   (")  PORT_CODE(KEYCODE_8)       PORT_CHAR('8') PORT_CHAR('(')
+																			PORT_CODE(KEYCODE_RIGHT) PORT_CODE(KEYCODE_8_PAD)
+	PORT_BIT(0x0008, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("7   Up    '")  PORT_CODE(KEYCODE_7)       PORT_CHAR('7') PORT_CHAR('\'')
+																			PORT_CODE(KEYCODE_UP) PORT_CODE(KEYCODE_QUOTE) PORT_CODE(KEYCODE_7_PAD)
+	PORT_BIT(0x0010, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("6   Dwn   &")  PORT_CODE(KEYCODE_6)       PORT_CHAR('6') PORT_CHAR('&')
+																			PORT_CODE(KEYCODE_DOWN) PORT_CODE(KEYCODE_6_PAD)
 	PORT_BIT(0x0040, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("CS Line4")     PORT_CODE(KEYCODE_BACKSPACE)  PORT_CODE(KEYCODE_RIGHT) PORT_CODE(KEYCODE_UP) PORT_CODE(KEYCODE_DOWN) PORT_CODE(KEYCODE_LCONTROL)
 	PORT_BIT(0x0080, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("SS Line4")     PORT_CODE(KEYCODE_QUOTE)
 	PORT_BIT(0x0100, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("_ (SS+KEY)")   PORT_CODE(KEYCODE_MINUS)
@@ -771,7 +775,7 @@ INPUT_PORTS_START(chloe)
 	PORT_BIT(0xef20, IP_ACTIVE_LOW, IPT_UNUSED)
 
 	PORT_START("NMI")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_OTHER) PORT_NAME("NMI (SS+KEY)") PORT_CODE(KEYCODE_ESC) PORT_CHANGED_MEMBER(DEVICE_SELF, chloe_state, on_divmmc_nmi, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_OTHER) PORT_NAME("NMI (SS+KEY)") PORT_CODE(KEYCODE_ESC) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(chloe_state::on_divmmc_nmi), 0)
 
 
 	PORT_START("JOY1")
@@ -792,12 +796,16 @@ INPUT_PORTS_START(chloe)
 	PORT_BIT(0xff, 0, IPT_MOUSE_X) PORT_SENSITIVITY(30)
 
 	PORT_START("mouse_input2")
-	PORT_BIT(0xff, 0, IPT_MOUSE_Y) PORT_SENSITIVITY(30)
+	PORT_BIT(0xff, 0, IPT_MOUSE_Y) PORT_REVERSE PORT_SENSITIVITY(30)
 
 	PORT_START("mouse_input3")
-	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_BUTTON4) PORT_NAME("Left mouse button") PORT_CODE(MOUSECODE_BUTTON1)
-	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_BUTTON5) PORT_NAME("Right mouse button") PORT_CODE(MOUSECODE_BUTTON2)
-	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_BUTTON6) PORT_NAME("Middle mouse button") PORT_CODE(MOUSECODE_BUTTON3)
+	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_BUTTON4) PORT_NAME("Mouse Button Left") PORT_CODE(MOUSECODE_BUTTON1)
+	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_BUTTON5) PORT_NAME("Mouse Button Right") PORT_CODE(MOUSECODE_BUTTON2)
+	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_BUTTON6) PORT_NAME("Mouse Button Middle") PORT_CODE(MOUSECODE_BUTTON3)
+	PORT_BIT(0xf8, IP_ACTIVE_HIGH, IPT_UNUSED)
+
+	PORT_START("mouse_input4")
+	PORT_BIT(0x0f, 0, IPT_DIAL_V) PORT_REVERSE PORT_NAME("Mouse Scroll V") PORT_SENSITIVITY(1) PORT_CODE(MOUSECODE_Z)
 
 INPUT_PORTS_END
 
@@ -811,8 +819,6 @@ void chloe_state::machine_start()
 	m_irq_raster_off_timer = timer_alloc(FUNC(chloe_state::raster_irq_off), this);
 
 	m_regs_map->space(AS_PROGRAM).specific(m_uno_regs);
-	m_maincpu->space(AS_PROGRAM).specific(m_program);
-	m_maincpu->space(AS_IO).specific(m_io);
 
 	for (int i = 0; i < 8; i++)
 	{
@@ -832,9 +838,8 @@ void chloe_state::machine_start()
 	save_item(NAME(m_reg_selected));
 	save_item(NAME(m_divmmc_paged));
 	save_item(NAME(m_divmmc_ctrl));
-	save_pointer(NAME(m_uno_regs_data), 256);
+	save_item(NAME(m_uno_regs_data));
 	save_item(NAME(m_palpen_selected));
-	save_item(NAME(m_ay_selected));
 	save_item(NAME(m_dma_hilo));
 	save_item(NAME(m_dma_src_latch));
 	save_item(NAME(m_dma_dst_latch));
@@ -865,7 +870,6 @@ void chloe_state::machine_reset()
 	m_port_7ffd_data = 0;
 	m_divmmc_paged = 1;
 	m_divmmc_ctrl &= 0x40;
-	m_ay_selected = 0;
 
 	update_memory();
 }
@@ -888,10 +892,10 @@ GFXDECODE_END
 void chloe_state::video_start()
 {
 	spectrum_128_state::video_start();
-	m_contention_pattern = {}; // Has no contention
 
 	const u8 *ram = m_ram->pointer();
-	m_ula->set_host_ram_ptr(ram);
+	m_ula_scr->set_bram_bank5_ptr(ram + (5 << 14));
+	m_ula_scr->set_bram_bank7_ptr(ram + (7 << 14));
 }
 
 
@@ -907,48 +911,55 @@ void chloe_state::chloe(machine_config &config)
 	m_maincpu->set_memory_map(&chloe_state::map_mem);
 	m_maincpu->set_io_map(&chloe_state::map_io);
 	m_maincpu->set_vblank_int("screen", FUNC(chloe_state::chloe_interrupt));
-	m_maincpu->nomreq_cb().set_nop();
+	//m_maincpu->busack_cb().set("dma", FUNC(dma_slot_device::bai_w));
 
 	ADDRESS_MAP_BANK(config, m_regs_map).set_map(&chloe_state::map_regs).set_options(ENDIANNESS_LITTLE, 8, 8, 0);
 
 	/*
-	???DMA(config, m_dma, 28_MHz_XTAL / 8);
-	m_dma->out_busreq_callback().set_inputline(m_maincpu, Z80_INPUT_LINE_BUSRQ);
-	m_dma->in_mreq_callback().set([this](offs_t offset) { return m_program.read_byte(offset); });
-	m_dma->out_mreq_callback().set([this](offs_t offset, u8 data) { m_program.write_byte(offset, data); });
-	m_dma->in_iorq_callback().set([this](offs_t offset) { return m_io.read_byte(offset); });
-	m_dma->out_iorq_callback().set([this](offs_t offset, u8 data) { m_io.write_byte(offset, data); });
+	???dma_slot_device &dma(DMA_SLOT(config.replace(), "dma", 28_MHz_XTAL / 8, default_dma_slot_devices, nullptr));
+	dma.set_io_space(m_maincpu, AS_IO);
+	dma.out_busreq_callback().set_inputline(m_maincpu, Z80_INPUT_LINE_BUSREQ);
+	dma.out_int_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0);
+	dma.in_mreq_callback().set([this](offs_t offset) { return m_program.read_byte(offset); });
+	dma.out_mreq_callback().set([this](offs_t offset, u8 data) { m_program.write_byte(offset, data); });
+	dma.in_iorq_callback().set([this](offs_t offset) { return m_io.read_byte(offset); });
+	dma.out_iorq_callback().set([this](offs_t offset, u8 data) { m_io.write_byte(offset, data); });
 	*/
 
-	SPI_SDCARD(config, m_sdcard, 0);
+	SPI_SDCARD(config, m_sdcard);
+	m_sdcard->set_prefer_sdhc();
 	m_sdcard->spi_miso_callback().set(FUNC(chloe_state::spi_miso_w));
 
 	subdevice<gfxdecode_device>("gfxdecode")->set_info(gfx_chloe);
 	m_screen->set_raw(25.175_MHz_XTAL, CYCLES_HORIZ, CYCLES_VERT, SCR_FULL); // VGA
 	m_screen->set_screen_update(FUNC(chloe_state::screen_update));
 	m_screen->set_no_palette();
-
 	PALETTE(config, m_palette, FUNC(chloe_state::spectrum_palette), 256);
-	SCREEN_ULA_PLUS(config, m_ula, 0).set_raster_offset(SCR_256x192.left(), SCR_256x192.top()).set_palette(m_palette->device().tag(), 0x000, 0x000);
+	SPECTRUM_ULA_UNCONTENDED(config.replace(), m_ula);
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SCREEN_ULA_PLUS(config, m_ula_scr).set_palette(m_palette->device().tag(), 0x000, 0x000);
+	m_ula_scr->set_raster_offset(SCR_256x192.left(), SCR_256x192.top());
 
-	config.device_remove("ay8912");
-	AY8912(config, m_ay[0], 28_MHz_XTAL / 16)
-		.add_route(0, "lspeaker", 0.50)
-		.add_route(2, "lspeaker", 0.25)
-		.add_route(2, "rspeaker", 0.25)
-		.add_route(1, "rspeaker", 0.50);
-	AY8912(config, m_ay[1], 28_MHz_XTAL / 16)
-		.add_route(0, "lspeaker", 0.50)
-		.add_route(2, "lspeaker", 0.25)
-		.add_route(2, "rspeaker", 0.25)
-		.add_route(1, "rspeaker", 0.50);
+	SPEAKER(config.replace(), "speakers", 2).front();
+
+	AY_SLOT(config.replace(), "ay_slot", 28_MHz_XTAL / 16, default_ay_slot_devices, "ay_turbosound")
+		.add_route(0, "speakers", 0.50, 0)
+		.add_route(2, "speakers", 0.25, 0)
+		.add_route(2, "speakers", 0.25, 1)
+		.add_route(1, "speakers", 0.50, 1);
 
 	DAC_8BIT_R2R(config, m_covox, 0)
-		.add_route(ALL_OUTPUTS, "lspeaker", 0.75)
-		.add_route(ALL_OUTPUTS, "rspeaker", 0.75);
+		.add_route(ALL_OUTPUTS, "speakers", 0.75, 0)
+		.add_route(ALL_OUTPUTS, "speakers", 0.75, 1);
+
+	KBDC8042(config, m_kbdc);
+	m_kbdc->set_keyboard_type(kbdc8042_device::KBDC8042_STANDARD);
+	m_kbdc->set_interrupt_type(kbdc8042_device::KBDC8042_SINGLE);
+	m_kbdc->input_buffer_full_callback().set(FUNC(chloe_state::irq_keyboard_w));
+	m_kbdc->set_keyboard_tag("at_keyboard");
+
+	at_keyboard_device &at_keyb(AT_KEYB(config, "at_keyboard", pc_keyboard_device::KEYBOARD_TYPE::AT, 2));
+	at_keyb.keypress().set(m_kbdc, FUNC(kbdc8042_device::keyboard_w));
 
 	SOFTWARE_LIST(config, "cass_list_t").set_original("timex_cass");
 }

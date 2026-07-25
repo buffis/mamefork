@@ -13,7 +13,7 @@ Those aren't El Torito compliant so they expect at very least a
 bootable MSDOS 5.0 (according to Pq_debug.txt file found in gvrxpsys).
 The nfsgt is a Windows XP HDD image, containing:
 - C:\Program Files:
-\- C-Media 3D Audio driver (C-Media AC97 Audio Device / CMI8738/C3DX PCI Audio Device)
+\- C-Media 3D Audio driver (C-Media AC'97 Audio Device / CMI8738/C3DX PCI Audio Device)
 \- Intel 82865G/PE/P, 82875P (GMCH)
 \- Ligos Indeo XP codec package (Indeo Video 5.2)
 \- ALi USB2.0 Driver
@@ -281,7 +281,7 @@ public:
 private:
 	required_device<cpu_device> m_maincpu;
 
-	void globalvr_map(address_map &map);
+	void globalvr_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -305,7 +305,7 @@ void globalvr_state::globalvr(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &globalvr_state::globalvr_map);
 	m_maincpu->set_disable();
 
-	PCI_ROOT(config, "pci", 0);
+	PCI_ROOT(config, "pci");
 	// ...
 }
 
@@ -427,16 +427,16 @@ ROM_END
 
 
 // OS/Global VR specific Setup Installers
-GAME( 2002, hyperv2,  0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Hyper V2 (Global VR) Install - 06/12/02",   MACHINE_IS_SKELETON )
-GAME( 2001, hyperv2a, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Hyper V2 (Global VR) Install - 09/30/01",   MACHINE_IS_SKELETON )
-GAME( 2001, gvrxpsys, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Global VR XP OS Install - 09/30/01",        MACHINE_IS_SKELETON )
-GAME( 2002, gvrxpsup, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Global VR XP OS Update/Install - 06/11/02", MACHINE_IS_SKELETON )
+GAME( 2002, hyperv2,  0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Hyper V2 (Global VR) Install - 06/12/02",   MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2001, hyperv2a, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Hyper V2 (Global VR) Install - 09/30/01",   MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2001, gvrxpsys, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Global VR XP OS Install - 09/30/01",        MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2002, gvrxpsup, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Global VR XP OS Update/Install - 06/11/02", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
 
 // Game Installer CDs
-GAME( 2000, bhead2k,  0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2000 Install - 05/27/03",                   MACHINE_IS_SKELETON )
-GAME( 2000, bhead2ka, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2000 Install - 09/16/01",                   MACHINE_IS_SKELETON )
-GAME( 2002, bhead2k2, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2002 Install - 05/27/03",                   MACHINE_IS_SKELETON )
-GAME( 2003, bhead2k3, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2003 Desert War Install - 05/27/03",        MACHINE_IS_SKELETON )
-GAME( 2003, nfs,      0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Need for Speed - 4 Cab Link (2 Discs) (v1.0.1 Rev B)", MACHINE_IS_SKELETON )
-GAME( 2004, nfsgt,    0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Need for Speed GT (Hard Drive+2 Discs) (v1.1.0 Rev C)",MACHINE_IS_SKELETON )
-GAME( 2005, nfsug,    0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Need For Speed: Underground Install (2 Discs) (v1.1)", MACHINE_IS_SKELETON )
+GAME( 2000, bhead2k,  0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2000 Install - 05/27/03",                   MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2000, bhead2ka, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2000 Install - 09/16/01",                   MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2002, bhead2k2, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2002 Install - 05/27/03",                   MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2003, bhead2k3, 0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Beach Head 2003 Desert War Install - 05/27/03",        MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2003, nfs,      0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Need for Speed - 4 Cab Link (2 Discs) (v1.0.1 Rev B)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2004, nfsgt,    0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Need for Speed GT (Hard Drive+2 Discs) (v1.1.0 Rev C)",MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 2005, nfsug,    0, globalvr, globalvr, globalvr_state, empty_init, ROT0, "Global VR", "Need For Speed: Underground Install (2 Discs) (v1.1)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

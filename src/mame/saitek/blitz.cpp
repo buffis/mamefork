@@ -29,8 +29,8 @@ Hardware notes:
 - piezo, 64 LEDs, metal sensors chessboard*, 2 dials
 
 *: The chessboard technology is not with magnets (reed switches or hall effect
-sensors). There are of copper wires beneath the chessboard, each square resembles
-a metal detector. Chess pieces have aluminium washers at the bottom.
+sensors). There are lots of copper wires beneath the chessboard, each square
+resembles a metal detector. Chess pieces have aluminium washers at the bottom.
 
 TODO:
 - if/when MAME supports an exit callback, hook up power-off switch to that
@@ -46,6 +46,8 @@ TODO:
 
 #include "screen.h"
 #include "speaker.h"
+
+#include <bit>
 
 // internal artwork
 #include "saitek_blitz.lh"
@@ -67,13 +69,13 @@ public:
 		m_out_lcd(*this, "s%u.%u", 0U, 0U)
 	{ }
 
-	void blitz(machine_config &config);
+	void blitz(machine_config &config) ATTR_COLD;
 
 	DECLARE_INPUT_CHANGED_MEMBER(power_off) { m_power = false; }
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override { m_power = true; }
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -92,12 +94,12 @@ private:
 	u8 m_lcd_com = 0;
 	bool m_power = false;
 
+	u8 m_port1 = 0xff;
 	u8 m_port3 = 0xff;
 	u8 m_port6 = 0xff;
 
 	attotime m_board_init_time;
 
-	void init_board(u8 data);
 	bool board_active() { return machine().time() > m_board_init_time; }
 
 	// I/O handlers
@@ -124,8 +126,6 @@ private:
 
 void blitz_state::machine_start()
 {
-	m_out_lcd.resolve();
-
 	// register for savestates
 	save_item(NAME(m_inp_mux));
 	save_item(NAME(m_sensor_strength));
@@ -133,15 +133,18 @@ void blitz_state::machine_start()
 	save_item(NAME(m_lcd_segs));
 	save_item(NAME(m_lcd_com));
 	save_item(NAME(m_power));
+	save_item(NAME(m_port1));
 	save_item(NAME(m_port3));
 	save_item(NAME(m_port6));
 	save_item(NAME(m_board_init_time));
 }
 
-void blitz_state::init_board(u8 data)
+void blitz_state::machine_reset()
 {
+	m_power = true;
+
 	// briefly deactivate board after a cold boot to give it time to calibrate
-	if (~data & 1)
+	if (m_port1 & 0x40)
 		m_board_init_time = machine().time() + attotime::from_msec(1750);
 }
 
@@ -184,7 +187,7 @@ void blitz_state::update_lcd()
 	for (int i = 0; i < 4; i++)
 	{
 		// LCD common is analog (voltage level)
-		const u8 com = population_count_32(m_lcd_com >> (i * 2) & 3);
+		const u8 com = std::popcount(m_lcd_com >> (i * 2) & 3U);
 		const u32 data = (com == 0) ? lcd_segs : (com == 2) ? ~lcd_segs : 0;
 		m_lcd_pwm->write_row(i, data);
 	}
@@ -207,7 +210,8 @@ void blitz_state::p1_w(u8 data)
 	// P10-P15: board sensor strength (higher is more sensitive)
 	m_sensor_strength = bitswap<6>(data,0,1,2,3,4,5);
 
-	// P16: ext power (no need to emulate it)
+	// P16: ext power
+	m_port1 = data;
 }
 
 void blitz_state::p2_w(u8 data)
@@ -286,7 +290,7 @@ static INPUT_PORTS_START( blitz )
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_UNKNOWN)
 
 	PORT_START("POWER")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_OTHER) PORT_CODE(KEYCODE_F1) PORT_CHANGED_MEMBER(DEVICE_SELF, blitz_state, power_off, 0) PORT_NAME("Power Off")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_POWER_OFF) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(blitz_state::power_off), 0)
 INPUT_PORTS_END
 
 
@@ -317,7 +321,6 @@ void blitz_state::blitz(machine_config &config)
 
 	SENSORBOARD(config, m_board).set_type(sensorboard_device::MAGNETS);
 	m_board->init_cb().set(m_board, FUNC(sensorboard_device::preset_chess));
-	m_board->init_cb().append(FUNC(blitz_state::init_board));
 	m_board->set_delay(attotime::from_msec(150));
 	m_board->set_nvram_enable(true);
 

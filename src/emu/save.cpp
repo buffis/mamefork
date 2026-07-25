@@ -27,8 +27,10 @@
 
 #include "main.h"
 
+#include "util/endianness.h"
 #include "util/ioprocs.h"
 #include "util/ioprocsfilter.h"
+#include "util/multibyte.h"
 
 
 //**************************************************************************
@@ -67,6 +69,7 @@ enum
 save_manager::save_manager(running_machine &machine)
 	: m_machine(machine)
 	, m_reg_allowed(true)
+	, m_supported(false)
 {
 	m_rewind = std::make_unique<rewinder>(*this);
 }
@@ -99,6 +102,16 @@ void save_manager::allow_registration(bool allowed)
 
 		if (dupes_found)
 			fatalerror("%d duplicate save state entries found.\n", dupes_found);
+
+		m_supported = true;
+		for (device_t &device : device_enumerator(machine().root_device()))
+		{
+			if (device.type().emulation_flags() & device_t::flags::SAVE_UNSUPPORTED)
+			{
+				m_supported = false;
+				break;
+			}
+		}
 
 		dump_registry();
 
@@ -206,7 +219,7 @@ void save_manager::save_memory(device_t *device, const char *module, const char 
 //  state
 //-------------------------------------------------
 
-save_error save_manager::check_file(running_machine &machine, util::core_file &file, const char *gamename, void (CLIB_DECL *errormsg)(const char *fmt, ...))
+std::pair<save_error, std::string> save_manager::check_file(running_machine &machine, util::core_file &file, const char *gamename)
 {
 	// if we want to validate the signature, compute it
 	u32 sig;
@@ -217,14 +230,10 @@ save_error save_manager::check_file(running_machine &machine, util::core_file &f
 	u8 header[HEADER_SIZE];
 	auto const [err, actual] = read(file, header, sizeof(header));
 	if (err || (actual != sizeof(header)))
-	{
-		if (errormsg != nullptr)
-			(*errormsg)("Could not read %s save file header", emulator_info::get_appname());
-		return STATERR_READ_ERROR;
-	}
+		return std::make_pair(STATERR_READ_ERROR, util::string_format("Could not read %s save file header", emulator_info::get_appname()));
 
 	// let the generic header check work out the rest
-	return validate_header(header, gamename, sig, errormsg, "");
+	return validate_header(header, gamename, sig);
 }
 
 
@@ -416,7 +425,7 @@ inline save_error save_manager::do_write(T check_space, U write_block, V start_h
 	header[9] = NATIVE_ENDIAN_VALUE_LE_BE(0, SS_MSB_FIRST);
 	strncpy((char *)&header[0x0a], machine().system().name, 0x1c - 0x0a);
 	u32 sig = signature();
-	*(u32 *)&header[0x1c] = little_endianize_int32(sig);
+	put_u32le(&header[0x1c], sig);
 
 	// write the header and turn on compression for the rest of the file
 	if (!start_header() || !write_block(header, sizeof(header)) || !start_data())
@@ -458,8 +467,8 @@ inline save_error save_manager::do_read(T check_length, U read_block, V start_he
 		return STATERR_READ_ERROR;
 
 	// verify the header and report an error if it doesn't match
-	u32 sig = signature();
-	if (validate_header(header, machine().system().name, sig, nullptr, "Error: ")  != STATERR_NONE)
+	u32 const sig = signature();
+	if (validate_header(header, machine().system().name, sig).first != STATERR_NONE)
 		return STATERR_INVALID_HEADER;
 
 	// determine whether or not to flip the data when done
@@ -505,7 +514,7 @@ u32 save_manager::signature() const
 		temp[0] = little_endianize_int32(entry->m_typesize);
 		temp[1] = little_endianize_int32(entry->m_typecount);
 		temp[2] = little_endianize_int32(entry->m_blockcount);
-		temp[3] = little_endianize_int32(entry->m_stride);
+		temp[3] = 0;
 		crc.append(&temp[0], sizeof(temp));
 	}
 	return crc.finish();
@@ -529,45 +538,28 @@ void save_manager::dump_registry() const
 //  header
 //-------------------------------------------------
 
-save_error save_manager::validate_header(const u8 *header, const char *gamename, u32 signature,
-	void (CLIB_DECL *errormsg)(const char *fmt, ...), const char *error_prefix)
+std::pair<save_error, std::string> save_manager::validate_header(const u8 *header, const char *gamename, u32 signature)
 {
 	// check magic number
 	if (memcmp(header, STATE_MAGIC_NUM, 8))
-	{
-		if (errormsg != nullptr)
-			(*errormsg)("%sThis is not a %s save file", error_prefix, emulator_info::get_appname());
-		return STATERR_INVALID_HEADER;
-	}
+		return std::make_pair(STATERR_INVALID_HEADER, util::string_format("This is not a %s save file", emulator_info::get_appname()));
 
 	// check save state version
 	if (header[8] != SAVE_VERSION)
-	{
-		if (errormsg != nullptr)
-			(*errormsg)("%sWrong version in save file (version %d, expected %d)", error_prefix, header[8], SAVE_VERSION);
-		return STATERR_INVALID_HEADER;
-	}
+		return std::make_pair(STATERR_INVALID_HEADER, util::string_format("Wrong version in save file (version %d, expected %d)", header[8], SAVE_VERSION));
 
 	// check gamename, if we were asked to
-	if (gamename != nullptr && strncmp(gamename, (const char *)&header[0x0a], 0x1c - 0x0a))
-	{
-		if (errormsg != nullptr)
-			(*errormsg)("%s'File is not a valid savestate file for game '%s'.", error_prefix, gamename);
-		return STATERR_INVALID_HEADER;
-	}
+	if (gamename && strncmp(gamename, (const char *)&header[0x0a], 0x1c - 0x0a))
+		return std::make_pair(STATERR_INVALID_HEADER, util::string_format("'File is not a valid savestate file for game '%s'.", gamename));
 
 	// check signature, if we were asked to
 	if (signature != 0)
 	{
-		u32 rawsig = *(u32 *)&header[0x1c];
-		if (signature != little_endianize_int32(rawsig))
-		{
-			if (errormsg != nullptr)
-				(*errormsg)("%sIncompatible save file (signature %08x, expected %08x)", error_prefix, little_endianize_int32(rawsig), signature);
-			return STATERR_INVALID_HEADER;
-		}
+		u32 const rawsig = get_u32le(&header[0x1c]);
+		if (signature != rawsig)
+			return std::make_pair(STATERR_INVALID_HEADER, util::string_format("Incompatible save file (signature %08x, expected %08x)", rawsig, signature));
 	}
-	return STATERR_NONE;
+	return std::make_pair(STATERR_NONE, std::string());
 }
 
 
@@ -934,7 +926,7 @@ void rewinder::report_error(save_error error, rewind_operation operation)
 	// success
 	case STATERR_NONE:
 		{
-			const u64 supported = m_save.machine().system().flags & MACHINE_SUPPORTS_SAVE;
+			const u64 supported = m_save.supported();
 			const char *const warning = supported || !m_first_time_warning ? "" :
 				"Rewind warning: Save states are not officially supported for this machine.\n";
 			const char *const opnamed = (operation == rewind_operation::LOAD) ? "loaded" : "captured";

@@ -22,8 +22,8 @@ public:
 
 protected:
 	// device_t implementation
-	virtual ioport_constructor device_input_ports() const override;
-	virtual void device_start() override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
 
 	// device_a2gameio_interface implementation
 	virtual u8 pdl0_r() override;
@@ -33,6 +33,8 @@ protected:
 	virtual int sw0_r() override;
 	virtual int sw1_r() override;
 	virtual void an0_w(int state) override;
+	virtual bool has_sw0() const override { return true; }
+	virtual bool has_sw1() const override { return true; }
 
 private:
 	// input ports

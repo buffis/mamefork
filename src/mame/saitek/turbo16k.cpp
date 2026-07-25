@@ -3,7 +3,7 @@
 // thanks-to:Sean Riddle
 /*******************************************************************************
 
-SciSys Turbo 16K family
+SciSys Kasparov Turbo 16K family
 
 These chesscomputers are all on similar hardware. The chess engine is by Julio
 Kaplan and Craig Barnes.
@@ -92,15 +92,15 @@ public:
 		m_lcd_colon(*this, "lc%u", 0U)
 	{ }
 
-	void compan3(machine_config &config);
-	void turbo16k(machine_config &config);
-	void t1850(machine_config &config);
+	void compan3(machine_config &config) ATTR_COLD;
+	void turbo16k(machine_config &config) ATTR_COLD;
+	void t1850(machine_config &config) ATTR_COLD;
 
 	DECLARE_INPUT_CHANGED_MEMBER(go_button);
 	DECLARE_INPUT_CHANGED_MEMBER(change_cpu_freq);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	// devices/pointers
 	required_device<hd6301y0_cpu_device> m_maincpu;
@@ -133,9 +133,6 @@ protected:
 
 void turbo16k_state::machine_start()
 {
-	m_lcd_digits.resolve();
-	m_lcd_colon.resolve();
-
 	// register for savestates
 	save_item(NAME(m_inp_mux));
 	save_item(NAME(m_led_select));
@@ -337,10 +334,10 @@ static INPUT_PORTS_START( turbo16k )
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_I) PORT_NAME("Display Move")
 
 	PORT_START("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_G) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, go_button, 0) PORT_NAME("Go")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_G) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(turbo16k_state::go_button), 0) PORT_NAME("Go")
 
 	PORT_START("FREQ")
-	PORT_CONFNAME( 0x88, 0x80, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x88, 0x80, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(turbo16k_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x00, "4MHz (unofficial)" )
 	PORT_CONFSETTING(    0x08, "8MHz (Companion III, Express 16K)" )
 	PORT_CONFSETTING(    0x80, "12MHz (Turbo 16K, Astral)" )
@@ -351,8 +348,8 @@ INPUT_PORTS_END
 static INPUT_PORTS_START( compan3 )
 	PORT_INCLUDE( turbo16k )
 
-	PORT_MODIFY("FREQ") // default to 8MHz
-	PORT_CONFNAME( 0x88, 0x08, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
+	PORT_MODIFY("FREQ") // modify default to 8MHz
+	PORT_CONFNAME( 0x88, 0x08, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(turbo16k_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x00, "4MHz (unofficial)" )
 	PORT_CONFSETTING(    0x08, "8MHz (Companion III, Express 16K)" )
 	PORT_CONFSETTING(    0x80, "12MHz (Turbo 16K, Astral)" )
@@ -383,7 +380,7 @@ static INPUT_PORTS_START( conquist )
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_I) PORT_NAME("Info")
 
 	PORT_MODIFY("FREQ")
-	PORT_CONFNAME( 0x88, 0x80, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
+	PORT_CONFNAME( 0x88, 0x80, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(turbo16k_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x08, "8MHz (Team-Mate)" )
 	PORT_CONFSETTING(    0x80, "12MHz (Conquistador)" )
 INPUT_PORTS_END
@@ -391,8 +388,8 @@ INPUT_PORTS_END
 static INPUT_PORTS_START( tmate )
 	PORT_INCLUDE( conquist )
 
-	PORT_MODIFY("FREQ") // default to 8MHz
-	PORT_CONFNAME( 0x88, 0x08, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, change_cpu_freq, 0) // factory set
+	PORT_MODIFY("FREQ") // modify default to 8MHz
+	PORT_CONFNAME( 0x88, 0x08, "CPU Frequency" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(turbo16k_state::change_cpu_freq), 0) // factory set
 	PORT_CONFSETTING(    0x08, "8MHz (Team-Mate)" )
 	PORT_CONFSETTING(    0x80, "12MHz (Conquistador)" )
 INPUT_PORTS_END
@@ -408,7 +405,7 @@ static INPUT_PORTS_START( t1850 )
 	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_D) PORT_NAME("Display Move")
 
 	PORT_MODIFY("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_O) PORT_CHANGED_MEMBER(DEVICE_SELF, turbo16k_state, go_button, 0) PORT_NAME("Power On")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_O) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(turbo16k_state::go_button), 0) PORT_NAME("Power On")
 INPUT_PORTS_END
 
 
@@ -515,8 +512,8 @@ ROM_END
 *******************************************************************************/
 
 //    YEAR  NAME      PARENT    COMPAT  MACHINE   INPUT     CLASS           INIT        COMPANY, FULLNAME, FLAGS
-SYST( 1986, turbo16k, 0,        0,      turbo16k, turbo16k, turbo16k_state, empty_init, "SciSys / Heuristic Software", "Turbo 16K", MACHINE_SUPPORTS_SAVE )
-SYST( 1986, compan3,  turbo16k, 0,      compan3,  compan3,  turbo16k_state, empty_init, "SciSys / Heuristic Software", "Companion III", MACHINE_SUPPORTS_SAVE )
+SYST( 1986, turbo16k, 0,        0,      turbo16k, turbo16k, turbo16k_state, empty_init, "SciSys / Heuristic Software", "Kasparov Turbo 16K", MACHINE_SUPPORTS_SAVE )
+SYST( 1986, compan3,  turbo16k, 0,      compan3,  compan3,  turbo16k_state, empty_init, "SciSys / Heuristic Software", "Kasparov Companion III", MACHINE_SUPPORTS_SAVE )
 
 SYST( 1988, conquist, 0,        0,      conquist, conquist, conquist_state, empty_init, "Saitek / Heuristic Software", "Kasparov Conquistador", MACHINE_SUPPORTS_SAVE )
 SYST( 1988, tmate,    conquist, 0,      tmate,    tmate,    conquist_state, empty_init, "Saitek / Heuristic Software", "Kasparov Team-Mate", MACHINE_SUPPORTS_SAVE )

@@ -49,6 +49,8 @@ Keypad legend:
 #include "softlist_dev.h"
 #include "speaker.h"
 
+#include <bit>
+
 // internal artwork
 #include "intellect02.lh"
 
@@ -73,7 +75,7 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(reset_button);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -87,8 +89,8 @@ private:
 	u8 m_led_select = 0;
 
 	// address maps
-	void main_map(address_map &map);
-	void main_io(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void main_io(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void update_display();
@@ -129,7 +131,7 @@ u8 intel02_state::input_r()
 {
 	// d0-d3: buttons through a maze of logic gates
 	// basically giving each button its own 4-bit scancode
-	u8 data = count_leading_zeros_32(m_inputs[0]->read()) - 17;
+	u8 data = std::countl_zero(u16(m_inputs[0]->read())) - 1;
 
 	// d4: Vcc, d5-d7: buttons (direct)
 	return data | (~m_inputs[1]->read() << 4 & 0xf0);
@@ -201,7 +203,7 @@ static INPUT_PORTS_START( intel02 )
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_DEL) PORT_CODE(KEYCODE_BACKSPACE) PORT_NAME(u8"СТ (Erase)")
 
 	PORT_START("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_R) PORT_CHANGED_MEMBER(DEVICE_SELF, intel02_state, reset_button, 0) PORT_NAME(u8"СБ (Reset)")
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_R) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(intel02_state::reset_button), 0) PORT_NAME(u8"СБ (Reset)")
 INPUT_PORTS_END
 
 

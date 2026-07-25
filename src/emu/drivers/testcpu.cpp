@@ -93,7 +93,7 @@ private:
 			for (int regnum = 0; regnum < 32; regnum++)
 			{
 				double value = double(regnum | (regnum << 8) | (regnum << 16) | (regnum << 24));
-				m_cpu->set_state_int(PPC_F0 + regnum, d2u(value));
+				m_cpu->set_state_int(PPC_F0 + regnum, std::bit_cast<u64>(value));
 			}
 
 			// output initial state
@@ -179,7 +179,7 @@ private:
 		osd_printf_info("Write to %08X & %016X = %016X\n", offset * 8, mem_mask, data);
 	}
 
-	void ppc_mem(address_map &map);
+	void ppc_mem(address_map &map) ATTR_COLD;
 
 	// internal state
 	required_device<ppc603e_device> m_cpu;

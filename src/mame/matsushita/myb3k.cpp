@@ -114,11 +114,11 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(monitor_changed);
 
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void myb3k_io(address_map &map);
-	void myb3k_map(address_map &map);
+	void myb3k_io(address_map &map) ATTR_COLD;
+	void myb3k_map(address_map &map) ATTR_COLD;
 
 	/* Interrupt controller */
 	void pic_int_w(int state);
@@ -606,7 +606,7 @@ static INPUT_PORTS_START( myb3k )
 	PORT_CONFSETTING(    0x08, "Centronics Ack")
 
 	PORT_START("MONITOR")
-	PORT_CONFNAME( 0x01, 0x00, "Monitor") PORT_CHANGED_MEMBER(DEVICE_SELF, myb3k_state, monitor_changed, 0)
+	PORT_CONFNAME( 0x01, 0x00, "Monitor") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(myb3k_state::monitor_changed), 0)
 	PORT_CONFSETTING(    0x00, "Color")
 	PORT_CONFSETTING(    0x01, "Monochrome")
 
@@ -986,7 +986,7 @@ void myb3k_state::myb3k(machine_config &config)
 	m_crtc->set_update_row_callback(FUNC(myb3k_state::crtc_update_row));
 
 	/* ISA8+ Expansion bus */
-	ISA8(config, m_isabus, 0);
+	ISA8(config, m_isabus);
 	m_isabus->set_memspace("maincpu", AS_PROGRAM);
 	m_isabus->set_iospace("maincpu", AS_IO);
 	m_isabus->irq2_callback().set(m_pic8259, FUNC(pic8259_device::ir2_w));
@@ -1020,7 +1020,7 @@ void myb3k_state::myb3k(machine_config &config)
 	SPEAKER_SOUND(config, m_speaker).add_route(ALL_OUTPUTS, "mono", 1.00);
 
 	/* Keyboard */
-	MYB3K_KEYBOARD(config, m_kb, 0);
+	MYB3K_KEYBOARD(config, m_kb);
 	m_kb->set_keyboard_callback(FUNC(myb3k_state::kbd_set_data_and_interrupt));
 
 	/* Monitor */

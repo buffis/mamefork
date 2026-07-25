@@ -7,6 +7,8 @@
 #include "k057714.h"
 #include "screen.h"
 
+#include "endianness.h"
+
 
 #define DUMP_VRAM 0
 
@@ -24,7 +26,7 @@
 #define LOGCMDEXEC(...) LOGMASKED(LOG_CMDEXEC, __VA_ARGS__)
 #define LOGDRAW(...) LOGMASKED(LOG_DRAW, __VA_ARGS__)
 
-DEFINE_DEVICE_TYPE(K057714, k057714_device, "k057714", "k057714_device GCU")
+DEFINE_DEVICE_TYPE(K057714, k057714_device, "k057714", "Konami 057714 GCU")
 
 k057714_device::k057714_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, K057714, tag, owner, clock)
@@ -528,7 +530,7 @@ void k057714_device::vblank_w(int state)
 	}
 }
 
-int k057714_device::draw(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
+uint32_t k057714_device::draw(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
 {
 	bitmap.fill(0, cliprect);
 

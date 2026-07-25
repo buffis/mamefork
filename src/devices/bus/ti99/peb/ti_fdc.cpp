@@ -15,6 +15,7 @@
 #include "emu.h"
 #include "ti_fdc.h"
 #include "formats/ti99_dsk.h"
+#include "formats/hxchfe_dsk.h"
 #include "machine/rescap.h"
 
 #define LOG_WARN        (1U << 1)    // Warnings
@@ -377,6 +378,7 @@ void ti_fdc_device::floppy_formats(format_registration &fr)
 	fr.add_mfm_containers();
 	fr.add(FLOPPY_TI99_SDF_FORMAT);
 	fr.add(FLOPPY_TI99_TDF_FORMAT);
+	fr.add(FLOPPY_HFE_FORMAT);
 }
 
 static void tifdc_floppies(device_slot_interface &device)
@@ -411,7 +413,7 @@ void ti_fdc_device::device_add_mconfig(machine_config& config)
 	m_crulatch->q_out_cb<6>().set(FUNC(ti_fdc_device::dsel3_w));
 	m_crulatch->q_out_cb<7>().set(FUNC(ti_fdc_device::sidsel_w));
 
-	TTL74123(config, m_motormf, 0);
+	TTL74123(config, m_motormf);
 	m_motormf->out_cb().set(FUNC(ti_fdc_device::dvena_w));
 	m_motormf->set_connection_type(TTL74123_GROUNDED);
 	m_motormf->set_resistor_value(RES_K(200));

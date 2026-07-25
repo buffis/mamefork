@@ -85,9 +85,9 @@ public:
 	void dday(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_shared_ptr<uint8_t> m_textvideoram;
@@ -129,7 +129,7 @@ private:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	TIMER_CALLBACK_MEMBER(countdown_timer_callback);
 	void start_countdown_timer();
-	void program_map(address_map &map);
+	void program_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -633,7 +633,6 @@ void dday_state::dday(machine_config &config)
 	Z80(config, m_maincpu, 2'000'000);     // 2 MHz ?
 	m_maincpu->set_addrmap(AS_PROGRAM, &dday_state::program_map);
 
-
 	// video hardware
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
 	m_screen->set_refresh_hz(60);
@@ -729,5 +728,5 @@ ROM_END
 } // anonymous namespace
 
 
-GAME( 1982, dday,  0,    dday, dday,  dday_state, empty_init, ROT0, "Olympia",                   "D-Day",           MACHINE_IMPERFECT_COLORS | MACHINE_SUPPORTS_SAVE )
+GAME( 1982, dday,  0,    dday, dday,  dday_state, empty_init, ROT0, "Olympia",                   "D-Day (Olympia)", MACHINE_IMPERFECT_COLORS | MACHINE_SUPPORTS_SAVE )
 GAME( 1982, ddayc, dday, dday, ddayc, dday_state, empty_init, ROT0, "Olympia (Centuri license)", "D-Day (Centuri)", MACHINE_IMPERFECT_COLORS | MACHINE_SUPPORTS_SAVE )

@@ -42,9 +42,9 @@ private:
 	void kbd_put(u8 data);
 	I8275_DRAW_CHARACTER_MEMBER( crtc_display_pixels );
 	uint8_t m_term_data = 0U;
-	virtual void machine_reset() override;
-	void ipds_io(address_map &map);
-	void ipds_mem(address_map &map);
+	virtual void machine_reset() override ATTR_COLD;
+	void ipds_io(address_map &map) ATTR_COLD;
+	void ipds_mem(address_map &map) ATTR_COLD;
 };
 
 uint8_t ipds_state::ipds_b0_r()
@@ -159,7 +159,7 @@ void ipds_state::ipds(machine_config &config)
 	m_crtc->set_character_width(6);
 	m_crtc->set_display_callback(FUNC(ipds_state::crtc_display_pixels));
 
-	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard", 0));
+	generic_keyboard_device &keyboard(GENERIC_KEYBOARD(config, "keyboard"));
 	keyboard.set_keyboard_callback(FUNC(ipds_state::kbd_put));
 }
 

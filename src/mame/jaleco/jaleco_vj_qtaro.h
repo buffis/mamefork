@@ -12,7 +12,7 @@
 class jaleco_vj_qtaro_device : public device_t
 {
 public:
-	jaleco_vj_qtaro_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	jaleco_vj_qtaro_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	static constexpr feature_type imperfect_features() {
 		return feature::TIMING; // DMA timings aren't perfectly synced between all displays so one video stream may end up out of sync
@@ -31,8 +31,8 @@ public:
 	void write(uint8_t *data, uint32_t len);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	uint8_t m_int;
@@ -45,7 +45,7 @@ private:
 class jaleco_vj_king_qtaro_device : public pci_device
 {
 public:
-	jaleco_vj_king_qtaro_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	jaleco_vj_king_qtaro_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	template <int DeviceId> void video_mix_w(offs_t offset, uint16_t data, uint16_t mem_mask = ~0) { m_qtaro[DeviceId]->video_mix_w(offset, data, mem_mask); }
 
@@ -54,12 +54,12 @@ public:
 protected:
 	jaleco_vj_king_qtaro_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 private:
-	void map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
 
 	uint32_t qtaro_fpga_firmware_status_r(offs_t offset);
 	void qtaro_fpga_firmware_status_w(offs_t offset, uint32_t data);

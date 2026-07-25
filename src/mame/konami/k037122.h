@@ -14,7 +14,7 @@ class k037122_device : public device_t,
 public:
 	static constexpr feature_type imperfect_features() { return feature::GRAPHICS; } // unimplemented tilemap ROZ, scroll registers
 
-	k037122_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	k037122_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void tile_draw( screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect );
 	uint32_t sram_r(offs_t offset);
@@ -26,8 +26,8 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_palette_interface impleemntations
 	virtual uint32_t palette_entries() const noexcept override { return 8192; }

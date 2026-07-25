@@ -66,26 +66,25 @@ public:
 
 	template <class T> void set_space(T &&tag, int spacenum) { m_space.set_tag(std::forward<T>(tag), spacenum); }
 
-	void map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
-	required_address_space m_space;
-
-	u32 m_dmalist_address = 0;
-
-	TIMER_CALLBACK_MEMBER(execute_cb);
-	typedef enum {
+	enum dma_state_t : u8 {
 		COPY,
 		MIX,
 		SWAP,
 		FILL,
 		IDLE,
 		FETCH_PARAMS
-	} dma_state_t;
+	};
+
+	required_address_space m_space;
+
+	u32 m_dmalist_address = 0;
 
 	dma_state_t m_state;
 	u32 m_src, m_dst, m_length, m_command, m_modulo;
@@ -93,10 +92,15 @@ private:
 	bool m_chained_transfer;
 
 	emu_timer *m_dma_timer;
+
+	TIMER_CALLBACK_MEMBER(execute_cb);
+
 	void check_state(int next_cycles);
 	void increment_src();
 	void increment_dst();
 };
+
+ALLOW_SAVE_TYPE(dmagic_f018_device::dma_state_t)
 
 // CSG 390957-01
 DEFINE_DEVICE_TYPE(DMAGIC_F018, dmagic_f018_device, "dmagic_f018", "DMAgic F018 Gate Array")
@@ -110,7 +114,7 @@ dmagic_f018_device::dmagic_f018_device(const machine_config &mconfig, const char
 void dmagic_f018_device::device_start()
 {
 	save_item(NAME(m_dmalist_address));
-	//save_item(NAME(m_state));
+	save_item(NAME(m_state));
 
 	m_dma_timer = timer_alloc(FUNC(dmagic_f018_device::execute_cb), this);
 }
@@ -320,6 +324,7 @@ public:
 		, m_ipl_rom(*this, "ipl")
 		, m_cart_exp(*this, "cart_exp")
 		, m_exrom_view(*this, "exrom_view")
+		, m_portswap(*this, "JOYSWAP")
 	{ }
 
 	void init_c65();
@@ -329,11 +334,11 @@ public:
 
 protected:
 	// driver_device overrides
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	virtual void video_start() override;
-	virtual void video_reset() override;
+	virtual void video_start() override ATTR_COLD;
+	virtual void video_reset() override ATTR_COLD;
 private:
 	required_device<m4510_device> m_maincpu;
 	required_device_array<mos6526_device, 2> m_cia;
@@ -363,12 +368,13 @@ private:
 	required_memory_region m_ipl_rom;
 	required_device<generic_slot_device> m_cart_exp;
 	memory_view m_exrom_view;
+	optional_ioport m_portswap;
 
 	uint8_t m_keyb_input[10]{};
 	uint8_t m_keyb_c0_c7 = 0U;
 	uint8_t m_keyb_c8_c9 = 0U;
 
-	void vic4567_map(address_map &map);
+	void vic4567_map(address_map &map) ATTR_COLD;
 	void palette_red_w(offs_t offset, uint8_t data);
 	void palette_green_w(offs_t offset, uint8_t data);
 	void palette_blue_w(offs_t offset, uint8_t data);
@@ -385,7 +391,7 @@ private:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void palette_init(palette_device &palette);
 
-	void c65_map(address_map &map);
+	void c65_map(address_map &map) ATTR_COLD;
 
 	void irq_check(uint8_t irq_cause);
 
@@ -1093,9 +1099,10 @@ void c65_state::uart_w(offs_t offset, uint8_t data)
 uint8_t c65_state::cia0_porta_r()
 {
 	uint8_t res = 0xff;
+	int cur_joy = m_portswap->read() ? 0 : 1;
 
 	// joystick
-	uint8_t joy_b = m_joy[1]->read_joy();
+	uint8_t joy_b = m_joy[cur_joy]->read_joy();
 
 	res &= (0xf0 | (joy_b & 0x0f));
 	res &= ~(!BIT(joy_b, 5) << 4);
@@ -1108,15 +1115,16 @@ uint8_t c65_state::cia0_portb_r()
 {
 	static const char *const c64ports[] = { "C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7" };
 	static const char *const c65ports[] = { "C8", "C9" };
+	int cur_joy = m_portswap->read() ? 1 : 0;
 	uint8_t res;
 
 	res = 0xff;
-	uint8_t joy_a = m_joy[0]->read_joy();
+	uint8_t joy_a = m_joy[cur_joy]->read_joy();
 
 	res &= (0xf0 | (joy_a & 0x0f));
 	res &= ~(!BIT(joy_a, 5) << 4);
 
-	for(int i=0;i<8;i++)
+	for(int i = 0; i < 8; i++)
 	{
 		m_keyb_input[i] = ioport(c64ports[i])->read();
 
@@ -1124,12 +1132,12 @@ uint8_t c65_state::cia0_portb_r()
 			res &= m_keyb_input[i];
 	}
 
-	for(int i=0;i<2;i++)
+	for(int i = 0; i < 2; i++)
 	{
-		m_keyb_input[i+8] = ioport(c65ports[i])->read();
+		m_keyb_input[i + 8] = ioport(c65ports[i])->read();
 
 		if(m_keyb_c8_c9 & 1 << (i))
-			res &= m_keyb_input[i+8];
+			res &= m_keyb_input[i + 8];
 	}
 
 	return res;
@@ -1137,15 +1145,16 @@ uint8_t c65_state::cia0_portb_r()
 
 void c65_state::cia0_porta_w(uint8_t data)
 {
+	int cur_joy = m_portswap->read() ? 0 : 1;
 	m_keyb_c0_c7 = ~data;
-	m_joy[1]->joy_w(data & 0x1f);
+	m_joy[cur_joy]->joy_w(data & 0x1f);
 //  logerror("%02x\n",m_keyb_c0_c7);
 }
 
 void c65_state::cia0_portb_w(uint8_t data)
 {
-	m_joy[0]->joy_w(data & 0x1f);
-
+	int cur_joy = m_portswap->read() ? 1 : 0;
+	m_joy[cur_joy]->joy_w(data & 0x1f);
 }
 
 /*
@@ -1319,6 +1328,11 @@ static INPUT_PORTS_START( c65 )
 
 	PORT_START("CAPS")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK") PORT_CODE(KEYCODE_F8) PORT_TOGGLE
+
+	PORT_START( "JOYSWAP" )
+	PORT_CONFNAME( 0x01, 0x00, "Swap joystick ports" )
+	PORT_CONFSETTING( 0x01, "Joystick in swapped port" )
+	PORT_CONFSETTING( 0x00, "Joystick in assigned port" )
 INPUT_PORTS_END
 
 
@@ -1411,7 +1425,6 @@ void c65_state::cpu_w(uint8_t data)
 
 void c65_state::c65(machine_config &config)
 {
-	/* basic machine hardware */
 	M4510(config, m_maincpu, MAIN_C65_CLOCK);
 	m_maincpu->set_addrmap(AS_PROGRAM, &c65_state::c65_map);
 	m_maincpu->read_callback().set(FUNC(c65_state::cpu_r));
@@ -1443,8 +1456,6 @@ void c65_state::c65(machine_config &config)
 //  m_cia[1]->pa_rd_callback().set(FUNC(c65_state::c65_cia1_port_a_r));
 	m_cia[1]->pa_wr_callback().set(FUNC(c65_state::cia1_porta_w));
 
-
-	/* video hardware */
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
 	m_screen->set_screen_update(FUNC(c65_state::screen_update));
 	// TODO: stub parameters
@@ -1456,19 +1467,17 @@ void c65_state::c65(machine_config &config)
 
 	PALETTE(config, m_palette, FUNC(c65_state::palette_init), 0x100);
 
-	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 	// 8580 SID
 	MOS6581(config, m_sid[0], MAIN_C64_CLOCK);
 	//m_sid->potx().set(FUNC(c64_state::sid_potx_r));
 	//m_sid->poty().set(FUNC(c64_state::sid_poty_r));
-	m_sid[0]->add_route(ALL_OUTPUTS, "lspeaker", 0.50);
+	m_sid[0]->add_route(ALL_OUTPUTS, "speaker", 0.50, 0);
 
 	MOS6581(config, m_sid[1], MAIN_C64_CLOCK);
 	//m_sid->potx().set(FUNC(c64_state::sid_potx_r));
 	//m_sid->poty().set(FUNC(c64_state::sid_poty_r));
-	m_sid[1]->add_route(ALL_OUTPUTS, "rspeaker", 0.50);
+	m_sid[1]->add_route(ALL_OUTPUTS, "speaker", 0.50, 1);
 
 	VCS_CONTROL_PORT(config, m_joy[0], vcs_control_port_devices, "joy");
 	//m_joy1->trigger_wr_callback().set(MOS6567_TAG, FUNC(mos6567_device::lp_w));

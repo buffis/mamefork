@@ -16,16 +16,17 @@ public:
 	scsidma_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
 
 	template <typename... T> void set_maincpu_tag(T &&... args) { m_maincpu.set_tag(std::forward<T>(args)...); }
+	void set_ram_base(u8 *base) { m_ram_base = base; }
 
 	auto write_irq() { return m_irq.bind(); }
 
-	void map(address_map &map);
+	void map(address_map &map) ATTR_COLD;
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 
 	required_device<m68000_musashi_device> m_maincpu;
 	required_device<nscsi_bus_device> m_scsibus;
@@ -39,16 +40,19 @@ private:
 
 	u8 scsi_r(offs_t offset);
 	void scsi_w(offs_t offset, u8 data);
-	u32 control_r();
-	void control_w(u32 data);
+	u32 control_r(offs_t offset);
+	void control_w(offs_t offset, u32 data);
 	u32 handshake_r(offs_t offset, u32 mem_mask);
+	u32 handshake_data_r(offs_t offset, u32 mem_mask);
 	void handshake_w(offs_t offset, u32 data, u32 mem_mask);
 
 	s32 m_drq, m_scsi_irq;
 	u32 m_control;
 	u32 m_holding;
+	u32 m_dma_address, m_dma_count;
+	u8 *m_ram_base;
 	u8 m_holding_remaining;
-	bool m_is_write, m_drq_completed;
+	bool m_is_write, m_drq_completed, m_dma_direction;
 };
 
 // device type definition

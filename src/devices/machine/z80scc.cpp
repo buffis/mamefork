@@ -374,7 +374,7 @@ DEFINE_DEVICE_TYPE(Z80SCC_CHANNEL, z80scc_channel,  "z80scc_channel", "Z80 SCC C
 DEFINE_DEVICE_TYPE(SCC8030,        scc8030_device,  "scc8030",        "Zilog Z8030 SCC")
 DEFINE_DEVICE_TYPE(SCC80C30,       scc80c30_device, "scc80c30",       "Zilog Z80C30 SCC")
 DEFINE_DEVICE_TYPE(SCC80230,       scc80230_device, "scc80230",       "Zilog Z80230 ESCC")
-DEFINE_DEVICE_TYPE(SCC8530N,       scc8530_device,  "scc8530",        "Zilog Z8530 SCC")  // remove trailing N when 8530scc.c is fully replaced and removed
+DEFINE_DEVICE_TYPE(SCC8530,        scc8530_device,  "scc8530",        "Zilog Z8530 SCC")
 DEFINE_DEVICE_TYPE(SCC85C30,       scc85c30_device, "scc85c30",       "Zilog Z85C30 SCC")
 DEFINE_DEVICE_TYPE(SCC85230,       scc85230_device, "scc85230",       "Zilog Z85230 ESCC")
 DEFINE_DEVICE_TYPE(SCC85233,       scc85233_device, "scc85233",       "Zilog Z85233 EMSCC")
@@ -385,8 +385,8 @@ DEFINE_DEVICE_TYPE(SCC8523L,       scc8523l_device, "scc8523l",       "Zilog Z85
 //-------------------------------------------------
 void z80scc_device::device_add_mconfig(machine_config &config)
 {
-	Z80SCC_CHANNEL(config, CHANA_TAG, 0);
-	Z80SCC_CHANNEL(config, CHANB_TAG, 0);
+	Z80SCC_CHANNEL(config, CHANA_TAG);
+	Z80SCC_CHANNEL(config, CHANB_TAG);
 }
 
 
@@ -455,7 +455,7 @@ scc80230_device::scc80230_device(const machine_config &mconfig, const char *tag,
 }
 
 scc8530_device::scc8530_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: z80scc_device(mconfig, SCC8530N, tag, owner, clock, TYPE_SCC8530)
+	: z80scc_device(mconfig, SCC8530, tag, owner, clock, TYPE_SCC8530)
 {
 }
 
@@ -1044,6 +1044,7 @@ void z80scc_channel::device_start()
 	m_index = m_uart->get_channel_index(this);
 
 	m_uart->m_wr0_ptrbits = 0;
+	m_start_bit_hack_for_external_clocks = true;
 
 	m_rx_fifo_sz = (m_uart->m_variant & z80scc_device::SET_ESCC) ? 8 : 3;
 
@@ -1796,6 +1797,8 @@ void z80scc_channel::do_sccreg_wr0(uint8_t data)
 				break;
 			}
 		}
+		// re-assert interrupt if conditions are still present
+		check_receive_interrupt();
 		break;
 	case WR0_ERROR_RESET:
 		/*Error Reset Command (110). This command resets the error bits in RR1. If interrupt on first Rx
@@ -2584,22 +2587,7 @@ void z80scc_channel::receive_data(uint8_t data)
 	m_rr0 |= RR0_RX_CHAR_AVAILABLE;
 	check_dma_request();
 
-	// receive interrupt on FIRST and ALL character
-	switch (m_wr1 & WR1_RX_INT_MODE_MASK)
-	{
-	case WR1_RX_INT_FIRST:
-		if (m_rx_first)
-		{
-			m_uart->trigger_interrupt(m_index, INT_RECEIVE);
-
-			m_rx_first = 0;
-		}
-		break;
-
-	case WR1_RX_INT_ALL:
-		m_uart->trigger_interrupt(m_index, INT_RECEIVE);
-		break;
-	}
+	check_receive_interrupt();
 }
 
 
@@ -2725,13 +2713,16 @@ void z80scc_channel::rxc_w(int state)
 	/* Support for external clock as source for BRG has not been added */
 	if (m_wr3 & WR3_RX_ENABLE)
 	{
+		int source = (m_index == z80scc_device::CHANNEL_A) ? m_uart->m_rxca : m_uart->m_rxcb;
+		bool edge_driven_rxc = ((m_wr11 & WR11_RCVCLK_SRC_MASK) == WR11_RCVCLK_SRC_RTXC) && !source && !m_rxc;
+		if (!edge_driven_rxc)
+			return;
 		int clocks = get_clock_mode();
 		if (clocks == 1)
 			rx_clock_w(state);
-		else if(state)
+		else if (state)
 		{
-			if (m_rx_clock == clocks/2 && m_rcv_mode == RCV_SAMPLING)
-			rx_clock_w(m_rx_clock < clocks/2);
+			rx_clock_w(m_rx_clock < clocks / 2);
 
 			m_rx_clock++;
 			if (m_rx_clock == clocks)
@@ -2862,6 +2853,7 @@ void z80scc_channel::update_serial()
 	int data_bit_count = get_rx_word_length();
 	stop_bits_t stop_bits = get_stop_bits();
 	parity_t parity;
+	unsigned int rtxc_rate;
 
 	if (m_wr4 & WR4_PARITY_ENABLE)
 	{
@@ -2886,14 +2878,51 @@ void z80scc_channel::update_serial()
 
 	int clocks = get_clock_mode();
 
-	if  (m_wr14 & WR14_BRG_ENABLE)
+	m_brg_rate = (m_wr14 & WR14_BRG_ENABLE) ? get_brg_rate() : 0;
+	if (m_wr14 & WR14_BRG_ENABLE)
+		LOG("- BRG enabled (rate %d)\n", m_brg_rate);
+
+	switch (m_wr11 & WR11_RCVCLK_SRC_MASK)
 	{
-		LOG("- BRG enabled\n");
-		m_brg_rate = get_brg_rate();
-
-		LOG("- BRG rate %d\n", m_brg_rate);
+	case WR11_RCVCLK_SRC_RTXC:
+		rtxc_rate = get_rtxc_rate();
+		if (rtxc_rate)
+		{
+			set_rcv_rate(rtxc_rate);
+			LOG("- Receiver clock source RTxC (rate %d, clock %d)\n", rtxc_rate, get_clock_mode());
+		}
+		else
+		{
+			set_rcv_rate(0);
+			LOG("- Receiver clock source RTxC is edge-driven externally\n");
+		}
+		break;
+	case WR11_RCVCLK_SRC_BR:
 		set_rcv_rate(m_brg_rate);
+		LOG("- Receiver clock source BRG (rate %d, clock %d)\n", m_brg_rate, get_clock_mode());
+		break;
+	default:
+		LOG("- Receiver clock source unimplemented: stopping\n");
+		set_rcv_rate(0);
+		break;
+	}
 
+	switch (m_wr11 & WR11_TRACLK_SRC_MASK)
+	{
+	case WR11_TRACLK_SRC_RTXC:
+		rtxc_rate = get_rtxc_rate();
+		if (rtxc_rate)
+		{
+			set_tra_rate(rtxc_rate);
+			LOGTX("   - Transmit clock source RTxC: %d mode: %dx\n", rtxc_rate, get_clock_mode());
+		}
+		else
+		{
+			set_tra_rate(0);
+			LOGTX("   - Transmit clock source RTxC is edge-driven externally\n");
+		}
+		break;
+	case WR11_TRACLK_SRC_BR:
 		if (is_transmit_register_empty())
 		{
 			set_tra_rate(m_brg_rate);
@@ -2904,23 +2933,11 @@ void z80scc_channel::update_serial()
 			m_delayed_tx_brg_change = 1;
 			LOGTX("   - Baud Rate Generator delay init: %d clock mode: %dx\n", m_brg_rate, get_clock_mode());
 		}
-	}
-	else
-	{
-		if ((m_wr11 & WR11_RCVCLK_SRC_MASK) == WR11_RCVCLK_SRC_RTXC &&
-			(m_wr11 & WR11_TRACLK_SRC_MASK) == WR11_TRACLK_SRC_RTXC)
-		{
-			m_brg_rate = get_rtxc_rate();
-			LOG("- BRG disabled, clock source RTxC (rate %d, clock %d)\n", m_brg_rate, get_clock_mode());
-			set_rcv_rate(m_brg_rate);
-			set_tra_rate(m_brg_rate);
-		}
-		else
-		{
-			LOG("- BRG disabled and RX/TX clock sources differ, unimplemented: stopping\n");
-			set_rcv_rate(0);
-			set_tra_rate(0);
-		}
+		break;
+	default:
+		set_tra_rate(0);
+		LOGTX("   - Transmit clock source unimplemented: stopping\n");
+		break;
 	}
 	// TODO: Check registers for use of RTxC and TRxC, if used as direct Tx and/or Rx clocks set them to value as programmed
 	// in m_uart->txca/txcb and rxca/rxcb respectivelly
@@ -2954,6 +2971,9 @@ void z80scc_channel::set_dtr(int state)
 //-------------------------------------------------
 void z80scc_channel::write_rx(int state)
 {
+	int source = (m_index == z80scc_device::CHANNEL_A) ? m_uart->m_rxca : m_uart->m_rxcb;
+	bool edge_driven_rxc = ((m_wr11 & WR11_RCVCLK_SRC_MASK) == WR11_RCVCLK_SRC_RTXC) && !source && !m_rxc;
+
 #if START_BIT_HUNT
 	// Check for start bit if not receiving
 	if (m_rcv_mode == RCV_SEEKING && m_rxd == 1 && state == 0){
@@ -2964,10 +2984,12 @@ void z80scc_channel::write_rx(int state)
 	}
 #endif
 
+	if (m_rxd && !state && ((m_wr11 & WR11_RCVCLK_SRC_MASK) == WR11_RCVCLK_SRC_RTXC) && (get_clock_mode() > 1))
+		m_rx_clock = 0;
+
 	LOGRCV("%s(%d)\n", FUNCNAME, state);
 	m_rxd = state;
-	//only use rx_w when self-clocked
-	if(m_rxc != 0 || m_brg_rate != 0)
+	if (edge_driven_rxc || m_rxc != 0 || m_brg_rate != 0)
 		device_serial_interface::rx_w(state);
 }
 
@@ -3002,6 +3024,27 @@ void z80scc_channel::check_dma_request()
 		{
 			// assert /W//REQ if transmit buffer is empty and transmitter is enabled
 			m_uart->m_out_wreq_cb[m_index](((m_rr0 & RR0_TX_BUFFER_EMPTY) && (m_wr5 & WR5_TX_ENABLE)) ? 0 : 1);
+		}
+	}
+}
+
+void z80scc_channel::check_receive_interrupt()
+{
+	if (m_rr0 & RR0_RX_CHAR_AVAILABLE)
+	{
+		switch (m_wr1 & WR1_RX_INT_MODE_MASK)
+		{
+		case WR1_RX_INT_FIRST:
+			if (m_rx_first)
+			{
+				m_uart->trigger_interrupt(m_index, INT_RECEIVE);
+				m_rx_first = 0;
+			}
+			break;
+
+		case WR1_RX_INT_ALL:
+			m_uart->trigger_interrupt(m_index, INT_RECEIVE);
+			break;
 		}
 	}
 }

@@ -95,11 +95,11 @@ public:
 
 	DECLARE_INPUT_CHANGED_MEMBER(reset_switch) { update_reset(newval); }
 	DECLARE_INPUT_CHANGED_MEMBER(overlay_switch) { update_overlay(); }
-	DECLARE_CUSTOM_INPUT_MEMBER(overlay_r);
+	ioport_value overlay_r();
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -121,7 +121,7 @@ private:
 	bool m_extram_enabled = false;
 	u8 m_overlay = 0;
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	void update_reset(ioport_value state);
 	void update_overlay();
@@ -143,8 +143,6 @@ private:
 
 void ggm_state::machine_start()
 {
-	m_fdigit.resolve();
-
 	// register for savestates
 	save_item(NAME(m_inp_mux));
 	save_item(NAME(m_digit_data));
@@ -190,7 +188,7 @@ void ggm_state::update_reset(ioport_value state)
     Keypad Overlay
 *******************************************************************************/
 
-CUSTOM_INPUT_MEMBER(ggm_state::overlay_r)
+ioport_value ggm_state::overlay_r()
 {
 	u8 data = m_inputs[5]->read() & 0xf;
 	return (data == 0xf) ? m_overlay : data;
@@ -540,10 +538,10 @@ static INPUT_PORTS_START( ggm )
 	PORT_CONFNAME( 0x01, 0x00, "Version" ) // factory-set
 	PORT_CONFSETTING(    0x00, "GGM (Applied Concepts)" )
 	PORT_CONFSETTING(    0x01, "MGS (Chafitz)" )
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_OTHER) PORT_CODE(KEYCODE_F1) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, ggm_state, reset_switch, 0) PORT_NAME("Memory Switch")
+	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_OTHER) PORT_CODE(KEYCODE_F1) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(ggm_state::reset_switch), 0) PORT_NAME("Memory Switch")
 
 	PORT_START("IN.5")
-	PORT_CONFNAME( 0x0f, 0x0f, "Keypad Overlay" ) PORT_CHANGED_MEMBER(DEVICE_SELF, ggm_state, overlay_switch, 0)
+	PORT_CONFNAME( 0x0f, 0x0f, "Keypad Overlay" ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(ggm_state::overlay_switch), 0)
 	PORT_CONFSETTING(    0x00, "None" )
 	PORT_CONFSETTING(    0x0f, "Auto" ) // get param from softwarelist
 	PORT_CONFSETTING(    0x01, "Boris 2.5" )
@@ -553,7 +551,7 @@ static INPUT_PORTS_START( ggm )
 	PORT_CONFSETTING(    0x03, "Steinitz" )
 
 	PORT_START("IN.6")
-	PORT_BIT(0x0f, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_CUSTOM_MEMBER(ggm_state, overlay_r)
+	PORT_BIT(0x0f, IP_ACTIVE_HIGH, IPT_CUSTOM) PORT_CUSTOM_MEMBER(FUNC(ggm_state::overlay_r))
 INPUT_PORTS_END
 
 

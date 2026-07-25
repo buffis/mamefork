@@ -37,10 +37,7 @@ public:
 	wangpcbus_slot_device(machine_config const &mconfig, char const *tag, device_t *owner, T &&bus, U &&opts, char const *dflt, int sid)
 		: wangpcbus_slot_device(mconfig, tag, owner, 0)
 	{
-		option_reset();
-		opts(*this);
-		set_default_option(dflt);
-		set_fixed(false);
+		set_options(std::forward<U>(opts), dflt, false);
 		set_bus(std::forward<T>(bus));
 		set_bus_slot(sid);
 	}
@@ -52,7 +49,7 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 private:
 	// configuration
@@ -61,7 +58,7 @@ private:
 };
 
 
-// device type definition
+// device type declaration
 DECLARE_DEVICE_TYPE(WANGPC_BUS_SLOT, wangpcbus_slot_device)
 
 
@@ -122,7 +119,7 @@ public:
 
 protected:
 	// devicedevice_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 private:
 	using card_vector = std::vector<std::reference_wrapper<device_wangpcbus_card_interface> >;
@@ -142,7 +139,7 @@ private:
 };
 
 
-// device type definition
+// device type declaration
 DECLARE_DEVICE_TYPE(WANGPC_BUS, wangpcbus_device)
 
 

@@ -111,16 +111,15 @@ public:
 	{ }
 
 
-	void luckboom(machine_config &config);
-	void pmroulet(machine_config &config);
-	void sderby(machine_config &config);
-	void sderbya(machine_config &config);
-	void shinygld(machine_config &config);
-	void spacewin(machine_config &config);
+	void luckboom(machine_config &config) ATTR_COLD;
+	void pmroulet(machine_config &config) ATTR_COLD;
+	void sderby(machine_config &config) ATTR_COLD;
+	void sderbya(machine_config &config) ATTR_COLD;
+	void shinygld(machine_config &config) ATTR_COLD;
+	void spacewin(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override { m_lamps.resolve(); }
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 	required_shared_ptr<uint16_t> m_bg_videoram;
 	required_shared_ptr<uint16_t> m_md_videoram;
@@ -160,12 +159,13 @@ protected:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	uint32_t screen_update_pmroulet(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect);
-	void luckboom_map(address_map &map);
-	void roulette_map(address_map &map);
-	void sderby_map(address_map &map);
-	void sderbya_map(address_map &map);
-	void shinygld_map(address_map &map);
-	void spacewin_map(address_map &map);
+
+	void luckboom_map(address_map &map) ATTR_COLD;
+	void roulette_map(address_map &map) ATTR_COLD;
+	void sderby_map(address_map &map) ATTR_COLD;
+	void sderbya_map(address_map &map) ATTR_COLD;
+	void shinygld_map(address_map &map) ATTR_COLD;
+	void spacewin_map(address_map &map) ATTR_COLD;
 };
 
 class zw3_state : public sderby_state
@@ -173,22 +173,22 @@ class zw3_state : public sderby_state
 public:
 	using sderby_state::sderby_state;
 
-	void zw3(machine_config &config);
+	void zw3(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	TILE_GET_INFO_MEMBER(get_fg_tile_info);
 
-	void zw3_map(address_map &map);
+	void zw3_map(address_map &map) ATTR_COLD;
 };
 
 
 TILE_GET_INFO_MEMBER(sderby_state::get_bg_tile_info)
 {
-	int tileno = m_bg_videoram[tile_index * 2];
-	int colour = m_bg_videoram[tile_index * 2 + 1] & 0x0f;
+	const u32 tileno = m_bg_videoram[tile_index * 2];
+	const u32 colour = m_bg_videoram[tile_index * 2 + 1] & 0x0f;
 
 	tileinfo.set(1, tileno, colour, 0);
 }
@@ -202,8 +202,8 @@ void sderby_state::bg_videoram_w(offs_t offset, uint16_t data, uint16_t mem_mask
 
 TILE_GET_INFO_MEMBER(sderby_state::get_md_tile_info)
 {
-	int tileno = m_md_videoram[tile_index * 2];
-	int colour = m_md_videoram[tile_index * 2 + 1] & 0x0f;
+	const u32 tileno = m_md_videoram[tile_index * 2];
+	const u32 colour = m_md_videoram[tile_index * 2 + 1] & 0x0f;
 
 	tileinfo.set(1, tileno, colour + 16, 0);
 }
@@ -217,16 +217,16 @@ void sderby_state::md_videoram_w(offs_t offset, uint16_t data, uint16_t mem_mask
 
 TILE_GET_INFO_MEMBER(sderby_state::get_fg_tile_info)
 {
-	int tileno = m_fg_videoram[tile_index * 2];
-	int colour = m_fg_videoram[tile_index * 2 + 1] & 0x0f;
+	const u32 tileno = m_fg_videoram[tile_index * 2];
+	const u32 colour = m_fg_videoram[tile_index * 2 + 1] & 0x0f;
 
 	tileinfo.set(0, tileno, colour + 32, 0);
 }
 
 TILE_GET_INFO_MEMBER(zw3_state::get_fg_tile_info)
 {
-	int tileno = (m_fg_videoram[tile_index * 2] << 2) | ((m_fg_videoram[tile_index * 2 + 1] & 0xc000) >> 14);
-	int colour = m_fg_videoram[tile_index * 2 + 1] & 0x0f;
+	const u32 tileno = (m_fg_videoram[tile_index * 2] << 2) | ((m_fg_videoram[tile_index * 2 + 1] & 0xc000) >> 14);
+	const u32 colour = m_fg_videoram[tile_index * 2 + 1] & 0x0f;
 
 	tileinfo.set(0, tileno, colour + 32, 0);
 }
@@ -240,19 +240,19 @@ void sderby_state::fg_videoram_w(offs_t offset, uint16_t data, uint16_t mem_mask
 
 void sderby_state::draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect)
 {
-	int height = m_gfxdecode->gfx(0)->height();
-	int colordiv = m_gfxdecode->gfx(0)->granularity() / 16;
+	const int height = m_gfxdecode->gfx(0)->height();
+	const int colordiv = m_gfxdecode->gfx(0)->granularity() / 16;
 
 	for (int offs = 4; offs < m_spriteram.bytes() / 2; offs += 4)
 	{
 		int sy = m_spriteram[offs + 3 - 4]; // -4? what the... ???
 		if (sy == 0x2000) return;   // end of list marker
 
-		int flipx = sy & 0x4000;
-		int sx = (m_spriteram[offs + 1] & 0x01ff) - 16 - m_sprites_x_kludge;
+		const bool flipx = BIT(sy, 14);
+		const int sx = (m_spriteram[offs + 1] & 0x01ff) - 16 - m_sprites_x_kludge;
 		sy = (256 - m_sprites_y_kludge - height - sy) & 0xff;
-		int code = m_spriteram[offs + 2];
-		int color = (m_spriteram[offs + 1] & 0x3e00) >> 9;
+		const int code = m_spriteram[offs + 2];
+		const int color = (m_spriteram[offs + 1] & 0x3e00) >> 9;
 
 		m_gfxdecode->gfx(1)->transpen(bitmap, cliprect,
 				code,
@@ -345,7 +345,8 @@ uint16_t sderby_state::input_r(offs_t offset)
 			return 0xffff;          // to avoid game to reset (needs more work)
 	}
 
-	LOGINPUTS("input_r : offset = %x - PC = %06x\n", offset * 2, m_maincpu->pc());
+	if (!machine().side_effects_disabled())
+		LOGINPUTS("%s: input_r : offset = %x - PC = %06x\n", machine().describe_context(), offset * 2, m_maincpu->pc());
 
 	return 0xffff;
 }
@@ -389,7 +390,8 @@ uint16_t sderby_state::roulette_input_r(offs_t offset)
 
 uint16_t sderby_state::rprot_r()
 {
-	LOGCROUPIERMCU("rprot_r : offset = %02x\n", m_maincpu->pc());
+	if (!machine().side_effects_disabled())
+		LOGCROUPIERMCU("%s: rprot_r : offset = %02x\n", machine().describe_context(), m_maincpu->pc());
 
 /* This is the only mask I found that allow a normal play.
    Using other values, the game hangs waiting for response,
@@ -451,7 +453,7 @@ void sderby_state::sderby_out_w(uint16_t data)
 	m_lamps[1] = BIT(data, 1);      // Lamp 2 - BET
 	m_lamps[2] = BIT(data, 15);     // Lamp 3 - END OF RACE
 
-	machine().bookkeeping().coin_counter_w(0, data & 0x2000);
+	machine().bookkeeping().coin_counter_w(0, BIT(data, 13));
 }
 
 
@@ -500,7 +502,7 @@ void sderby_state::scmatto_out_w(uint16_t data)
 	m_lamps[5] = BIT(data, 5);      // Lamp 6 - START
 	m_lamps[6] = BIT(data, 6);      // Lamp 7 - BET
 
-	machine().bookkeeping().coin_counter_w(0, data & 0x2000);
+	machine().bookkeeping().coin_counter_w(0, BIT(data, 13));
 }
 
 
@@ -786,7 +788,7 @@ INPUT_PORTS_END
 static INPUT_PORTS_START( pmroulet )
 	PORT_START("IN0")
 	PORT_BIT( 0x000f, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // it must be toggled to boot anyway
+	PORT_BIT( 0x0010, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // it must be toggled to boot anyway
 	PORT_SERVICE_NO_TOGGLE(0x0020, IP_ACTIVE_LOW)
 	PORT_BIT( 0x00c0, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0f00, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -832,7 +834,7 @@ static INPUT_PORTS_START( croupierb )
 	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("IN1")
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // it must be toggled to boot anyway
+	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // it must be toggled to boot anyway
 	PORT_BIT( 0xfffe, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
@@ -856,7 +858,7 @@ static INPUT_PORTS_START( magictch )
 	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("IN1")
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // it must be toggled to boot anyway
+	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // it must be toggled to boot anyway
 	PORT_BIT( 0xfffe, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
@@ -880,7 +882,7 @@ static INPUT_PORTS_START( tropfrt )
 	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("IN1")
-	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_VBLANK("screen") // it must be toggled to boot anyway
+	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("screen", FUNC(screen_device::vblank)) // it must be toggled to boot anyway
 	PORT_BIT( 0xfffe, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
@@ -1368,8 +1370,30 @@ ZW3 PCB with 'MAGIC' sticker
 
 ROM_START( magictch )
 	ROM_REGION( 0x40000, "maincpu", 0 )
-	ROM_LOAD16_BYTE( "22.u43", 0x00000, 0x20000, CRC(47f047b1) SHA1(f47ab9734f6bb1dc50baf159bca144fa79eac1a5) ) // TMS27C010A
-	ROM_LOAD16_BYTE( "23.u42", 0x00001, 0x20000, CRC(f63e31bf) SHA1(e96da519a8d6488d600e031ac48f5ce1a8a376f5) ) // TMS27C010A
+	ROM_LOAD16_BYTE( "22.u43", 0x00000, 0x20000, CRC(7826e130) SHA1(f4928661fee1170c3df03be0842cab57c338a7c6) )
+	ROM_LOAD16_BYTE( "23.u42", 0x00001, 0x20000, CRC(8f74ec63) SHA1(b158851872dcc2af9c349926d26c36fd097fb418) )
+
+	ROM_REGION( 0x4008, "pic16c65", 0 )
+	ROM_LOAD( "pic16c65.u28", 0x0000, 0x4008, NO_DUMP )
+
+	ROM_REGION( 0x040000, "oki", 0 )
+	ROM_LOAD( "21.u16", 0x00000, 0x40000, CRC(e06a023f) SHA1(b4cd64f6c97e9c3e50a9658e171d748cb9f1c4ef) )
+
+	ROM_REGION( 0xa0000, "gfx", 0 )
+	ROM_LOAD( "28.u76", 0x000000, 0x20000, CRC(ca49b54c) SHA1(69d6a3b32ebc357231b22ded40468971ba9ef8c3) )
+	ROM_LOAD( "27.u77", 0x020000, 0x20000, CRC(55b10fe5) SHA1(caf16512afe1b3fa66018075598cbc2626a63b3e) )
+	ROM_LOAD( "26.u78", 0x040000, 0x20000, CRC(d7974bd9) SHA1(b49678697e30d104a88adcc8e2c09cd62233c7b4) )
+	ROM_LOAD( "25.u79", 0x060000, 0x20000, CRC(f825cb9d) SHA1(10ffa614ac82e5c625c36095b298a8acfc7465bf) )
+	ROM_LOAD( "24.u80", 0x080000, 0x20000, CRC(3bdaea12) SHA1(8d9493ab80f96e6f941039ce6d1b8f1ed3c78379) )
+
+	ROM_REGION( 0x300, "plds", 0)
+	ROM_LOAD( "gal22cv10-15lnc.u40", 0x000, 0x2e5, NO_DUMP ) // soldered
+ROM_END
+
+ROM_START( magictcha )
+	ROM_REGION( 0x40000, "maincpu", 0 )
+	ROM_LOAD16_BYTE( "22.u43", 0x00000, 0x20000, CRC(47f047b1) SHA1(f47ab9734f6bb1dc50baf159bca144fa79eac1a5) ) // TMS27C010A, SLDH
+	ROM_LOAD16_BYTE( "23.u42", 0x00001, 0x20000, CRC(f63e31bf) SHA1(e96da519a8d6488d600e031ac48f5ce1a8a376f5) ) // TMS27C010A, SLDH
 
 	ROM_REGION( 0x4008, "pic16c65", 0 )
 	ROM_LOAD( "pic16c65.u28", 0x0000, 0x4008, NO_DUMP )
@@ -1451,5 +1475,6 @@ GAMEL( 1997, croupier,  0,        pmroulet, pmroulet,  sderby_state, empty_init,
 GAMEL( 1997, croupiera, croupier, pmroulet, pmroulet,  sderby_state, empty_init, ROT0, "Playmark", "Croupier (Playmark Roulette v.09.04)",    MACHINE_UNEMULATED_PROTECTION | MACHINE_NOT_WORKING, layout_pmroulet )
 GAMEL( 1997, croupierb, croupier, zw3,      croupierb, zw3_state,    empty_init, ROT0, "Playmark", "Croupier II (Playmark Roulette v.03.09)", MACHINE_UNEMULATED_PROTECTION | MACHINE_NOT_WORKING | MACHINE_IMPERFECT_GRAPHICS, layout_pmroulet ) // title screen says Croupier 2 but every string in ROM says Croupier.
 GAME(  1996, luckboom,  0,        luckboom, luckboom,  sderby_state, empty_init, ROT0, "Playmark", "Lucky Boom",                              0                                                                    )
-GAME(  1998, magictch,  0,        zw3,      magictch,  zw3_state,    empty_init, ROT0, "Playmark", "Magic Touch",                             MACHINE_UNEMULATED_PROTECTION | MACHINE_NOT_WORKING | MACHINE_IMPERFECT_GRAPHICS ) // sprite offsets aren't 100% correct, no PIC16C65 emulation, needs proper layout
+GAME(  1998, magictch,  0,        zw3,      magictch,  zw3_state,    empty_init, ROT0, "Playmark", "Magic Touch (v. 28.05)",                  MACHINE_UNEMULATED_PROTECTION | MACHINE_NOT_WORKING | MACHINE_IMPERFECT_GRAPHICS ) // sprite offsets aren't 100% correct, no PIC16C65 emulation, needs proper layout
+GAME(  1998, magictcha, magictch, zw3,      magictch,  zw3_state,    empty_init, ROT0, "Playmark", "Magic Touch (v. 24.03)",                  MACHINE_UNEMULATED_PROTECTION | MACHINE_NOT_WORKING | MACHINE_IMPERFECT_GRAPHICS ) // sprite offsets aren't 100% correct, no PIC16C65 emulation, needs proper layout
 GAME(  1999, tropfrt,   0,        zw3,      tropfrt,   zw3_state,    empty_init, ROT0, "Playmark", "Tropical Fruits (V. 24-06.00 Rev. 4.0)",  MACHINE_UNEMULATED_PROTECTION | MACHINE_NOT_WORKING | MACHINE_IMPERFECT_GRAPHICS ) // sprite offsets aren't 100% correct, no PIC16C74 emulation, needs proper layout

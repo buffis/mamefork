@@ -20,15 +20,16 @@
 ***************************************************************************/
 
 #include "emu.h"
+
 #include "cpu/mcs48/mcs48.h"
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "machine/74259.h"
 #include "machine/bankdev.h"
 #include "machine/i8279.h"
 #include "machine/msm5832.h"
 #include "machine/msm6242.h"
 #include "machine/nvram.h"
-#include "machine/roc10937.h"
+#include "video/roc10937.h"
 
 #include "design6.lh"
 
@@ -54,8 +55,8 @@ public:
 	void design6(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<i8051_device> m_maincpu;
@@ -63,9 +64,9 @@ private:
 	required_device<roc10937_device> m_vfd;
 	required_ioport_array<4> m_buttons;
 
-	void mem_map(address_map &map);
-	void io_map(address_map &map);
-	void iobanked_map(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
+	void iobanked_map(address_map &map) ATTR_COLD;
 
 	void port1_w(uint8_t data);
 	uint8_t in2_r();
@@ -285,10 +286,10 @@ void design6_state::design6(machine_config &config)
 {
 	I8051(config, m_maincpu, 6_MHz_XTAL);
 	m_maincpu->set_addrmap(AS_PROGRAM, &design6_state::mem_map);
-	m_maincpu->set_addrmap(AS_IO, &design6_state::io_map);
+	m_maincpu->set_addrmap(AS_DATA, &design6_state::io_map);
 	m_maincpu->port_out_cb<1>().set(FUNC(design6_state::port1_w));
 
-	ADDRESS_MAP_BANK(config, m_iobank, 0);
+	ADDRESS_MAP_BANK(config, m_iobank);
 	m_iobank->set_map(&design6_state::iobanked_map);
 	m_iobank->set_addr_width(17);
 	m_iobank->set_data_width(8);
@@ -455,8 +456,8 @@ ROM_END
 GAME( 1995?, design6,     0,          design6,    design6,  design6_state,  empty_init, ROT0, "Azkoyen", "Design D6",                         MACHINE_SUPPORTS_SAVE | MACHINE_NO_SOUND_HW | MACHINE_NOT_WORKING )
 GAME( 1995?, designe,     0,          design6,    designe,  design6_state,  empty_init, ROT0, "Azkoyen", "Design (Euro)",                     MACHINE_SUPPORTS_SAVE | MACHINE_NO_SOUND_HW | MACHINE_NOT_WORKING )
 
-GAME( 19??,  azkoyent6,   0,          azkoyent,   azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T6",          MACHINE_IS_SKELETON )
-GAME( 19??,  azkoyent8,   0,          azkoyent,   azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T8",          MACHINE_IS_SKELETON )
-GAME( 19??,  azkoyent12,  0,          azkoyent,   azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T12",         MACHINE_IS_SKELETON )
-GAME( 19??,  azkoyent61,  0,          azkoyent61, azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T61 (set 1)", MACHINE_IS_SKELETON )
-GAME( 19??,  azkoyent61a, azkoyent61, azkoyent61, azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T61 (set 2)", MACHINE_IS_SKELETON )
+GAME( 19??,  azkoyent6,   0,          azkoyent,   azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T6",          MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 19??,  azkoyent8,   0,          azkoyent,   azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T8",          MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 19??,  azkoyent12,  0,          azkoyent,   azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T12",         MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 19??,  azkoyent61,  0,          azkoyent61, azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T61 (set 1)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 19??,  azkoyent61a, azkoyent61, azkoyent61, azkoyent, azkoyent_state, empty_init, ROT0, "Azkoyen", "Vending machine model T61 (set 2)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

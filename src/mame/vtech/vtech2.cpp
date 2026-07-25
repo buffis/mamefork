@@ -271,7 +271,7 @@ static INPUT_PORTS_START( laser500 )
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_NAME("Ins") PORT_CODE(KEYCODE_INSERT)          PORT_CHAR(UCHAR_MAMEKEY(INSERT))
 
 	PORT_START("RESET")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD) PORT_NAME("Reset") PORT_CODE(KEYCODE_LALT) PORT_CHAR(UCHAR_MAMEKEY(LALT)) PORT_CHANGED_MEMBER(DEVICE_SELF, vtech2_state, reset_button, 0)
+	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD) PORT_NAME("Reset") PORT_CODE(KEYCODE_LALT) PORT_CHAR(UCHAR_MAMEKEY(LALT)) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(vtech2_state::reset_button), 0)
 INPUT_PORTS_END
 
 INPUT_CHANGED_MEMBER(vtech2_state::reset_button)
@@ -507,7 +507,7 @@ void vtech2_state::laser350(machine_config &config)
 	GENERIC_CARTSLOT(config, "cartslot", generic_plain_slot, "vtech_cart", "rom,bin").set_device_load(FUNC(vtech2_state::cart_load));
 
 	/* 5.25" Floppy drive */
-	LEGACY_FLOPPY(config, m_laser_file[0], 0, &vtech2_floppy_interface);
+	LEGACY_FLOPPY(config, m_laser_file[0], &vtech2_floppy_interface);
 }
 
 
@@ -532,7 +532,7 @@ void vtech2_state::laser700(machine_config &config)
 	ADDRESS_MAP_BANK(config.replace(), "bankd").set_map(&vtech2_state::m_map700).set_options(ENDIANNESS_LITTLE, 8, 18, 0x4000);
 
 	/* Second 5.25" floppy drive */
-	LEGACY_FLOPPY(config, m_laser_file[1], 0, &vtech2_floppy_interface);
+	LEGACY_FLOPPY(config, m_laser_file[1], &vtech2_floppy_interface);
 }
 
 

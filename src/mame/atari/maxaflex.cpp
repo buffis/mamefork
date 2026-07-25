@@ -57,8 +57,8 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(coin_inserted);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	uint8_t mcu_porta_r();
@@ -74,7 +74,7 @@ private:
 	bool atari_input_disabled() const { return !BIT(m_portb_out, 7); }
 	void mmu(uint8_t new_mmu);
 
-	void a600xl_mem(address_map &map);
+	void a600xl_mem(address_map &map) ATTR_COLD;
 
 	uint8_t m_portb_out;
 	uint8_t m_portc_out;
@@ -255,7 +255,7 @@ static INPUT_PORTS_START( a600xl )
 
 	// Max-A-Flex specific ports
 	PORT_START("coin")
-	PORT_BIT(0x1, IP_ACTIVE_LOW, IPT_COIN1) PORT_CHANGED_MEMBER(DEVICE_SELF, maxaflex_state, coin_inserted, 0)
+	PORT_BIT(0x1, IP_ACTIVE_LOW, IPT_COIN1) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(maxaflex_state::coin_inserted), 0)
 
 	PORT_START("dsw")
 	PORT_DIPNAME(0xf, 0x9, "Coin/Time" )
@@ -292,9 +292,6 @@ uint8_t maxaflex_state::pia_pb_r()
 void maxaflex_state::machine_start()
 {
 	atari_common_state::machine_start();
-
-	m_lamps.resolve();
-	m_digits.resolve();
 
 	save_item(NAME(m_portb_out));
 	save_item(NAME(m_portc_out));
@@ -334,12 +331,12 @@ void maxaflex_state::maxaflex(machine_config &config)
 	m_mcu->portb_w().set(FUNC(maxaflex_state::mcu_portb_w));
 	m_mcu->portc_w().set(FUNC(maxaflex_state::mcu_portc_w));
 
-	ATARI_GTIA(config, m_gtia, 0);
+	ATARI_GTIA(config, m_gtia);
 	m_gtia->set_region(GTIA_NTSC);
 	m_gtia->read_callback().set_ioport("console");
 	m_gtia->trigger_callback().set_ioport("djoy_b");
 
-	ATARI_ANTIC(config, m_antic, 0);
+	ATARI_ANTIC(config, m_antic);
 	m_antic->set_gtia_tag(m_gtia);
 
 	pia6821_device &pia(PIA6821(config, "pia"));

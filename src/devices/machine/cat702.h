@@ -22,7 +22,7 @@ public:
 protected:
 	cat702_device_base(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
 
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 	void apply_bit_sbox(int sel);
 	void apply_sbox(const uint8_t *sbox);
@@ -45,7 +45,7 @@ private:
 class cat702_device : public cat702_device_base
 {
 public:
-	cat702_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	cat702_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void write_select(int state);
 	void write_clock(int state);
@@ -54,7 +54,7 @@ public:
 class cat702_piu_device : public cat702_device_base
 {
 public:
-	cat702_piu_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	cat702_piu_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void write_select(int state);
 	void write_clock(int state);

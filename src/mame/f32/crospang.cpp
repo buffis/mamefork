@@ -77,9 +77,9 @@ public:
 	void pitapata(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	// memory pointers
@@ -113,14 +113,14 @@ private:
 	TILE_GET_INFO_MEMBER(get_bg_tile_info);
 	TILE_GET_INFO_MEMBER(get_fg_tile_info);
 	u32 screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-	void base_map(address_map &map);
-	void bestri_map(address_map &map);
-	void bestria_map(address_map &map);
-	void crospang_map(address_map &map);
-	void pitapat_map(address_map &map);
-	void pitapata_map(address_map &map);
-	void sound_io_map(address_map &map);
-	void sound_map(address_map &map);
+	void base_map(address_map &map) ATTR_COLD;
+	void bestri_map(address_map &map) ATTR_COLD;
+	void bestria_map(address_map &map) ATTR_COLD;
+	void crospang_map(address_map &map) ATTR_COLD;
+	void pitapat_map(address_map &map) ATTR_COLD;
+	void pitapata_map(address_map &map) ATTR_COLD;
+	void sound_io_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -681,7 +681,7 @@ void crospang_state::crospang(machine_config &config)
 	PALETTE(config, "palette").set_format(palette_device::xRGB_555, 0x300);
 	GFXDECODE(config, m_gfxdecode, "palette", gfx_crospang);
 
-	DECO_SPRITE(config, m_sprgen, 0, "palette", gfx_crospang_spr);
+	DECO_SPRITE(config, m_sprgen, "palette", gfx_crospang_spr);
 	m_sprgen->set_is_bootleg(true);
 	m_sprgen->set_offsets(5, 7);
 

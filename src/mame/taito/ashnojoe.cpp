@@ -109,9 +109,9 @@ public:
 	void ashnojoe(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	// memory pointers
@@ -151,9 +151,9 @@ private:
 	TILE_GET_INFO_MEMBER(get_tile_info_lowest);
 	u32 screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void vclk_cb(int state);
-	void main_map(address_map &map);
-	void sound_map(address_map &map);
-	void sound_portmap(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
+	void sound_portmap(address_map &map) ATTR_COLD;
 };
 
 
@@ -646,5 +646,5 @@ ROM_END
 } // anonymous namespace
 
 
-GAME( 1990, scessjoe, 0,        ashnojoe, ashnojoe, ashnojoe_state, empty_init, ROT0, "Taito Corporation / Wave", "Success Joe (World)",   MACHINE_SUPPORTS_SAVE )
-GAME( 1990, ashnojoe, scessjoe, ashnojoe, ashnojoe, ashnojoe_state, empty_init, ROT0, "Taito Corporation / Wave", "Ashita no Joe (Japan)", MACHINE_SUPPORTS_SAVE )
+GAME( 1990, scessjoe, 0,        ashnojoe, ashnojoe, ashnojoe_state, empty_init, ROT0, "Taito / Wave", "Success Joe (World)",   MACHINE_SUPPORTS_SAVE )
+GAME( 1990, ashnojoe, scessjoe, ashnojoe, ashnojoe, ashnojoe_state, empty_init, ROT0, "Taito / Wave", "Ashita no Joe (Japan)", MACHINE_SUPPORTS_SAVE )

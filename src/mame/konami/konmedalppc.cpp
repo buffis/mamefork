@@ -33,8 +33,8 @@ public:
 	void konmedalppc(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<ppc_device> m_maincpu;
@@ -42,19 +42,12 @@ private:
 	required_device<ata_interface_device> m_ata;
 	required_shared_ptr<uint32_t> m_work_ram;
 
-	u32 screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-
-	void main_map(address_map &map);
-	void ymz280b_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void ymz280b_map(address_map &map) ATTR_COLD;
 
 	u16 ata_r(offs_t offset, u16 mem_mask);
 	void ata_w(offs_t offset, u16 data, u16 mem_mask);
 };
-
-uint32_t konmedalppc_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
-{
-	return m_gcu->draw(screen, bitmap, cliprect);
-}
 
 /*
    Offset 0 is the full 16 bits of ATA register 0 (1F0h on PC)
@@ -143,18 +136,17 @@ void konmedalppc_state::konmedalppc(machine_config &config)
 	screen.set_refresh_hz(60);
 	screen.set_size(1280, 800);
 	screen.set_visarea(0, 1024-1, 0, 768-1);
-	screen.set_screen_update(FUNC(konmedalppc_state::screen_update));
+	screen.set_screen_update(m_gcu, FUNC(k057714_device::draw));
 	screen.set_palette("palette");
 
-	K057714(config, m_gcu, 0).set_screen("screen");
+	K057714(config, m_gcu).set_screen("screen");
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	ymz280b_device &ymz(YMZ280B(config, "ymz", 16934400));
 	ymz.set_addrmap(0, &konmedalppc_state::ymz280b_map);
-	ymz.add_route(1, "lspeaker", 1.0);
-	ymz.add_route(0, "rspeaker", 1.0);
+	ymz.add_route(1, "speaker", 1.0, 0);
+	ymz.add_route(0, "speaker", 1.0, 1);
 }
 
 ROM_START( turfwld3 )

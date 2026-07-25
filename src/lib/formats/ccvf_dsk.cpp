@@ -13,6 +13,8 @@
 #include "coretmpl.h" // BIT
 #include "ioprocs.h"
 
+#include <cstring>
+
 
 ccvf_format::ccvf_format()
 {
@@ -151,11 +153,6 @@ bool ccvf_format::load(util::random_read &io, uint32_t form_factor, const std::v
 	image.set_variant(f.variant);
 
 	return true;
-}
-
-bool ccvf_format::supports_save() const noexcept
-{
-	return false;
 }
 
 const ccvf_format FLOPPY_CCVF_FORMAT;

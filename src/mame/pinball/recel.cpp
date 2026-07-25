@@ -63,7 +63,11 @@ public:
 		, m_digit(*this, "digit%d", 0U)
 	{ }
 
-	void recel(machine_config &config);
+	void recel(machine_config &config) ATTR_COLD;
+
+protected:
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	u8 solenoids_r(offs_t offset);
@@ -75,15 +79,12 @@ private:
 	void lamps_w(offs_t offset, u8 data);
 	u8 nvram_r(offs_t offset);
 	void nvram_w(offs_t offset, u8 data);
-	[[maybe_unused]]u8 bic_r(offs_t offset);
-	[[maybe_unused]]void bic_w(offs_t offset, u8 data);
+	[[maybe_unused]] u8 bic_r(offs_t offset);
+	[[maybe_unused]] void bic_w(offs_t offset, u8 data);
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-
-	void recel_map(address_map &map);
-	void recel_data(address_map &map);
-	void recel_io(address_map &map);
+	void recel_map(address_map &map) ATTR_COLD;
+	void recel_data(address_map &map) ATTR_COLD;
+	void recel_io(address_map &map) ATTR_COLD;
 
 	required_device<pps4_2_device> m_maincpu;
 	required_region_ptr<u8> m_pm;
@@ -180,8 +181,6 @@ INPUT_PORTS_END
 void recel_state::machine_start()
 {
 	genpin_class::machine_start();
-
-	m_digit.resolve();
 
 	save_item(NAME(m_strobe));
 	save_item(NAME(m_nvram_addr));
@@ -359,17 +358,17 @@ void recel_state::recel(machine_config & config)
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
-	ra17xx_device &u5(RA17XX(config, "b2", 0));
+	ra17xx_device &u5(RA17XX(config, "b2"));
 	u5.iord_cb().set(FUNC(recel_state::nvram_r));
 	u5.iowr_cb().set(FUNC(recel_state::nvram_w));     // control NVRAM, printer
 	u5.set_cpu_tag(m_maincpu);
 
-	ra17xx_device &u4(RA17XX(config, "b1", 0));
+	ra17xx_device &u4(RA17XX(config, "b1"));
 	u4.iord_cb().set(FUNC(recel_state::lamps_r));
 	u4.iowr_cb().set(FUNC(recel_state::lamps_w));    // control lamps
 	u4.set_cpu_tag(m_maincpu);
 
-	r10696_device &u3(R10696(config, "b3", 0));
+	r10696_device &u3(R10696(config, "b3"));
 	u3.iord_cb().set(FUNC(recel_state::solenoids_r));
 	u3.iowr_cb().set(FUNC(recel_state::solenoids_w));   // to sound, solenoids, lamps
 
@@ -456,13 +455,18 @@ ROM_START(r_fairfght)
 	ROM_LOAD("fa.c5",         0x0000, 0x0100, CRC(5d3694da) SHA1(4d0a8033acb6ef2e2af107f76540fd19b4a39b12) )
 ROM_END
 
+/* There are three different known dumps for Poker Plus:
+    (1) CRC(571ee27b) SHA1(482a3ba18eff05bce4cab073b1f13fc2f145bb2b)
+    (2) CRC(60a199a8) SHA1(045d61f56ea03a694722da810d465ab65d85cbfd)
+    (3) CRC(fadd715a) SHA1(6c5b6e8fcf77be2b0b7076dc1139760f7e4d5688)
+  (1) was tested on a real machine and works OK, (2) was also tested, but the pinball did not work with it,
+  (3) was not tested.
+*/
 ROM_START(r_pokrplus)
 	RECEL_BIOS
 
 	ROM_REGION( 0x0800, "module", ROMREGION_ERASEFF )
-	ROM_LOAD("po.c5",         0x0000, 0x0100, CRC(60a199a8) SHA1(045d61f56ea03a694722da810d465ab65d85cbfd) )
-	//ROM_LOAD( "po2.c5",       0x0000, 0x0100, CRC(571ee27b) SHA1(482a3ba18eff05bce4cab073b1f13fc2f145bb2b) )
-	//ROM_LOAD( "po3.c5",       0x0000, 0x0800, CRC(fadd715a) SHA1(6c5b6e8fcf77be2b0b7076dc1139760f7e4d5688) )
+	ROM_LOAD( "ba65.c5",      0x0000, 0x0100, CRC(571ee27b) SHA1(482a3ba18eff05bce4cab073b1f13fc2f145bb2b) )
 ROM_END
 
 ROM_START(r_mrdoom)
@@ -541,20 +545,20 @@ ROM_END
 
 GAME(1977,  recel,      0,      recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Recel BIOS",             MACHINE_IS_BIOS_ROOT | MACHINE_NOT_WORKING)
 
-GAME(1978,  r_alaska,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Interflip", "Alaska",                 MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1978,  r_hotcold,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Inder",     "Hot & Cold",             MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1978,  r_screech,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Inder",     "Screech",                MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1978,  r_mrevil,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Mr. Evil",               MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1978,  r_torneo,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Torneo",                 MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1978,  r_crzyrace, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Crazy Race",             MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1978,  r_fairfght, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Fair Fight",             MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1978,  r_pokrplus, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Poker Plus",             MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1979,  r_mrdoom,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Mr. Doom",               MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1979,  r_cavalier, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Cavalier",               MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1979,  r_swash,    recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "SwashBuckler",           MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1979,  r_quijote,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Don Quijote",            MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1979,  r_spcgame7, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Space Game (Bingo 6+1)", MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1980,  r_antar,    recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Antar (Recel)",          MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1980,  r_flipper,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "The Flipper Game",       MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1980,  r_blackmag, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Black Magic",            MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1980,  r_blackm4,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Black Magic 4",          MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_alaska,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Interflip", "Alaska",                 MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_hotcold,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Inder",     "Hot & Cold",             MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_screech,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Inder",     "Screech",                MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_mrevil,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Mr. Evil",               MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_torneo,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Torneo",                 MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_crzyrace, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Crazy Race",             MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_fairfght, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Fair Fight",             MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1978,  r_pokrplus, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Poker Plus",             MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1979,  r_mrdoom,   recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Mr. Doom",               MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1979,  r_cavalier, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Cavalier",               MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1979,  r_swash,    recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "SwashBuckler",           MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1979,  r_quijote,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Don Quijote",            MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1979,  r_spcgame7, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Space Game (Bingo 6+1)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1980,  r_antar,    recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Antar (Recel)",          MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1980,  r_flipper,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "The Flipper Game",       MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1980,  r_blackmag, recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Black Magic",            MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1980,  r_blackm4,  recel,  recel,   recel, recel_state, empty_init, ROT0, "Recel",     "Black Magic 4",          MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )

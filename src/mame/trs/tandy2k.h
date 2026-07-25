@@ -3,28 +3,33 @@
 #ifndef MAME_TRS_TANDY2K_H
 #define MAME_TRS_TANDY2K_H
 
+#pragma once
+
+#include "tandy2kb.h"
+
 #include "bus/centronics/ctronics.h"
 #include "bus/rs232/rs232.h"
 #include "cpu/i86/i186.h"
 #include "cpu/mcs48/mcs48.h"
-#include "formats/tandy2k_dsk.h"
 #include "imagedev/floppy.h"
 #include "imagedev/harddriv.h"
-#include "machine/i8255.h"
+#include "machine/bankdev.h"
 #include "machine/i8251.h"
+#include "machine/i8255.h"
 #include "machine/pckeybrd.h"
-#include "machine/pit8253.h"
 #include "machine/pic8259.h"
+#include "machine/pit8253.h"
 #include "machine/ram.h"
-#include "tandy2kb.h"
 #include "machine/timer.h"
 #include "machine/upd765.h"
-#include "machine/bankdev.h"
 #include "sound/spkrdev.h"
 #include "video/crt9007.h"
 #include "video/crt9021.h"
 #include "video/crt9212.h"
+
 #include "emupal.h"
+
+#include "formats/tandy2k_dsk.h"
 
 #define SCREEN_TAG      "screen"
 #define I80186_TAG      "u76"
@@ -116,15 +121,14 @@ public:
 	DECLARE_INPUT_CHANGED_MEMBER(input_changed);
 
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void device_reset_after_children() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void tandy2k_mem(address_map &map);
-	void tandy2k_io(address_map &map);
-	void tandy2k_hd_io(address_map &map);
-	void vpac_mem(address_map &map);
-	void vrambank_mem(address_map &map);
+	void tandy2k_mem(address_map &map) ATTR_COLD;
+	void tandy2k_io(address_map &map) ATTR_COLD;
+	void tandy2k_hd_io(address_map &map) ATTR_COLD;
+	void vpac_mem(address_map &map) ATTR_COLD;
+	void vrambank_mem(address_map &map) ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(update_mouse);
 	TIMER_CALLBACK_MEMBER(mcu_delay_cb);

@@ -97,8 +97,6 @@ void msx_slot_disk_device::add_drive_mconfig(machine_config &config, bool double
 void msx_slot_disk_device::device_start()
 {
 	msx_slot_rom_device::device_start();
-
-	m_internal_drive_led.resolve();
 }
 
 void msx_slot_disk_device::device_reset()
@@ -149,6 +147,7 @@ void msx_slot_tc8566_disk_device::add_mconfig(machine_config &config)
 	TC8566AF(config, m_fdc, 16'000'000);
 
 	add_drive_mconfig(config, DS);
+	m_fdc->set_ready_line_connected(false);
 }
 
 void msx_slot_tc8566_disk_device::dor_w(u8 data)

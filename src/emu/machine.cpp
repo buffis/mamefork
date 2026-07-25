@@ -20,6 +20,7 @@
 #include "fileio.h"
 #include "http.h"
 #include "image.h"
+#include "input.h"
 #include "main.h"
 #include "natkeyboard.h"
 #include "network.h"
@@ -54,6 +55,13 @@ osd_interface &running_machine::osd() const
 {
 	return m_manager.osd();
 }
+
+ui_input_manager &running_machine::ui_input() const noexcept
+{
+	assert(m_ui_input);
+	return m_ui_input->input_manager();
+}
+
 
 //-------------------------------------------------
 //  running_machine - constructor
@@ -119,8 +127,10 @@ std::string running_machine::describe_context() const
 		cpu_device *cpu = dynamic_cast<cpu_device *>(&executing->device());
 		if (cpu != nullptr)
 		{
-			address_space &prg = cpu->space(AS_PROGRAM);
-			return string_format(prg.is_octal() ? "'%s' (%0*o)" :  "'%s' (%0*X)", cpu->tag(), prg.logaddrchars(), cpu->pc());
+			address_space *tspace;
+			offs_t address = cpu->pc();
+			bool ok = cpu->translate(AS_PROGRAM, device_memory_interface::TR_READ, address, tspace);
+			return string_format((ok && tspace->is_octal()) ? "'%s' (%0*o)" :  "'%s' (%0*X)", cpu->tag(), ok ? tspace->logaddrchars() : 1, cpu->pc());
 		}
 	}
 
@@ -139,16 +149,14 @@ void running_machine::start()
 {
 	// initialize basic can't-fail systems here
 	m_configuration = std::make_unique<configuration_manager>(*this);
+	m_ui_input = std::make_unique<ui_input_manager_impl>(*this);
 	m_input = std::make_unique<input_manager>(*this);
 	m_output = std::make_unique<output_manager>(*this);
-	m_render = std::make_unique<render_manager>(*this);
+	m_render = std::make_unique<render_manager>(*this, m_ui_input->event_sink());
 	m_bookkeeping = std::make_unique<bookkeeping_manager>(*this);
 
 	// allocate a soft_reset timer
 	m_soft_reset_timer = m_scheduler.timer_alloc(timer_expired_delegate(FUNC(running_machine::soft_reset), this));
-
-	// initialize UI input
-	m_ui_input = std::make_unique<ui_input_manager>(*this);
 
 	// init the OSD layer
 	m_manager.osd().init(*this);
@@ -166,7 +174,67 @@ void running_machine::start()
 	// callbacks based on input port tags
 	time_t newbase = m_ioport.initialize();
 	if (newbase != 0)
+	{
 		m_base_time = newbase;
+
+		std::string rtc_str = options().rtc_time();
+		if (!rtc_str.empty() && rtc_str != "0")
+		{
+			osd_printf_warning("RTC: Input playback is active. Ignoring -rtc command line option.\n");
+		}
+	}
+	// if no playback file is active, look for the command-line override
+	else
+	{
+		std::string rtc_str = options().rtc_time();
+		if (!rtc_str.empty() && rtc_str != "0")
+		{
+			time_t old_base = m_base_time;
+			bool parsed_successfully = false;
+
+			// validate format: exactly 14 digits (YYYYMMDDhhmmss)
+			if (rtc_str.length() == 14 && rtc_str.find_first_not_of("0123456789") == std::string::npos)
+			{
+				int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
+				if (sscanf(rtc_str.c_str(), "%4d%2d%2d%2d%2d%2d",
+					&year, &month, &day, &hour, &min, &sec) == 6)
+				{
+					struct tm t;
+					std::memset(&t, 0, sizeof(t));
+
+					t.tm_year = year - 1900;
+					t.tm_mon  = month - 1;
+					t.tm_mday = day;
+					t.tm_hour = hour;
+					t.tm_min  = min;
+					t.tm_sec  = sec;
+					t.tm_isdst = -1;
+
+					time_t parsed_time = mktime(&t);
+					if (parsed_time != (time_t)-1)
+					{
+						m_base_time = parsed_time;
+						osd_printf_verbose("RTC Override: Parsed '%s' successfully.\n", rtc_str.c_str());
+						parsed_successfully = true;
+					}
+				}
+			}
+
+			if (!parsed_successfully)
+			{
+				osd_printf_error("RTC Override Error: '%s' is not a valid YYYYMMDDhhmmss string.\n", rtc_str.c_str());
+			}
+
+			// print the final result to confirm it changed
+			if (m_base_time != old_base)
+			{
+				struct tm *final_tm = std::localtime(&m_base_time);
+				char time_buffer[64];
+				std::strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", final_tm);
+				osd_printf_verbose("RTC Override Success: Base time set to %lld (%s)\n", (long long)m_base_time, time_buffer);
+			}
+		}
+	}
 
 	// initialize natural keyboard support after ports have been initialized
 	m_natkeyboard = std::make_unique<natural_keyboard>(*this);
@@ -212,7 +280,9 @@ void running_machine::start()
 	add_notifier(MACHINE_NOTIFY_RESET, machine_notify_delegate(&running_machine::reset_all_devices, this));
 	add_notifier(MACHINE_NOTIFY_EXIT, machine_notify_delegate(&running_machine::stop_all_devices, this));
 	save().register_presave(save_prepost_delegate(FUNC(running_machine::presave_all_devices), this));
+	m_sound->before_devices_init();
 	start_all_devices();
+	m_sound->after_devices_init();
 	save().register_postload(save_prepost_delegate(FUNC(running_machine::postload_all_devices), this));
 
 	// save outputs created before start time
@@ -232,14 +302,28 @@ void running_machine::start()
 	if (filename[0] != 0 && !m_video->is_recording())
 		m_video->begin_recording(filename, movie_recording::format::AVI);
 
-	// if we're coming in with a savegame request, process it now
 	const char *savegame = options().state();
 	if (savegame[0] != 0)
+	{
+		// if we're coming in with a savegame request, process it now
 		schedule_load(savegame);
-
-	// if we're in autosave mode, schedule a load
-	else if (options().autosave() && (m_system.flags & MACHINE_SUPPORTS_SAVE) != 0)
-		schedule_load("auto");
+	}
+	else if (options().autosave())
+	{
+		// if we're in autosave mode, schedule a load
+		// m_save.supported() won't be set until save state registrations are finalised
+		bool supported = true;
+		for (device_t &device : device_enumerator(root_device()))
+		{
+			if (device.type().emulation_flags() & device_t::flags::SAVE_UNSUPPORTED)
+			{
+				supported = false;
+				break;
+			}
+		}
+		if (supported)
+			schedule_load("auto");
+	}
 
 	manager().update_machine();
 }
@@ -284,14 +368,12 @@ int running_machine::run(bool quiet)
 		// then finish setting up our local machine
 		start();
 
+		// disallow save state registrations starting here
+		m_save.allow_registration(false);
+
 		// load the configuration settings
 		manager().before_load_settings(*this);
 		m_configuration->load_settings();
-
-		// disallow save state registrations starting here.
-		// Don't do it earlier, config load can create network
-		// devices with timers.
-		m_save.allow_registration(false);
 
 		// load the NVRAM
 		nvram_load();
@@ -331,9 +413,12 @@ int running_machine::run(bool quiet)
 			// execute CPUs if not paused
 			if (!m_paused)
 				m_scheduler.timeslice();
-			// otherwise, just pump video updates through
+			// otherwise, just pump video updates and sound mapping updates through
 			else
+			{
 				m_video->frame_update();
+				sound().mapping_update();
+			}
 
 			// handle save/load
 			if (m_saveload_schedule != saveload_schedule::NONE)
@@ -408,7 +493,7 @@ void running_machine::schedule_exit()
 	m_scheduler.eat_all_cycles();
 
 	// if we're autosaving on exit, schedule a save as well
-	if (options().autosave() && (m_system.flags & MACHINE_SUPPORTS_SAVE) && this->time() > attotime::zero)
+	if (options().autosave() && m_save.supported() && (this->time() > attotime::zero))
 		schedule_save("auto");
 }
 
@@ -905,7 +990,7 @@ void running_machine::handle_saveload()
 				case STATERR_NONE:
 				{
 					const char *const opnamed = (m_saveload_schedule == saveload_schedule::LOAD) ? "Loaded" : "Saved";
-					if (!(m_system.flags & MACHINE_SUPPORTS_SAVE))
+					if (!m_save.supported())
 						popmessage("%s state %s %s.\nWarning: Save states are not officially supported for this system.", opnamed, preposname, m_saveload_pending_file);
 					else
 						popmessage("%s state %s %s.", opnamed, preposname, m_saveload_pending_file);

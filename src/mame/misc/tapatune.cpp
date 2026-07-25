@@ -48,6 +48,8 @@
 #include "screen.h"
 #include "speaker.h"
 
+#include "endianness.h"
+
 
 namespace {
 
@@ -73,8 +75,8 @@ public:
 	void tapatune_base(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -120,9 +122,9 @@ private:
 	MC6845_BEGIN_UPDATE(crtc_begin_update);
 	MC6845_UPDATE_ROW(crtc_update_row);
 
-	void maincpu_io_map(address_map &map);
-	void maincpu_map(address_map &map);
-	void video_map(address_map &map);
+	void maincpu_io_map(address_map &map) ATTR_COLD;
+	void maincpu_map(address_map &map) ATTR_COLD;
+	void video_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -508,7 +510,7 @@ static INPUT_PORTS_START( tapatune )
 	PORT_START("COINS")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_COIN2 )
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ticket", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("ticket", FUNC(ticket_dispenser_device::line_r))
 	PORT_BIT( 0xf8, IP_ACTIVE_LOW, IPT_UNUSED )
 
 	PORT_START("BUTTONS")
@@ -542,12 +544,11 @@ void tapatune_state::tapatune_base(machine_config &config)
 	TICKET_DISPENSER(config, "ticket", attotime::from_msec(100));
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	BSMT2000(config, m_bsmt, XTAL(24'000'000));
-	m_bsmt->add_route(0, "lspeaker", 1.0);
-	m_bsmt->add_route(1, "rspeaker", 1.0);
+	m_bsmt->add_route(0, "speaker", 1.0, 0);
+	m_bsmt->add_route(1, "speaker", 1.0, 1);
 }
 
 void tapatune_state::tapatune(machine_config &config)
@@ -660,5 +661,5 @@ ROM_END
 GAME(1994, tapatune, 0, tapatune,      tapatune, tapatune_state, empty_init, ROT0, "Moloney Manufacturing Inc. / Creative Electronics and Software", "Tap a Tune", MACHINE_SUPPORTS_SAVE )
 
 // below appear to be mechanical games with the same Z80 board as the above
-GAME(1994, srockbwl, 0, tapatune_base, tapatune, tapatune_state, empty_init, ROT0, "Bromley",                                                        "Super Rock and Bowl (V1.1)", MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(199?, smartoss, 0, tapatune_base, tapatune, tapatune_state, empty_init, ROT0, "Smart Industries / Creative Electronics and Software",           "Smart Toss 'em / Smartball (Ver 2.0)", MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME(1994, srockbwl, 0, tapatune_base, tapatune, tapatune_state, empty_init, ROT0, "Bromley",                                                        "Super Rock and Bowl (V1.1)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(199?, smartoss, 0, tapatune_base, tapatune, tapatune_state, empty_init, ROT0, "Smart Industries / Creative Electronics and Software",           "Smart Toss 'em / Smartball (Ver 2.0)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )

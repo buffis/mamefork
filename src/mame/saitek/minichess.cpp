@@ -57,10 +57,10 @@ public:
 		m_inputs(*this, "IN.%u", 0)
 	{ }
 
-	void smchess(machine_config &config);
+	void smchess(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -76,7 +76,7 @@ private:
 
 	TIMER_DEVICE_CALLBACK_MEMBER(computing) { m_computing = 1; }
 
-	void update_display();
+	void update_lcd();
 	template<int N> void seg_w(u8 data);
 	void mux_w(u16 data);
 	u16 input_r();
@@ -84,8 +84,6 @@ private:
 
 void mini_state::machine_start()
 {
-	m_computing.resolve();
-
 	// register for savestates
 	save_item(NAME(m_inp_mux));
 	save_item(NAME(m_lcd_select));
@@ -98,7 +96,7 @@ void mini_state::machine_start()
     I/O
 *******************************************************************************/
 
-void mini_state::update_display()
+void mini_state::update_lcd()
 {
 	u8 data = (m_lcd_select & 1) ? (m_lcd_data ^ 0xff) : m_lcd_data;
 	data = bitswap<8>(data,2,4,6,7,5,1,0,3);
@@ -108,9 +106,10 @@ void mini_state::update_display()
 template<int N>
 void mini_state::seg_w(u8 data)
 {
-	// R2x,R3x: lcd segment data
-	m_lcd_data = (m_lcd_data & ~(0xf << (N*4))) | (data << (N*4));
-	update_display();
+	// R2x,R3x: LCD segment data
+	const u8 shift = N * 4;
+	m_lcd_data = (m_lcd_data & ~(0xf << shift)) | (data << shift);
+	update_lcd();
 }
 
 void mini_state::mux_w(u16 data)
@@ -129,7 +128,7 @@ void mini_state::mux_w(u16 data)
 	}
 
 	m_lcd_select = sel;
-	update_display();
+	update_lcd();
 }
 
 u16 mini_state::input_r()
@@ -196,6 +195,7 @@ void mini_state::smchess(machine_config &config)
 	PWM_DISPLAY(config, m_display).set_size(4, 8);
 	m_display->set_segmask(0xf, 0x7f);
 	m_display->set_refresh(attotime::from_hz(30));
+
 	config.set_default_layout(layout_saitek_minichess);
 
 	screen_device &screen(SCREEN(config, "screen", SCREEN_TYPE_SVG));

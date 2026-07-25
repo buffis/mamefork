@@ -85,11 +85,9 @@ public:
 
 	{ }
 
-	void taitoo(machine_config &config);
-	DECLARE_INPUT_CHANGED_MEMBER(all_clear_cb);
+	void taitoo(machine_config &config) ATTR_COLD;
 
-protected:
-	virtual void machine_start() override { m_lamps.resolve(); };
+	DECLARE_INPUT_CHANGED_MEMBER(all_clear_cb);
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -109,7 +107,7 @@ private:
 	u32 screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	TIMER_DEVICE_CALLBACK_MEMBER(interrupt);
 	u32 draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect, u32 start_offset);
-	void prg_map(address_map &map);
+	void prg_map(address_map &map) ATTR_COLD;
 	void hopper_int_cb(int state);
 	void taito_outa_w(offs_t offs, u16 data, u16 mem_mask);
 	void taito_outb_w(offs_t offs, u16 data, u16 mem_mask);
@@ -249,9 +247,9 @@ INPUT_CHANGED_MEMBER(taitoo_state::all_clear_cb)
 
 static INPUT_PORTS_START( parentj )
 	PORT_START("COIN")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, coin_sense_w)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::coin_sense_w))
 	// FIXME: never triggers
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN2 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, coin_sense_w)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN2 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::coin_sense_w))
 
 	PORT_START("IN0")
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_POKER_HOLD1 ) PORT_NAME("Bet 1")
@@ -265,22 +263,22 @@ static INPUT_PORTS_START( parentj )
 	PORT_BIT( 0x0100, IP_ACTIVE_LOW, IPT_GAMBLE_DEAL ) PORT_NAME("Deal/Hit")
 	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_GAMBLE_D_UP )
 	// int7 assigned for NVRAM gen purposes
-	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Init NVRAM") PORT_CODE(KEYCODE_7) PORT_CHANGED_MEMBER(DEVICE_SELF, taitoo_state, all_clear_cb, 0)
+	PORT_BIT( 0x0400, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Init NVRAM") PORT_CODE(KEYCODE_7) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(taitoo_state::all_clear_cb), 0)
 	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_SERVICE1 )      PORT_NAME("Reset Key")  PORT_CODE(KEYCODE_R)
 	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_SERVICE2 )      PORT_NAME("Last Key")   PORT_CODE(KEYCODE_8)
 	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_GAMBLE_BOOK )   PORT_NAME("Meter Key")
-	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, opto_h_r)
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, opto_l_r)
+	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::opto_h_r))
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::opto_l_r))
 
 	PORT_START("IN1")
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Hopper Over")  // hopper overload sensor to activate diverter coil
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, opto_h_r)
-	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, opto_l_r)
-	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_GAMBLE_SERVICE )   PORT_NAME("All Clear SW")
+	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::opto_h_r))
+	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::opto_l_r))
+	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_MEMORY_RESET )     PORT_NAME("All Clear SW")
 	PORT_SERVICE_NO_TOGGLE(0x0010, IP_ACTIVE_LOW )
 	PORT_BIT( 0x00e0, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0100, IP_ACTIVE_HIGH, IPT_UNKNOWN ) // battery error if '1'
-	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x0200, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 
 	PORT_BIT( 0xfc00, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
@@ -323,8 +321,8 @@ INPUT_PORTS_END
 
 static INPUT_PORTS_START( eibise )
 	PORT_START("COIN")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, coin_sense_w)
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN2 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, coin_sense_w)
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN1 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::coin_sense_w))
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN2 ) PORT_WRITE_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::coin_sense_w))
 
 	PORT_START("IN0")
 	PORT_BIT( 0x001f, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -337,18 +335,18 @@ static INPUT_PORTS_START( eibise )
 	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_SERVICE1 )      PORT_NAME("Reset Key") PORT_CODE(KEYCODE_R)
 	PORT_BIT( 0x1000, IP_ACTIVE_LOW, IPT_SERVICE2 )      PORT_NAME("Last Key")  PORT_CODE(KEYCODE_8)
 	PORT_BIT( 0x2000, IP_ACTIVE_LOW, IPT_GAMBLE_BOOK )   PORT_NAME("Meter Key")
-	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, opto_h_r)
-	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", taitoio_opto_device, opto_l_r)
+	PORT_BIT( 0x4000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::opto_h_r))
+	PORT_BIT( 0x8000, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto1", FUNC(taitoio_opto_device::opto_l_r))
 
 	PORT_START("IN1")
 	PORT_BIT( 0x0001, IP_ACTIVE_LOW, IPT_OTHER )         PORT_NAME("Hopper Over")  // hopper overload sensor to activate diverter coil
-	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, opto_h_r)
-	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", taitoio_opto_device, opto_l_r)
-	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_GAMBLE_SERVICE )   PORT_NAME("All Clear SW")
+	PORT_BIT( 0x0002, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::opto_h_r))
+	PORT_BIT( 0x0004, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("opto2", FUNC(taitoio_opto_device::opto_l_r))
+	PORT_BIT( 0x0008, IP_ACTIVE_LOW, IPT_MEMORY_RESET )     PORT_NAME("All Clear SW")
 	PORT_SERVICE_NO_TOGGLE(0x0010, IP_ACTIVE_LOW )
 	PORT_BIT( 0x00e0, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x0100, IP_ACTIVE_HIGH, IPT_UNKNOWN ) // battery error if '1'
-	PORT_BIT( 0x0200, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x0200, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 	PORT_BIT( 0xfc00, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("DSWA")
@@ -438,7 +436,7 @@ void taitoo_state::taitoo(machine_config &config)
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 
 	for (auto &opto : m_opto)
-		TAITOIO_OPTO(config, opto, 0);
+		TAITOIO_OPTO(config, opto);
 
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
 	m_screen->set_refresh_hz(60);
@@ -450,7 +448,7 @@ void taitoo_state::taitoo(machine_config &config)
 
 	PALETTE(config, m_palette).set_format(palette_device::xBGR_555, 33*16);
 
-	TC0080VCO(config, m_tc0080vco, 0);
+	TC0080VCO(config, m_tc0080vco);
 	m_tc0080vco->set_offsets(1, 1);
 	m_tc0080vco->set_bgflip_yoffs(-2);
 	m_tc0080vco->set_palette(m_palette);
@@ -511,6 +509,6 @@ ROM_END
 
 } // anonymous namespace
 
-//     YEAR  NAME      PARENT   MACHINE   INPUT     CLASS         INIT        ROT    COMPANY  FULLNAME              FLAGS                                               LAYOUT
+//     YEAR  NAME      PARENT   MACHINE   INPUT     CLASS         INIT        ROT   COMPANY  FULLNAME               FLAGS                                               LAYOUT
 GAMEL( 1989, parentj,  0,       taitoo,   parentj,  taitoo_state, empty_init, ROT0, "Taito", "Parent Jack (Japan)", MACHINE_IMPERFECT_GRAPHICS | MACHINE_SUPPORTS_SAVE, layout_parentj )
 GAMEL( 1990, eibise,   0,       taitoo,   eibise,   taitoo_state, empty_init, ROT0, "Taito", "Eibise (Japan)",      MACHINE_IMPERFECT_GRAPHICS | MACHINE_SUPPORTS_SAVE, layout_eibise )

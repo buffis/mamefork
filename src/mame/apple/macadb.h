@@ -21,20 +21,22 @@ public:
 
 	auto adb_data_callback() { return write_adb_data.bind(); }
 	auto adb_irq_callback() { return write_adb_irq.bind(); }
+	auto adb_power_callback() { return write_adb_power.bind(); }
+	auto adb_akd_callback() { return write_adb_akd.bind(); }
 
 	required_ioport m_mouse0, m_mouse1, m_mouse2;
 	required_ioport_array<8> m_keys;
-	devcb_write_line write_adb_data, write_adb_irq;
+	devcb_write_line write_adb_data, write_adb_irq, write_adb_power, write_adb_akd;
 
 	void adb_linechange_w(int state);
 
-	void adb_vblank() {}
+	void portable_update_keyboard();
 
 protected:
 	// device-level overrides
-	virtual ioport_constructor device_input_ports() const override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	u64 m_last_adb_time;

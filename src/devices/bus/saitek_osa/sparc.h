@@ -2,12 +2,12 @@
 // copyright-holders:hap
 /*******************************************************************************
 
-    Saitek OSA Module: Kasparov Sparc
+    Saitek OSA: Kasparov Sparc Module
 
 *******************************************************************************/
 
-#ifndef MAME_BUS_SAITEKOSA_SPARC_H
-#define MAME_BUS_SAITEKOSA_SPARC_H
+#ifndef MAME_BUS_SAITEK_OSA_SPARC_H
+#define MAME_BUS_SAITEK_OSA_SPARC_H
 
 #pragma once
 
@@ -15,4 +15,4 @@
 
 DECLARE_DEVICE_TYPE(OSA_SPARC, device_saitekosa_expansion_interface)
 
-#endif // MAME_BUS_SAITEKOSA_SPARC_H
+#endif // MAME_BUS_SAITEK_OSA_SPARC_H

@@ -49,7 +49,7 @@ public:
 	void yard(machine_config &config);
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -81,7 +81,7 @@ private:
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void draw_panel(bitmap_ind16 &bitmap, const rectangle &cliprect);
-	void yard_map(address_map &map);
+	void yard_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -312,15 +312,13 @@ void m58_state::draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect)
 		}
 
 		m_gfxdecode->gfx(1)->transmask(bitmap, cliprect,
-			code1 + 256 * bank, color,
-			flipx, flipy, sx, visarea.min_y + sy1,
-			m_palette->transpen_mask(*m_gfxdecode->gfx(1), color, 512)
-		);
+				code1 + 256 * bank, color,
+				flipx, flipy, sx, visarea.min_y + sy1,
+				m_palette->transpen_mask(*m_gfxdecode->gfx(1), color, 512));
 		m_gfxdecode->gfx(1)->transmask(bitmap, cliprect,
-			code2 + 256 * bank, color,
-			flipx, flipy, sx, visarea.min_y + sy2,
-			m_palette->transpen_mask(*m_gfxdecode->gfx(1), color, 512)
-		);
+				code2 + 256 * bank, color,
+				flipx, flipy, sx, visarea.min_y + sy2,
+				m_palette->transpen_mask(*m_gfxdecode->gfx(1), color, 512));
 	}
 }
 
@@ -559,7 +557,7 @@ void m58_state::yard(machine_config &config)
 	m_screen->set_palette(m_palette);
 
 	// sound hardware
-	IREM_M52_LARGE_AUDIO(config, "irem_audio", 0);
+	IREM_M52_LARGE_AUDIO(config, "irem_audio");
 }
 
 

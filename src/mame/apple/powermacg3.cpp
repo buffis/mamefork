@@ -22,7 +22,6 @@
 #include "machine/input_merger.h"
 #include "machine/mpc106.h"
 #include "machine/pci.h"
-#include "machine/pci-ide.h"
 #include "machine/ram.h"
 #include "video/atirage.h"
 #include "awacs_macrisc.h"
@@ -48,10 +47,10 @@ public:
 private:
 	u16 m_sense;
 
-	void pwrmacg3_map(address_map &map);
+	void pwrmacg3_map(address_map &map) ATTR_COLD;
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	u16 read_sense();
 	void write_sense(u16 data);
@@ -144,10 +143,10 @@ void pwrmacg3_state::pwrmacg3(machine_config &config)
 	m_maincpu->ppcdrc_set_options(PPCDRC_COMPATIBLE_OPTIONS);
 	m_maincpu->set_addrmap(AS_PROGRAM, &pwrmacg3_state::pwrmacg3_map);
 
-	PCI_ROOT(config, "pci", 0);
-	MPC106(config, m_mpc106, 0, mpc106_host_device::MAP_TYPE_B, "maincpu", "bootrom");
+	PCI_ROOT(config, "pci");
+	MPC106(config, m_mpc106, mpc106_host_device::MAP_TYPE_B, "maincpu", "bootrom");
 
-	heathrow_device &heathrow(HEATHROW(config, "pci:10.0", 0));
+	heathrow_device &heathrow(HEATHROW(config, "pci:10.0"));
 	heathrow.set_maincpu_tag("maincpu");
 
 	// Apple's documentation says systems with the 4.0f2 ROM use a Rage II+, but
@@ -204,10 +203,9 @@ void pwrmacg3_state::pwrmacg3(machine_config &config)
 	heathrow.codec_r_callback().set(screamer, FUNC(screamer_device::read_macrisc));
 	heathrow.codec_w_callback().set(screamer, FUNC(screamer_device::write_macrisc));
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
-	screamer.add_route(0, "lspeaker", 1.0);
-	screamer.add_route(1, "rspeaker", 1.0);
+	SPEAKER(config, "speaker", 2).front();
+	screamer.add_route(0, "speaker", 1.0, 0);
+	screamer.add_route(1, "speaker", 1.0, 1);
 }
 
 /*

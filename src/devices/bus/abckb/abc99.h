@@ -33,20 +33,20 @@ public:
 	// construction/destruction
 	abc99_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
-	DECLARE_CUSTOM_INPUT_MEMBER( cursor_x4_r );
-	DECLARE_CUSTOM_INPUT_MEMBER( cursor_x6_r );
+	ioport_value cursor_x4_r();
+	ioport_value cursor_x6_r();
 
 	DECLARE_INPUT_CHANGED_MEMBER( keyboard_reset );
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// optional information overrides
-	virtual const tiny_rom_entry *device_rom_region() const override;
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual ioport_constructor device_input_ports() const override;
+	virtual const tiny_rom_entry *device_rom_region() const override ATTR_COLD;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
 
 	// abc_keyboard_interface overrides
 	virtual void txd_w(int state) override;
@@ -82,9 +82,9 @@ private:
 	void z5_p2_w(uint8_t data);
 	int z5_t1_r() { return m_t1_z5; }
 
-	void keyboard_io(address_map &map);
-	void keyboard_mem(address_map &map);
-	void mouse_mem(address_map &map);
+	void keyboard_io(address_map &map) ATTR_COLD;
+	void keyboard_mem(address_map &map) ATTR_COLD;
+	void mouse_mem(address_map &map) ATTR_COLD;
 
 	emu_timer *m_serial_timer;
 
@@ -99,14 +99,15 @@ private:
 	output_finder<11> m_leds;
 
 	int m_keylatch;
-	int m_si;
-	int m_si_en;
-	int m_so_z2;
-	int m_so_z5;
-	int m_t1_z2;
-	int m_t1_z5;
-	int m_led_en;
-	int m_reset;
+	bool m_si;
+	bool m_si_en;
+	bool m_so_z2;
+	bool m_so_z5;
+	bool m_t1_z2;
+	bool m_t1_z5;
+	bool m_led_en;
+	bool m_reset;
+	bool m_rxtxc;
 };
 
 

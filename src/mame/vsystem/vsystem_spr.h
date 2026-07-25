@@ -15,9 +15,15 @@ public:
 	typedef device_delegate<uint32_t (uint32_t)> vsystem_tile_indirection_delegate;
 	typedef device_delegate<uint32_t (uint32_t)> vsystem_pri_delegate;
 
-	vsystem_spr_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	vsystem_spr_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 	template <typename T> vsystem_spr_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock, T &&palette_tag, const gfx_decode_entry *gfxinfo)
 		: vsystem_spr_device(mconfig, tag, owner, clock)
+	{
+		set_info(gfxinfo);
+		set_palette(std::forward<T>(palette_tag));
+	}
+	template <typename T> vsystem_spr_device(const machine_config &mconfig, const char *tag, device_t *owner, T &&palette_tag, const gfx_decode_entry *gfxinfo)
+		: vsystem_spr_device(mconfig, tag, owner, 0, std::forward<T>(palette_tag), gfxinfo)
 	{
 		set_info(gfxinfo);
 		set_palette(std::forward<T>(palette_tag));
@@ -38,8 +44,8 @@ public:
 	void draw_sprites(uint16_t const *spriteram, int spriteram_bytes, screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	struct sprite_attributes

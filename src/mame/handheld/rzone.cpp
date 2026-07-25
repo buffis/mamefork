@@ -57,7 +57,7 @@ public:
 	void rzindy500(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	output_finder<> m_led_out;
@@ -89,9 +89,6 @@ private:
 void rzone_state::machine_start()
 {
 	hh_sm510_state::machine_start();
-
-	// resolve handlers
-	m_led_out.resolve();
 
 	// register for savestates
 	save_item(NAME(m_led_pin));

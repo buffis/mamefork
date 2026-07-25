@@ -479,11 +479,15 @@ bool d88_format::load(util::random_read &io, uint32_t form_factor, const std::ve
 
 	int img_tracks, img_heads;
 	image.get_maximal_geometry(img_tracks, img_heads);
-	if (track_count > img_tracks)
+	// HACK: smc777 .1dd files uses 0x30 as header but really expects SSQD format, override here
+	if (img_tracks >= 70 && h[0x1b] == 0x30)
 	{
-		osd_printf_error("d88: Floppy disk has too many tracks for this drive (floppy tracks=%d, drive tracks=%d).\n", track_count, img_tracks);
-		return false;
+		track_count = 82;
+		image.set_variant(floppy_image::SSQD);
 	}
+	if (track_count > img_tracks)
+		osd_printf_warning("d88: Floppy disk has too many tracks for this drive (floppy tracks=%d, drive tracks=%d).\n", track_count, img_tracks);
+
 	if (head_count > img_heads)
 		osd_printf_warning("d88: Floppy disk has excess of heads for this drive that will be discarded (floppy heads=%d, drive heads=%d).\n", head_count, img_heads);
 
@@ -513,13 +517,13 @@ bool d88_format::load(util::random_read &io, uint32_t form_factor, const std::ve
 				std::tie(err, actual) = read_at(io, pos, hs, 16); // FIXME: check for errors and premature EOF
 				pos += 16;
 
-				uint16_t size = little_endianize_int16(*(uint16_t *)(hs+14));
+				uint16_t size = get_u16le(hs+14);
 
 				if(pos + size > file_size)
 					return true;
 
 				if(i == 0) {
-					sector_count = little_endianize_int16(*(uint16_t *)(hs+4));
+					sector_count = get_u16le(hs+4);
 					// Support broken vfman converter
 					if(sector_count == 0x1000)
 						sector_count = 0x10;
@@ -533,7 +537,8 @@ bool d88_format::load(util::random_read &io, uint32_t form_factor, const std::ve
 				sects[i].size        = hs[3];
 				sects[i].actual_size = size;
 				sects[i].deleted     = hs[7] != 0;
-				sects[i].bad_crc     = hs[8] == 0xb0;  // according to hxc
+				sects[i].bad_data_crc = hs[8] == 0xb0;  // according to hxc
+				sects[i].bad_addr_crc = hs[8] == 0xa0;
 
 				if(size) {
 					sects[i].data    = sect_data + sdatapos;
@@ -548,17 +553,12 @@ bool d88_format::load(util::random_read &io, uint32_t form_factor, const std::ve
 			if(head < img_heads) {
 				if(density == 0x40)
 					build_pc_track_fm(track, head, image, cell_count / 2, sector_count, sects, calc_default_pc_gap3_size(form_factor, sects[0].actual_size));
-			    else
+				else
 					build_pc_track_mfm(track, head, image, cell_count, sector_count, sects, calc_default_pc_gap3_size(form_factor, sects[0].actual_size));
 			}
 		}
 
 	return true;
-}
-
-bool d88_format::supports_save() const noexcept
-{
-	return false;
 }
 
 const d88_format FLOPPY_D88_FORMAT;

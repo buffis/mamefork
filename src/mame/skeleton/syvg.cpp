@@ -43,14 +43,14 @@ public:
 	void init_luckyvl();
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
 
 	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void program_map(address_map &map);
+	void program_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -161,4 +161,4 @@ void syvg_state::init_luckyvl()
 } // anonymous namespace
 
 
-GAME( 2003, luckyvl, 0, syvg, luckyvl, syvg_state, init_luckyvl, ROT0, "Shyh-Yuan Electronics", "Lucky V Line", MACHINE_IS_SKELETON )
+GAME( 2003, luckyvl, 0, syvg, luckyvl, syvg_state, init_luckyvl, ROT0, "Shyh-Yuan Electronics", "Lucky V Line", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

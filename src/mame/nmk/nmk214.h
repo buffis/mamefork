@@ -11,7 +11,7 @@
 class nmk214_device : public device_t
 {
 public:
-	nmk214_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	nmk214_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void set_mode(const u8 mode) { m_mode = mode; }
 	void set_input_address_bitswap(const std::array<u8, 13> &input_address_bitswap) { m_input_address_bitswap = input_address_bitswap; }
@@ -23,8 +23,8 @@ public:
 	u8 decode_byte(u32 addr, u8 data) const noexcept;
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	// Operation mode - in practice, only LSB is used.

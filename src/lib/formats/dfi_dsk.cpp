@@ -18,6 +18,7 @@
 
 #include "osdcore.h" // osd_printf_*
 
+#include <cstring>
 #include <tuple>
 
 
@@ -55,11 +56,6 @@ const char *dfi_format::description() const noexcept
 const char *dfi_format::extensions() const noexcept
 {
 	return "dfi";
-}
-
-bool dfi_format::supports_save() const noexcept
-{
-	return false;
 }
 
 int dfi_format::identify(util::random_read &io, uint32_t form_factor, const std::vector<uint32_t> &variants) const

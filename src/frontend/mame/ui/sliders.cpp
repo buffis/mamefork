@@ -14,13 +14,15 @@
 #include "ui/slider.h"
 #include "ui/ui.h"
 
+#include "input.h"
+
 #include "osdepend.h"
 
 
 namespace ui {
 
-menu_sliders::menu_sliders(mame_ui_manager &mui, render_container &container, bool menuless_mode)
-	: menu(mui, container)
+menu_sliders::menu_sliders(mame_ui_manager &mui, render_target &target, bool menuless_mode)
+	: menu(mui, target)
 	, m_menuless_mode(menuless_mode)
 	, m_hidden(menuless_mode)
 {
@@ -75,7 +77,7 @@ bool menu_sliders::handle(event const *ev)
 			// decrease value
 			case IPT_UI_LEFT:
 				if (alt_pressed && shift_pressed)
-					increment = -1;
+					increment = (slider->incval > 100) ? -(slider->incval / 100) : -1;
 				else if (alt_pressed)
 					increment = -(curvalue - slider->minval);
 				else if (shift_pressed)
@@ -89,7 +91,7 @@ bool menu_sliders::handle(event const *ev)
 			// increase value
 			case IPT_UI_RIGHT:
 				if (alt_pressed && shift_pressed)
-					increment = 1;
+					increment = (slider->incval > 100) ? (slider->incval / 100) : 1;
 				else if (alt_pressed)
 					increment = slider->maxval - curvalue;
 				else if (shift_pressed)
@@ -200,6 +202,8 @@ void menu_sliders::populate()
 					flags |= FLAG_LEFT_ARROW;
 				if (curval < slider->maxval)
 					flags |= FLAG_RIGHT_ARROW;
+				if (curval == slider->defval)
+					flags |= FLAG_DEEMPHASIZE;
 				item_append(slider->description, tempstring, flags, (void *)slider, menu_item_type::SLIDER);
 			}
 		}
@@ -210,6 +214,7 @@ void menu_sliders::populate()
 	}
 
 	item_append(menu_item_type::SEPARATOR);
+	bool separator = true;
 
 	// add OSD options
 	std::vector<menu_item> osd_sliders = machine().osd().get_slider_list();
@@ -224,13 +229,20 @@ void menu_sliders::populate()
 				flags |= FLAG_LEFT_ARROW;
 			if (curval < slider->maxval)
 				flags |= FLAG_RIGHT_ARROW;
+			if (curval == slider->defval)
+				flags |= FLAG_DEEMPHASIZE;
 			item_append(slider->description, tempstring, flags, (void *)slider, menu_item_type::SLIDER);
 		}
 		else
 		{
 			item_append(item);
 		}
+
+		separator = item.type() == menu_item_type::SEPARATOR;
 	}
+
+	if (!separator)
+		item_append(menu_item_type::SEPARATOR);
 
 	// reselect last slider used in menuless mode
 	if (m_menuless_mode)
@@ -291,7 +303,7 @@ void menu_sliders::custom_render(uint32_t flags, void *selectedref, float top, f
 
 		// determine the text height
 		ui().draw_text_full(
-				container(),
+				target(),
 				tempstring,
 				0, 0, x2 - x1 - 2.0f * lr_border(),
 				text_layout::text_justify::CENTER, text_layout::word_wrapping::TRUNCATE,

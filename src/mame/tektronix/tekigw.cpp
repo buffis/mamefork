@@ -81,7 +81,7 @@ diags>
 #include "imagedev/harddriv.h"
 
 // graphics
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i8051.h"
 #include "video/mc6845.h"
 #include "screen.h"
 
@@ -110,16 +110,17 @@ protected:
 	{
 	}
 
-	void common_config(machine_config &config);
-	void common_init();
+	void common_config(machine_config &config) ATTR_COLD;
+	void common_init() ATTR_COLD;
 
+protected:
 	// driver_device overrides
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	// address maps
-	template <unsigned ST> void cpu_map(address_map &map);
-	void dma_map(address_map &map);
+	template <unsigned ST> void cpu_map(address_map &map) ATTR_COLD;
+	void dma_map(address_map &map) ATTR_COLD;
 
 	// computer board control registers
 	u8 nov_r() { return m_nmr; }
@@ -151,7 +152,6 @@ protected:
 
 	emu_timer *m_buserror = nullptr;
 
-private:
 	u8 m_nmr = 0; // nonvolatile memory register
 	u16 m_per = 0; // parity error register
 	u8 m_scr = 0; // system control register
@@ -180,18 +180,18 @@ public:
 	{
 	}
 
-	void tek6130(machine_config &config);
-	void init() { tekigw_state_base::common_init(); }
+	void tek6130(machine_config &config) ATTR_COLD;
+	void init() ATTR_COLD { tekigw_state_base::common_init(); }
 
 protected:
 	// driver_device overrides
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	// address maps
-	template <unsigned ST> void cpu_map(address_map &map);
-	void lan_map(address_map &map);
-	template <unsigned ST> void dpu_cpu_map(address_map &map);
+	template <unsigned ST> void cpu_map(address_map &map) ATTR_COLD;
+	void lan_map(address_map &map) ATTR_COLD;
+	template <unsigned ST> void dpu_cpu_map(address_map &map) ATTR_COLD;
 
 private:
 	// computer board control registers
@@ -228,23 +228,23 @@ public:
 	tek4132_state(machine_config const &mconfig, device_type type, char const *tag)
 		: tekigw_state_base(mconfig, type, tag)
 		, m_scsibus(*this, "scsi")
-		, m_scsi(*this, "scsi:7:ncr5385")
+		, m_scsi(*this, "ncr5385")
 		, m_sdma(*this, "sdma")
 		, m_sirq(*this, "sirq")
 	{
 	}
 
-	void tek4132(machine_config &config);
-	void init() { tekigw_state_base::common_init(); }
+	void tek4132(machine_config &config) ATTR_COLD;
+	void init() ATTR_COLD { tekigw_state_base::common_init(); }
 
 protected:
 	// driver_device overrides
-	//virtual void machine_start() override;
-	//virtual void machine_reset() override;
+	//virtual void machine_start() override ATTR_COLD;
+	//virtual void machine_reset() override ATTR_COLD;
 
 	// address maps
-	template <unsigned ST> void cpu_map(address_map &map);
-	void lan_map(address_map &map);
+	template <unsigned ST> void cpu_map(address_map &map) ATTR_COLD;
+	void lan_map(address_map &map) ATTR_COLD;
 
 private:
 	required_device<nscsi_bus_device> m_scsibus;
@@ -301,8 +301,6 @@ void tek6100_state::machine_reset()
 
 void tekigw_state_base::common_init()
 {
-	m_led.resolve();
-
 	m_lan->space(0).install_ram(0, m_ram->mask(), m_ram->pointer());
 }
 
@@ -752,7 +750,7 @@ void tekigw_state_base::common_config(machine_config &config)
 	RAM(config, m_ram);
 	m_ram->set_default_size("1M");
 
-	SCC8530N(config, m_scc, 16_MHz_XTAL / 4);
+	SCC8530(config, m_scc, 16_MHz_XTAL / 4);
 	m_scc->out_int_callback().set(m_icu, FUNC(ns32202_device::ir_w<1>)).invert();
 	m_scc->configure_channels(2'457'600, 0, 2'457'600, 0);
 
@@ -871,7 +869,7 @@ void tek6100_state::tek6130(machine_config &config)
 	// TODO: graphics board disabled for now
 	if (false)
 	{
-		NS32016(config, m_dpu_cpu, 0); // 8'000'000);
+		NS32016(config, m_dpu_cpu, 0 /* 8'000'000*/);
 		m_dpu_cpu->set_addrmap(0, &tek6100_state::dpu_cpu_map<0>);
 
 		ns32081_device &dpu_fpu(NS32081(config, "dpu_fpu", 8'000'000));
@@ -880,7 +878,7 @@ void tek6100_state::tek6130(machine_config &config)
 		ns32202_device &dpu_icu(NS32202(config, "dpu_icu", 20'000));
 		dpu_icu.out_int().set_inputline(m_dpu_cpu, INPUT_LINE_IRQ0).invert();
 
-		i8744_device &dpu_mcu(I8744(config, "dpu_mcu", 0)); // 10'000'000)); // 8744H-10
+		i8744_device &dpu_mcu(I8744(config, "dpu_mcu", 0 /* 10'000'000 */)); // 8744H-10
 		(void)dpu_mcu;
 
 		mc6845_device &dpu_crtc(SY6845E(config, "dpu_crtc", 25.2_MHz_XTAL)); // SYP6845EA
@@ -958,19 +956,14 @@ void tek4132_state::tek4132(machine_config &config)
 	NSCSI_CONNECTOR(config, "scsi:4", scsi_devices, nullptr);
 	NSCSI_CONNECTOR(config, "scsi:5", scsi_devices, nullptr);
 	NSCSI_CONNECTOR(config, "scsi:6", scsi_devices, nullptr);
-	NSCSI_CONNECTOR(config, "scsi:7").option_set("ncr5385", NCR5385).clock(10'000'000).machine_config(
-		[this](device_t *device)
-		{
-			ncr5385_device &adapter = downcast<ncr5385_device &>(*device);
 
-			//adapter.irq().set(m_sirq, FUNC(input_merger_all_high_device::in_w<1>));
-			adapter.irq().set(m_icu, FUNC(ns32202_device::ir_w<4>));
-			adapter.dreq().set(m_dma, FUNC(am9516_device::dreq_w<0>)).invert();
+	NCR5385(config, m_scsi, 10'000'000);
+	m_scsibus->set_external_device(7, m_scsi);
+	m_scsi->irq().set(m_icu, FUNC(ns32202_device::ir_w<4>));
+	m_scsi->dreq().set(m_dma, FUNC(am9516_device::dreq_w<0>)).invert();
 
-		});
-
-	m_dma->flyby_byte_r<0>().set(":scsi:7:ncr5385", FUNC(ncr5385_device::dma_r));
-	m_dma->flyby_byte_w<0>().set(":scsi:7:ncr5385", FUNC(ncr5385_device::dma_w));
+	m_dma->flyby_byte_r<0>().set("ncr5385", FUNC(ncr5385_device::dma_r));
+	m_dma->flyby_byte_w<0>().set("ncr5385", FUNC(ncr5385_device::dma_w));
 }
 
 static INPUT_PORTS_START(tekigw)

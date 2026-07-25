@@ -119,10 +119,10 @@ private:
 	floppy_image_device *m_floppy;
 	required_device<centronics_device> m_centronics;
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
 	MC6845_UPDATE_ROW(update_row);
@@ -154,8 +154,8 @@ private:
 	void write_centronics_fault(int state);
 	void write_centronics_perror(int state);
 
-	void fp_io(address_map &map);
-	void fp_mem(address_map &map);
+	void fp_io(address_map &map) ATTR_COLD;
+	void fp_mem(address_map &map) ATTR_COLD;
 };
 
 
@@ -596,17 +596,17 @@ void fp_state::fp(machine_config &config)
 	SN76489A(config, SN76489AN_TAG, 2000000).add_route(ALL_OUTPUTS, "mono", 1.00);
 
 	/* Devices */
-	APRICOT_KEYBOARD(config, APRICOT_KEYBOARD_TAG, 0);
+	APRICOT_KEYBOARD(config, APRICOT_KEYBOARD_TAG);
 
 	AM9517A(config, m_dmac, 250000);
 	m_dmac->out_eop_callback().set(m_pic, FUNC(pic8259_device::ir7_w));
 	m_dmac->in_ior_callback<1>().set(m_fdc, FUNC(wd2797_device::data_r));
 	m_dmac->out_iow_callback<1>().set(m_fdc, FUNC(wd2797_device::data_w));
 
-	PIC8259(config, m_pic, 0);
+	PIC8259(config, m_pic);
 	m_pic->out_int_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0);
 
-	PIT8253(config, m_pit, 0);
+	PIT8253(config, m_pit);
 	m_pit->set_clk<0>(2000000);
 	m_pit->out_handler<0>().set(m_pic, FUNC(pic8259_device::ir0_w));
 	m_pit->set_clk<1>(2000000);

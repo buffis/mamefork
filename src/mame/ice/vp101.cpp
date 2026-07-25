@@ -60,12 +60,12 @@
         Standard JAMMA I/O interface, including player 3 and 4 connectors
         4 channel general purpose A to D interface (steering wheel and control pedals)
         100baseT Ethernet interface for debugging and/or inter game communications
-        Forced-feedback “Wheel Driver Interface” for driving games
+        Force-feedback “Wheel Driver Interface” for driving games
         High-current drivers for lamps or solenoids
         Gun interface I/O tightly coupled to the CRT controller
 
     Sound System
-        AC97 codec for low cost of implementation and development
+        AC'97 codec for low cost of implementation and development
         TDA7375 40 Watt Integrated Amplifier
         Codec fed from the DDR bank via a 16 channel (8 channels of stereo) DMA engine.
 
@@ -100,10 +100,13 @@ Small outline design for easy kit retrofitting of existing cabinets.
 ****************************************************************************/
 
 #include "emu.h"
-#include "cpu/mips/mips3.h"
+
 #include "bus/ata/ataintf.h"
-#include "machine/nvram.h"
+#include "cpu/mips/mips3.h"
 #include "imagedev/harddriv.h"
+#include "machine/nvram.h"
+
+#include "input.h" // for keys to manually generate interrupts
 #include "screen.h"
 
 #define VERBOSE (0)
@@ -126,8 +129,8 @@ public:
 	void vp101(machine_config &config);
 
 private:
-	virtual void machine_reset() override;
-	virtual void machine_start() override;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void machine_start() override ATTR_COLD;
 
 	uint32_t tty_ready_r();
 	void tty_w(uint32_t data);
@@ -157,8 +160,8 @@ private:
 	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	uint32_t vp50_screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void main_map(address_map &map);
-	void vp50_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void vp50_map(address_map &map) ATTR_COLD;
 
 	// devices
 	required_device<mips3_device> m_maincpu;
@@ -166,7 +169,7 @@ private:
 	required_device<ata_interface_device> m_ata;
 
 	// driver_device overrides
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 	int pic_cmd = 0;
 	int pic_state = 0;
 	int m_dmarq_state = 0;
@@ -661,8 +664,8 @@ ROM_END
 } // anonymous namespace
 
 
-GAME( 2002,  specfrce,  0,          vp101,  specfrce, vp10x_state, empty_init, ROT0, "ICE/Play Mechanix",    "Special Forces Elite Training (v01.02.00)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-GAME( 2002,  specfrceo, specfrce,   vp101,  specfrce, vp10x_state, empty_init, ROT0, "ICE/Play Mechanix",    "Special Forces Elite Training (v01.01.01)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-GAME( 2003,  rhnation,  0,          vp50,   vp50,     vp10x_state, empty_init, ROT0, "ICE/Play Mechanix",    "Rhythm Nation (v01.00.04, boot v3.1.5)",    MACHINE_NOT_WORKING | MACHINE_NO_SOUND)
-GAME( 2004,  jnero,     0,          vp101,  jnero,    vp10x_state, empty_init, ROT0, "ICE/Play Mechanix",    "Johnny Nero Action Hero (v01.01.08)",       MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-GAME( 2006,  zoofari,   0,          vp50,   vp50,     vp10x_state, empty_init, ROT0, "ICE/Play Mechanix",    "Zoofari",                                   MACHINE_NOT_WORKING | MACHINE_NO_SOUND)
+GAME( 2002, specfrce,  0,        vp101, specfrce, vp10x_state, empty_init, ROT0, "ICE / Play Mechanix", "Special Forces Elite Training (v01.02.00)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+GAME( 2002, specfrceo, specfrce, vp101, specfrce, vp10x_state, empty_init, ROT0, "ICE / Play Mechanix", "Special Forces Elite Training (v01.01.01)", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+GAME( 2003, rhnation,  0,        vp50,  vp50,     vp10x_state, empty_init, ROT0, "ICE / Play Mechanix", "Rhythm Nation (v01.00.04, boot v3.1.5)",    MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+GAME( 2004, jnero,     0,        vp101, jnero,    vp10x_state, empty_init, ROT0, "ICE / Play Mechanix", "Johnny Nero Action Hero (v01.01.08)",       MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
+GAME( 2006, zoofari,   0,        vp50,  vp50,     vp10x_state, empty_init, ROT0, "ICE / Play Mechanix", "Zoofari",                                   MACHINE_NOT_WORKING | MACHINE_NO_SOUND )

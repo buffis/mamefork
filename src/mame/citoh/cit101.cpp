@@ -91,7 +91,7 @@ public:
 	void cit101e(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void draw_line(uint32_t *pixptr, int minx, int maxx, int line, bool last_line, u16 rowaddr, u16 rowattr, u8 scrattr);
@@ -114,10 +114,10 @@ private:
 	void nvr_address_w(u8 data);
 	void nvr_control_w(u8 data);
 
-	void mem_map(address_map &map);
-	void mem_map_101e(address_map &map);
-	void io_map(address_map &map);
-	void io_map_101e(address_map &map);
+	void mem_map(address_map &map) ATTR_COLD;
+	void mem_map_101e(address_map &map) ATTR_COLD;
+	void io_map(address_map &map) ATTR_COLD;
+	void io_map_101e(address_map &map) ATTR_COLD;
 
 	u8 m_e0_latch;
 
@@ -439,7 +439,7 @@ void cit101_state::cit101(machine_config &config)
 
 	CIT101_KEYBOARD(config, "keyboard").txd_callback().set("kbduart", FUNC(i8251_device::write_rxd));
 
-	pit8253_device &pit0(PIT8253(config, "pit0", 0));
+	pit8253_device &pit0(PIT8253(config, "pit0"));
 	pit0.set_clk<0>(6.144_MHz_XTAL / 4);
 	pit0.set_clk<1>(6.144_MHz_XTAL / 4);
 	//pit0.set_clk<2>(6.144_MHz_XTAL / 4);
@@ -448,7 +448,7 @@ void cit101_state::cit101(machine_config &config)
 	// OUT2 might be used for an internal expansion similar to the VT100 STP.
 	// The output appears to be fixed to a 307.2 kHz rate; turning this off boosts driver performance.
 
-	pit8253_device &pit1(PIT8253(config, "pit1", 0));
+	pit8253_device &pit1(PIT8253(config, "pit1"));
 	pit1.set_clk<0>(6.144_MHz_XTAL / 4);
 	pit1.set_clk<1>(6.144_MHz_XTAL / 4);
 	pit1.set_clk<2>(6.144_MHz_XTAL / 4);

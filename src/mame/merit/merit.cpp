@@ -143,7 +143,7 @@ public:
 	int rndbit_r();
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	required_shared_ptr<uint8_t> m_ram_attr;
 	required_shared_ptr<uint8_t> m_ram_video;
@@ -153,7 +153,7 @@ protected:
 	uint8_t palette_r(offs_t offset);
 	void palette_w(offs_t offset, uint8_t data);
 
-	void bigappg_io_map(address_map &map);
+	void bigappg_io_map(address_map &map) ATTR_COLD;
 
 private:
 	memory_share_creator<uint8_t> m_ram_palette;
@@ -175,12 +175,12 @@ private:
 	MC6845_BEGIN_UPDATE(crtc_begin_update);
 	MC6845_UPDATE_ROW(crtc_update_row);
 	MC6845_UPDATE_ROW(crtc_update_row_no_u40);
-	void bigappg_map(address_map &map);
-	void couple_map(address_map &map);
-	void riviera_map(address_map &map);
-	void misdraw_map(address_map &map);
-	void pitboss_map(address_map &map);
-	void pitboss_io_map(address_map &map);
+	void bigappg_map(address_map &map) ATTR_COLD;
+	void couple_map(address_map &map) ATTR_COLD;
+	void riviera_map(address_map &map) ATTR_COLD;
+	void misdraw_map(address_map &map) ATTR_COLD;
+	void pitboss_map(address_map &map) ATTR_COLD;
+	void pitboss_io_map(address_map &map) ATTR_COLD;
 };
 
 class merit_banked_state : public merit_state
@@ -194,14 +194,14 @@ public:
 	void casino5(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_memory_bank_array<2> m_rombank;
 
 	void bank_w(uint8_t data);
 
-	void casino5_map(address_map &map);
+	void casino5_map(address_map &map) ATTR_COLD;
 };
 
 class merit_quiz_state : public merit_state
@@ -222,7 +222,7 @@ public:
 	template <uint8_t Key> void init_key();
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	memory_bank_creator m_questions_bank;
@@ -235,19 +235,17 @@ private:
 	void med_offset_w(offs_t offset, uint8_t data);
 	void high_offset_w(offs_t offset, uint8_t data);
 
-	void dtrvwz5_map(address_map &map);
-	void phrcraze_io_map(address_map &map);
-	void phrcraze_map(address_map &map);
-	void tictac_map(address_map &map);
-	void trvwhiz_map(address_map &map);
-	void trvwhziv_map(address_map &map);
+	void dtrvwz5_map(address_map &map) ATTR_COLD;
+	void phrcraze_io_map(address_map &map) ATTR_COLD;
+	void phrcraze_map(address_map &map) ATTR_COLD;
+	void tictac_map(address_map &map) ATTR_COLD;
+	void trvwhiz_map(address_map &map) ATTR_COLD;
+	void trvwhziv_map(address_map &map) ATTR_COLD;
 };
 
 
 void merit_state::machine_start()
 {
-	m_leds.resolve();
-
 	save_item(NAME(m_lscnblk));
 	save_item(NAME(m_extra_video_bank_bit));
 }
@@ -702,7 +700,7 @@ static INPUT_PORTS_START( meritpoker )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(merit_state, rndbit_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(merit_state::rndbit_r))
 
 	PORT_START("DSW")
 	PORT_DIPUNKNOWN_DIPLOC( 0x01, IP_ACTIVE_LOW, "SW1:1" )
@@ -789,7 +787,7 @@ static INPUT_PORTS_START( chkndraw )
 	PORT_DIPSETTING(    0x10, "1" )
 	PORT_DIPNAME( 0x20, 0x00, "Players" )     PORT_DIPLOCATION("SW1:6")
 	PORT_DIPSETTING(    0x20, "One Player" )
-	PORT_DIPSETTING(    0x00, "Two Plaerys" )
+	PORT_DIPSETTING(    0x00, "Two Players" )
 	PORT_DIPNAME( 0xc0, 0x00, "Maximum Bet" )   PORT_DIPLOCATION("SW1:7,8")
 	PORT_DIPSETTING(    0x40, "1 Point Per Hand" )
 	PORT_DIPSETTING(    0xc0, "10" )
@@ -937,7 +935,7 @@ static INPUT_PORTS_START( pitboss ) // PCB pinout maps 12 lamp outputs - Where a
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_COCKTAIL PORT_CODE(KEYCODE_G) PORT_NAME("P2 Button 5")
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_BUTTON6 ) PORT_COCKTAIL PORT_CODE(KEYCODE_W) PORT_NAME("P2 Play")
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(merit_state, rndbit_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(merit_state::rndbit_r))
 
 	PORT_START("DSW")
 	PORT_DIPNAME( 0x01, 0x01, DEF_STR( Coin_A ) )   PORT_DIPLOCATION("SW:1")
@@ -1000,7 +998,7 @@ static INPUT_PORTS_START( mroundup ) // TODO: Find were Player 2 "Play" is mappe
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_COCKTAIL PORT_CODE(KEYCODE_G) PORT_NAME("P2 Button 5")
 	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_UNKNOWN ) // pulling this LOW causes "unauthorized conversion" msg.
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(merit_state, rndbit_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(merit_state::rndbit_r))
 
 	PORT_START("DSW")
 	PORT_DIPNAME( 0x01, 0x01, "Enable Draw Poker" )     PORT_DIPLOCATION("SW1:1")
@@ -1181,7 +1179,7 @@ static INPUT_PORTS_START( casino5 )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(merit_state, rndbit_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(merit_state::rndbit_r))
 
 	PORT_START("DSW")
 	PORT_DIPNAME( 0x01, 0x01, "Enable Draw Poker" )     PORT_DIPLOCATION("SW1:1")
@@ -1245,7 +1243,7 @@ static INPUT_PORTS_START( merittrivia )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_BUTTON5 ) PORT_COCKTAIL PORT_CODE(KEYCODE_G)
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(merit_state, rndbit_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(merit_state::rndbit_r))
 
 	PORT_START("DSW")
 	PORT_DIPNAME( 0x01, 0x00, DEF_STR( Demo_Sounds ) )  PORT_DIPLOCATION("SW1:1")
@@ -1488,7 +1486,7 @@ static INPUT_PORTS_START( couple )
 	PORT_DIPNAME( 0x40, 0x40, DEF_STR( Unknown ) )
 	PORT_DIPSETTING(    0x40, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( On ) )
-	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(merit_state, rndbit_r)
+	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(merit_state::rndbit_r))
 INPUT_PORTS_END
 
 // Different DSWs
@@ -1626,7 +1624,7 @@ void merit_state::mosdraw(machine_config &config)
 	riviera(config);
 
 	// TODO: hook up RTC and printer
-	MM58274C(config, "rtc", 0);  // actually an MM58174AN, but should be compatible according to other drivers
+	MM58274C(config, "rtc");  // actually an MM58174AN, but should be compatible according to other drivers
 }
 
 void merit_state::couple(machine_config &config)
@@ -1956,12 +1954,12 @@ ROM_START( riviera )
 	ROM_LOAD( "2131-08_u5-4a.u5", 0x0000, 0x8000, CRC(0bc8cf26) SHA1(da52010be2d44a240160bb1a13288b35e8feade2) ) // 08 U5-4A 111287 2131-84A, label shows (c) 1988
 
 	ROM_REGION( 0x6000, "gfx1", 0 )
-	ROM_LOAD( "hisc_u39.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
-	ROM_LOAD( "hisc_u38.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
-	ROM_LOAD( "hisc_u37.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
+	ROM_LOAD( "hisc_u39_c1987_mii.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
+	ROM_LOAD( "hisc_u38_c1987_mii.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
+	ROM_LOAD( "hisc_u37_c1987_mii.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
 
 	ROM_REGION( 0x2000, "gfx2", 0 )
-	ROM_LOAD( "hisc_u40.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
+	ROM_LOAD( "hisc_u40_c1987_mii.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
 
 	ROM_REGION( 0x117, "plds", 0 )
 	ROM_LOAD( "dec003.u13", 0x000, 0x117, CRC(5b9a2fec) SHA1(c56c7bbe13028903cfc82440ee8b24df855134c2) ) // PAL16L8ANC - brute forced
@@ -1972,32 +1970,82 @@ ROM_START( rivieraa )
 	ROM_LOAD( "2131-08_u5-4.u5", 0x0000, 0x8000, CRC(ce0b00f2) SHA1(c467c2c08d0bbadf80d67f41e17127e08ce3b3ff) ) // 08 U5-4 111786 2131-84, label shows (c) 1987
 
 	ROM_REGION( 0x6000, "gfx1", 0 )
-	ROM_LOAD( "hisc_u39.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
-	ROM_LOAD( "hisc_u38.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
-	ROM_LOAD( "hisc_u37.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
+	ROM_LOAD( "hisc_u39_c1987_mii.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
+	ROM_LOAD( "hisc_u38_c1987_mii.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
+	ROM_LOAD( "hisc_u37_c1987_mii.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
 
 	ROM_REGION( 0x2000, "gfx2", 0 )
-	ROM_LOAD( "hisc_u40.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
+	ROM_LOAD( "hisc_u40_c1987_mii.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
 
-	ROM_REGION( 0x117, "plds", 0 )
+	ROM_REGION( 0xe20, "plds", 0 )
 	ROM_LOAD( "dec003.u13", 0x000, 0x117, CRC(5b9a2fec) SHA1(c56c7bbe13028903cfc82440ee8b24df855134c2) ) // PAL16L8ANC - brute forced
+	ROM_LOAD( "sc3931_atf16v8b.jed.u13", 0x200, 0xc20, CRC(c505a4a1) SHA1(676f5f73cb14b5853aeca9cde71ad2c3ec425f9c) ) // needs conversion to .bin (the format type prevents easy conversion)
 ROM_END
 
 ROM_START( rivierab )
 	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "2131-08_u5-3c.u5", 0x0000, 0x8000, CRC(c9582556) SHA1(2d960cbfadea82968e9e509d2e72c0ef16032755) ) // 08 U5-3C 091586 2131-83C
+
+	ROM_REGION( 0x6000, "gfx1", 0 )
+	ROM_LOAD( "hisc_u39_c1987_mii.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
+	ROM_LOAD( "hisc_u38_c1987_mii.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
+	ROM_LOAD( "hisc_u37_c1987_mii.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
+
+	ROM_REGION( 0x2000, "gfx2", 0 )
+	ROM_LOAD( "hisc_u40_c1987_mii.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
+
+	ROM_REGION( 0xc22, "plds", 0 )  // need conversion to .bin (the format type prevents to do it)
+	ROM_LOAD( "dec-002_atf16v8c.jed.u13", 0x000, 0xc22, CRC(494164ba) SHA1(b7ebfd9c28e0e953beb9a4bdc331ded02ac5a67e) )
+ROM_END
+
+ROM_START( rivierac )
+	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "2131-08_u5-2d.u5", 0x0000, 0x8000, CRC(64c6892b) SHA1(d245d4a9933e3b21279542da0cb6ee641569ef6c) ) // 08 U5-2D 022086 2131-82d, label shows (c) 1985
 
 	ROM_REGION( 0x6000, "gfx1", 0 )
-	ROM_LOAD( "hisc_u39.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
-	ROM_LOAD( "hisc_u38.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
-	ROM_LOAD( "hisc_u37.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
+	ROM_LOAD( "hisc_u39_c1987_mii.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
+	ROM_LOAD( "hisc_u38_c1987_mii.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
+	ROM_LOAD( "hisc_u37_c1987_mii.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
 
 	ROM_REGION( 0x2000, "gfx2", 0 )
-	ROM_LOAD( "hisc_u40.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
+	ROM_LOAD( "hisc_u40_c1987_mii.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
 
 	ROM_REGION( 0x117, "plds", 0 )
 	ROM_LOAD( "dec003.u13", 0x000, 0x117, CRC(5b9a2fec) SHA1(c56c7bbe13028903cfc82440ee8b24df855134c2) ) // PAL16L8ANC - brute forced
 ROM_END
+
+ROM_START( rivierad ) // a hack of 2131-08_u5-4a.u5 - doesn't show "MERIT IND. INC." text after copyright symbol, plus other changes
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "nosticker_27c256.u5", 0x0000, 0x8000, CRC(a9d7606f) SHA1(0970a2158d5347624f45cccb03048d6e4175fd9b) ) // 08P 5C25C 082702 2131-84A
+
+	ROM_REGION( 0x6000, "gfx1", 0 )
+	ROM_LOAD( "hisc_u39_c1987_mii.u39", 0x00000, 0x2000, CRC(1814c2ea) SHA1(fecc5dc1c0a56cbc7b68ee6a52222de348d6cc79) )
+	ROM_LOAD( "hisc_u38_c1987_mii.u38", 0x02000, 0x2000, CRC(ef1d7a80) SHA1(539662bee187a300a6f1bcded954758c87171219) )
+	ROM_LOAD( "hisc_u37_c1987_mii.u37", 0x04000, 0x2000, CRC(f6e709f8) SHA1(02905be912d0aa794f82926462f854e8e67dc407) )
+
+	ROM_REGION( 0x2000, "gfx2", 0 )
+	ROM_LOAD( "hisc_u40_c1987_mii.u40", 0x00000, 0x2000, CRC(6d2a1ca8) SHA1(96ef3e0914c2b213ed9c9082fa3e27d75d52a8ec) )
+
+	ROM_REGION( 0x117, "plds", 0 )
+	ROM_LOAD( "dec003.u13", 0x000, 0x117, CRC(5b9a2fec) SHA1(c56c7bbe13028903cfc82440ee8b24df855134c2) ) // PAL16L8ANC - brute forced
+ROM_END
+
+ROM_START( rivierae ) // same program ROM, but different graphics ROMs which eliminate the Merit logo
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "riv2_u5_27256.u5", 0x0000, 0x8000, CRC(a9d7606f) SHA1(0970a2158d5347624f45cccb03048d6e4175fd9b) ) // 08P 5C25C 082702 2131-84A
+
+	ROM_REGION( 0x6000, "gfx1", 0 )
+	ROM_LOAD( "riv2_u39_2764.u39", 0x00000, 0x2000, CRC(fca9a4cf) SHA1(1a6f0a57ac2236e9cf7c64c671e6a6b0208cc3dd) ) // these graphics ROMs remove the Merit logo
+	ROM_LOAD( "riv2_u38_2764.u38", 0x02000, 0x2000, CRC(1dbe9afe) SHA1(becc5419b948ef750efb1359fbc3264d801b1b73) )
+	ROM_LOAD( "riv2_u37_2764.u37", 0x04000, 0x2000, CRC(3eea4a80) SHA1(7ab64810960799895b87c83096675872139f7070) )
+
+	ROM_REGION( 0x2000, "gfx2", 0 )
+	ROM_LOAD( "riv2_u40_2764.u40", 0x00000, 0x2000, CRC(6019ffb7) SHA1(e2dde1fb833feec99c2466e1da0af41c39212472) )
+
+	ROM_REGION( 0xc22, "plds", 0 ) // needs conversion to .bin (the format type prevents easy conversion)
+	ROM_LOAD( "sc3931_pal16l8amc.jed.u13", 0x000, 0xc22, CRC(5214d4d9) SHA1(b339443a8315e5dc0fac62fffc7458eeead0a4de) )
+ROM_END
+
 
 // Sub board CRT-203 includes 2 P8255A, parallel printer connection & MM58174AN RTC that plugs in through the CRT-200's P8255 socket.
 // There is a battery that connects to the PCB to keep the CRT-200's Mosel MS6264L-10PC RAM active and also runs to the CRT-203 for the RTC (guess)
@@ -2137,8 +2185,8 @@ ROM_END
 
 ROM_START( trvwz )
 	ROM_REGION( 0x10000, "maincpu", 0 )
-	ROM_LOAD( "6221-00_u5.u5", 0x0000, 0x2000, CRC(731fd5b1) SHA1(1074780321029446da0e6765b9e036b06b067a48) )
-	ROM_LOAD( "6221-00_u6.u6", 0x2000, 0x2000, CRC(af6886c0) SHA1(48005b921d7ce33ffc0ba160be82053a26382a9d) )
+	ROM_LOAD( "6221-03_u5.u5", 0x0000, 0x2000, CRC(0e0356a4) SHA1(2287f0c0bd7e524b9641e35e4174c9f52d81b072) )
+	ROM_LOAD( "6221-03_u6.u6", 0x2000, 0x2000, CRC(46ba5c85) SHA1(f339b2445202048abd5867e751663066b75c4220) )
 
 	ROM_REGION( 0x6000, "gfx1", 0 )
 	ROM_LOAD( "triv_1_u39.u39", 0x0000, 0x2000, CRC(f8a5f5fb) SHA1(a511e1a2b5e887ef00dc919e9e664ccec2d36cfa) )
@@ -2148,17 +2196,19 @@ ROM_START( trvwz )
 	ROM_REGION( 0x2000, "gfx2", 0 )
 	ROM_LOAD( "triv_1_u40.u40", 0x0000, 0x2000, CRC(cea7319f) SHA1(663cd18a4699dfd5ad1d3357094eff247e9b4a47) )
 
-	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF )
+	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF ) // Mixture of rev A & B questions
 	ROM_LOAD( "ent-001_01a",  0x08000, 0x8000, CRC(ff45d92b) SHA1(10356bc6a04b2c53ecaf76cb0cba3ec70b4ba612) ) // This set verified as all found on the same question board
 	ROM_LOAD( "ent-001_02a",  0x18000, 0x8000, CRC(902e26f7) SHA1(f13b816bfc507fb429fb3f44531de346a82c780d) )
-	ROM_LOAD( "gen-001_01a",  0x28000, 0x8000, CRC(1d8d353f) SHA1(6bd0cc5c67da81a48737f32bc49cbf235648c4c6) )
-	ROM_LOAD( "gen-001_02a",  0x3c000, 0x4000, CRC(2000e3c3) SHA1(21737fde3d1a1b22da4590476e4e52ee1bab026f) ) // 27128 EPROM, others are 27256
+	ROM_LOAD( "gen-001_01b",  0x28000, 0x8000, CRC(ded7e124) SHA1(7e6e04ae79dceba70d83ccfde4f9d0ccc0737c78) ) // Rev B questions
+	ROM_LOAD( "gen-001_02b",  0x3c000, 0x4000, CRC(2000e3c3) SHA1(21737fde3d1a1b22da4590476e4e52ee1bab026f) ) // Rev B questions -  27128 EPROM, others are 27256
 	ROM_LOAD( "spo-001_01a",  0x48000, 0x8000, CRC(ae111429) SHA1(ff551d7ac7ad367338e908805aeb78c59a747919) )
-	ROM_LOAD( "spo-001_02a",  0x58000, 0x8000, CRC(ee9263b3) SHA1(1644ab01f17e3af1e193e509d64dcbb243d3eb80) )
+	ROM_LOAD( "spo-001_02a",  0x58000, 0x8000, CRC(ee9263b3) SHA1(1644ab01f17e3af1e193e509d64dcbb243d3eb80) ) // Rev B ROM known to exist - NOT dumped
 	ROM_LOAD( "spo-001_03a",  0x68000, 0x8000, CRC(64181d34) SHA1(f84e28fc589b86ca6a596815871ed26602bcc095) )
+	ROM_LOAD( "sex-001_01a",  0x78000, 0x8000, CRC(32519098) SHA1(d070e02bb10e04964893903599a69a8943f9ac8a) ) // These were on the question board but program doesn't seem to
+	ROM_LOAD( "sex-001_02a",  0x88000, 0x8000, CRC(0be4ef9a) SHA1(c80080f1c853e1043bf7e47bea322540a8ac9195) ) //  see them or use them - but include them anyways
 
 	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
-	ROM_LOAD( "sc-001", 0x00000, 0x0100, NO_DUMP ) // 74S287 (==N82S129N) BPROM
+	ROM_LOAD( "sc-001", 0x00000, 0x0100, CRC(c3ba24aa) SHA1(46bb1aa3b2d3696cbe09184e58b7342cb165d0b6) ) // 74S287 (==N82S129N) BPROM
 ROM_END
 
 ROM_START( trvwza )
@@ -2174,19 +2224,19 @@ ROM_START( trvwza )
 	ROM_REGION( 0x2000, "gfx2", 0 )
 	ROM_LOAD( "triv_1_u40.u40", 0x0000, 0x2000, CRC(cea7319f) SHA1(663cd18a4699dfd5ad1d3357094eff247e9b4a47) )
 
-	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF )
+	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF ) // Rev A questions
 	ROM_LOAD( "ent-001_01a",  0x08000, 0x8000, CRC(ff45d92b) SHA1(10356bc6a04b2c53ecaf76cb0cba3ec70b4ba612) )
 	ROM_LOAD( "ent-001_02a",  0x18000, 0x8000, CRC(902e26f7) SHA1(f13b816bfc507fb429fb3f44531de346a82c780d) )
 	ROM_LOAD( "gen-001_01a",  0x28000, 0x8000, CRC(1d8d353f) SHA1(6bd0cc5c67da81a48737f32bc49cbf235648c4c6) )
 	ROM_LOAD( "gen-001_02a",  0x3c000, 0x4000, CRC(2000e3c3) SHA1(21737fde3d1a1b22da4590476e4e52ee1bab026f) ) // 27128 EPROM, others are 27256
-	ROM_LOAD( "sex-001_01a",  0x48000, 0x8000, CRC(32519098) SHA1(d070e02bb10e04964893903599a69a8943f9ac8a) )
-	ROM_LOAD( "sex-001_02a",  0x88000, 0x8000, CRC(0be4ef9a) SHA1(c80080f1c853e1043bf7e47bea322540a8ac9195) )
+	ROM_LOAD( "spo-001_01a",  0x48000, 0x8000, CRC(ae111429) SHA1(ff551d7ac7ad367338e908805aeb78c59a747919) )
+	ROM_LOAD( "spo-001_02a",  0x58000, 0x8000, CRC(ee9263b3) SHA1(1644ab01f17e3af1e193e509d64dcbb243d3eb80) )
+	ROM_LOAD( "spo-001_03a",  0x68000, 0x8000, CRC(64181d34) SHA1(f84e28fc589b86ca6a596815871ed26602bcc095) )
 
 	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
-	ROM_LOAD( "sc-001", 0x00000, 0x0100, NO_DUMP ) // 74S287 (==N82S129N) BPROM
+	ROM_LOAD( "sc-001", 0x00000, 0x0100, CRC(c3ba24aa) SHA1(46bb1aa3b2d3696cbe09184e58b7342cb165d0b6) ) // 74S287 (==N82S129N) BPROM
 ROM_END
 
-// question board only - this contained a variety of ROMs from the 'trvwz' and 'trvwza' sets as well as 2 unique general knowledge ones
 ROM_START( trvwzb )
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "6221-00_u5.u5", 0x0000, 0x2000, CRC(731fd5b1) SHA1(1074780321029446da0e6765b9e036b06b067a48) )
@@ -2200,20 +2250,45 @@ ROM_START( trvwzb )
 	ROM_REGION( 0x2000, "gfx2", 0 )
 	ROM_LOAD( "triv_1_u40.u40",   0x0000, 0x2000, CRC(cea7319f) SHA1(663cd18a4699dfd5ad1d3357094eff247e9b4a47) )
 
-	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF )
-	ROM_LOAD( "ent-001_01a",  0x08000, 0x8000, CRC(ff45d92b) SHA1(10356bc6a04b2c53ecaf76cb0cba3ec70b4ba612) )
-	ROM_LOAD( "ent-001_02a",  0x18000, 0x8000, CRC(902e26f7) SHA1(f13b816bfc507fb429fb3f44531de346a82c780d) )
-	ROM_LOAD( "merit2_6.1",   0x28000, 0x8000, CRC(8a4bcde3) SHA1(528ae9d3ff0b98201f89fd6b93a712cd7f0e9ab4) ) // alt General Trivia - Need correct ROM label
-	ROM_LOAD( "merit2_6.2",   0x38000, 0x8000, CRC(ded7e124) SHA1(7e6e04ae79dceba70d83ccfde4f9d0ccc0737c78) ) // alt General Trivia - Need correct ROM label
-	ROM_LOAD( "spo-001_01a",  0x48000, 0x8000, CRC(ae111429) SHA1(ff551d7ac7ad367338e908805aeb78c59a747919) )
-	ROM_LOAD( "spo-001_02a",  0x58000, 0x8000, CRC(ee9263b3) SHA1(1644ab01f17e3af1e193e509d64dcbb243d3eb80) )
-	ROM_LOAD( "spo-001_03a",  0x68000, 0x8000, CRC(64181d34) SHA1(f84e28fc589b86ca6a596815871ed26602bcc095) )
+	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF ) // Original rev questions
+	ROM_LOAD( "ent-001_01",  0x08000, 0x8000, CRC(c68ce954) SHA1(bf70fe64f095d5cfcf5347d83651b78c6c8bf05f) )
+	ROM_LOAD( "ent-001_02",  0x18000, 0x8000, CRC(aac4ff63) SHA1(d68c4408b4dad976e317a33f2a4eaee39d90dbed) )
+	ROM_LOAD( "gen-001_01",  0x28000, 0x8000, CRC(5deb1900) SHA1(b7e9407c37481ef8953e8283d45949d951302e92) )
+	ROM_LOAD( "gen-001_02",  0x3c000, 0x4000, CRC(d2b53b6a) SHA1(f75334e47885086e277682daf018818a02ce1026) ) // 27128 EPROM, others are 27256
+	ROM_LOAD( "spo-001_01",  0x48000, 0x8000, CRC(7b56315d) SHA1(4c8c63b80176bfac9594958a7043627012baada3) )
+	ROM_LOAD( "spo-001_02",  0x58000, 0x8000, CRC(148b63ee) SHA1(9f3b222d979f23b313f379cbc06cc00d88d08c56) )
+	ROM_LOAD( "spo-001_03",  0x68000, 0x8000, CRC(a6af8e41) SHA1(64f672bfa5fb2c0575103614986e53e238c5984f) )
 
 	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
-	ROM_LOAD( "sc-001", 0x00000, 0x0100, NO_DUMP ) // 74S287 (==N82S129N) BPROM
+	ROM_LOAD( "sc-001", 0x00000, 0x0100, CRC(c3ba24aa) SHA1(46bb1aa3b2d3696cbe09184e58b7342cb165d0b6) ) // 74S287 (==N82S129N) BPROM
 ROM_END
 
-ROM_START( trvwzv )
+ROM_START( trvwzs )
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "6221-00_u5.u5", 0x0000, 0x2000, CRC(731fd5b1) SHA1(1074780321029446da0e6765b9e036b06b067a48) )
+	ROM_LOAD( "6221-00_u6.u6", 0x2000, 0x2000, CRC(af6886c0) SHA1(48005b921d7ce33ffc0ba160be82053a26382a9d) )
+
+	ROM_REGION( 0x6000, "gfx1", 0 )
+	ROM_LOAD( "triv_1_u39.u39", 0x0000, 0x2000, CRC(f8a5f5fb) SHA1(a511e1a2b5e887ef00dc919e9e664ccec2d36cfa) )
+	ROM_LOAD( "triv_1_u38.u38", 0x2000, 0x2000, CRC(27621e52) SHA1(a7e88d329e2e774fef9bd8c5cefb4d8f1cfcba4c) )
+	ROM_LOAD( "triv_1_u37.u37", 0x4000, 0x2000, CRC(f739b5dc) SHA1(fbf469b7f4cab50e06ec2def9344e3b9801a275e) )
+
+	ROM_REGION( 0x2000, "gfx2", 0 )
+	ROM_LOAD( "triv_1_u40.u40", 0x0000, 0x2000, CRC(cea7319f) SHA1(663cd18a4699dfd5ad1d3357094eff247e9b4a47) )
+
+	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF ) // Rev A questions
+	ROM_LOAD( "ent-001_01a",  0x08000, 0x8000, CRC(ff45d92b) SHA1(10356bc6a04b2c53ecaf76cb0cba3ec70b4ba612) )
+	ROM_LOAD( "ent-001_02a",  0x18000, 0x8000, CRC(902e26f7) SHA1(f13b816bfc507fb429fb3f44531de346a82c780d) )
+	ROM_LOAD( "gen-001_01a",  0x28000, 0x8000, CRC(1d8d353f) SHA1(6bd0cc5c67da81a48737f32bc49cbf235648c4c6) )
+	ROM_LOAD( "gen-001_02a",  0x3c000, 0x4000, CRC(2000e3c3) SHA1(21737fde3d1a1b22da4590476e4e52ee1bab026f) ) // 27128 EPROM, others are 27256
+	ROM_LOAD( "sex-001_01a",  0x48000, 0x8000, CRC(32519098) SHA1(d070e02bb10e04964893903599a69a8943f9ac8a) )
+	ROM_LOAD( "sex-001_02a",  0x58000, 0x8000, CRC(0be4ef9a) SHA1(c80080f1c853e1043bf7e47bea322540a8ac9195) )
+
+	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
+	ROM_LOAD( "sc-001", 0x00000, 0x0100, CRC(c3ba24aa) SHA1(46bb1aa3b2d3696cbe09184e58b7342cb165d0b6) ) // 74S287 (==N82S129N) BPROM
+ROM_END
+
+ROM_START( trvwzv ) // Explicitly found with original version question ROMs, the program ROMs will work with Rev A & B question ROMs
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "6221-02_u5.u5", 0x0000, 0x2000, CRC(fd3531ac) SHA1(d11573df65676e704b28cc2d99fb004b48a358a4) )
 	ROM_LOAD( "6221-02_u6.u6", 0x2000, 0x2000, CRC(29e43d0e) SHA1(ad610748fe37436880648078f5d1a305cb147c5d) )
@@ -2236,7 +2311,7 @@ ROM_START( trvwzv )
 	ROM_LOAD( "spo-001_03",  0x68000, 0x8000, CRC(a6af8e41) SHA1(64f672bfa5fb2c0575103614986e53e238c5984f) )
 
 	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
-	ROM_LOAD( "sc-001", 0x00000, 0x0100, NO_DUMP ) // 74S287 (==N82S129N) BPROM
+	ROM_LOAD( "sc-001", 0x00000, 0x0100, CRC(c3ba24aa) SHA1(46bb1aa3b2d3696cbe09184e58b7342cb165d0b6) ) // 74S287 (==N82S129N) BPROM
 ROM_END
 
 ROM_START( trvwz2 )
@@ -2252,7 +2327,7 @@ ROM_START( trvwz2 )
 	ROM_REGION( 0x2000, "gfx2", 0 )
 	ROM_LOAD( "trvs_u40a.u40", 0x0000, 0x2000, CRC(fbfae092) SHA1(b8569819952a5c805f11b6854d64b3ae9c857f97) )
 
-	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF )
+	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF ) // Rev A questions
 	ROM_LOAD( "ent-101.01a",  0x08000, 0x8000, CRC(3825ac47) SHA1(d0da047c4d30a26f496b3663cfda77c229279be8) ) // This set verified as all found on the same question board
 	ROM_LOAD( "ent-101.02a",  0x18000, 0x8000, CRC(a0153407) SHA1(e669957a5d4775bfa2c16960a2a909a3505c078b) )
 	ROM_LOAD( "ent-101.03a",  0x28000, 0x8000, CRC(755b16ab) SHA1(277ea4110479ecdb2c772299ea04f4918cf7f561) )
@@ -2290,8 +2365,8 @@ ROM_START( trvwz2a )
 	ROM_LOAD( "spo-101.01a",  0x58000, 0x8000, CRC(9dc4ba98) SHA1(4ce2bbbd7436a0ba8140879d5d8614bddbd5a8ec) )
 	ROM_LOAD( "spo-101.02a",  0x68000, 0x8000, CRC(9c106ad9) SHA1(1d1a5c91152283e3937a2df17cd57b8fe04072b7) )
 	ROM_LOAD( "spo-101.03a",  0x78000, 0x8000, CRC(3d69c3a3) SHA1(9f16d45660f3cb15e44e9fc0d940a7b2b12819e8) )
-	ROM_LOAD( "merit2_4.0",   0x88000, 0x8000, CRC(069b59a3) SHA1(e3d75edd3a9271df73bf51f409f066547025abbe) ) // alt Sex Trivia - Need correct ROM label
-	ROM_LOAD( "merit2_4.1",   0x98000, 0x8000, CRC(938d319f) SHA1(5b5841692666c31f2c09cb318f7e106942fffea7) ) // alt Sex Trivia - Need correct ROM label
+	ROM_LOAD( "sex-101.01",   0x88000, 0x8000, CRC(069b59a3) SHA1(e3d75edd3a9271df73bf51f409f066547025abbe) ) // non "A" rev - verified
+	ROM_LOAD( "sex-101.02",   0x98000, 0x8000, CRC(938d319f) SHA1(5b5841692666c31f2c09cb318f7e106942fffea7) ) // non "A" rev - verified
 
 	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
 	ROM_LOAD( "sc-002", 0x00000, 0x0100, CRC(94a8da8a) SHA1(8bdaee436481418425c36de24477c96ec0787916) ) // N82S129N BPROM
@@ -2445,6 +2520,45 @@ ROM_START( trvwz4 )
 	ROM_LOAD( "tw4-05_rnp-2", 0x78000, 0x8000, CRC(e54fc4bc) SHA1(4607974ed2bf83c475396fc1cbb1e09ad084ace8) )
 	ROM_LOAD( "tw4-05_sex-1", 0x88000, 0x8000, CRC(976352b0) SHA1(5f89caca410704ba8a90da3167ba18e45fb21d43) )
 	ROM_LOAD( "tw4-05_sex-2", 0x98000, 0x8000, CRC(5f148bc9) SHA1(2fd2cf819c2f395dcffad59857b3533fe3cce60b) )
+
+	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
+	ROM_LOAD( "sc-005", 0x00000, 0x0100, CRC(288ba0bd) SHA1(64868d80eca246b81da784441b3706c372c4e0f7) ) // 74S287 (==N82S129N) BPROM
+
+	ROM_REGION( 0x117, "plds", 0 )
+	ROM_LOAD( "dec003.u13", 0x000, 0x117, CRC(5b9a2fec) SHA1(c56c7bbe13028903cfc82440ee8b24df855134c2) ) // PAL16L8ANC - brute forced
+ROM_END
+
+/*
+NOTE: The program ROM for the set below was printed as 6221-22 U5-0, however the 22 was crossed out and 11 was hand written
+      in its place.  Also an A was added for a stated version of 6221-11 U5-0A, but when checked internally it matched the
+      previously dumped 6221-10 U5-0A ROM from the parent set.
+
+NOTE: Only the Strange But True question ROMs changed, it's unknown if the below set adds content, corrects answers or is
+      the original released set.
+*/
+ROM_START( trvwz4a )
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "6221-10_u5-0a.u5", 0x0000, 0x8000, CRC(18425486) SHA1(53a223790f32c39abc098f58b42753844b628d54) ) // 6221-10 U5-0A 01/13/86
+
+	ROM_REGION( 0x6000, "gfx1", 0 )
+	ROM_LOAD( "triv_1_u39.u39", 0x0000, 0x2000, CRC(f8a5f5fb) SHA1(a511e1a2b5e887ef00dc919e9e664ccec2d36cfa) )
+	ROM_LOAD( "triv_1_u38.u38", 0x2000, 0x2000, CRC(27621e52) SHA1(a7e88d329e2e774fef9bd8c5cefb4d8f1cfcba4c) )
+	ROM_LOAD( "triv_1_u37.u37", 0x4000, 0x2000, CRC(f739b5dc) SHA1(fbf469b7f4cab50e06ec2def9344e3b9801a275e) )
+
+	ROM_REGION( 0x2000, "gfx2", 0 )
+	ROM_LOAD( "triv_1_u40e.u40", 0x0000, 0x2000, CRC(0430c239) SHA1(058b936789526b2a366ad87105703059ce2f3b48) ) // hand written E over D
+
+	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF )
+	ROM_LOAD( "spo-005_01", 0x08000, 0x8000, CRC(5fe0c6a3) SHA1(17bdb5262ce4edf5f022f075537f6161e1397b46) ) // Question ROMs have a different label format
+	ROM_LOAD( "spo-005_02", 0x18000, 0x8000, CRC(3f3390e0) SHA1(50bd7b79268438584bb0f497ab0055b4d4864590) )
+	ROM_LOAD( "ent-005_01", 0x28000, 0x8000, CRC(1b317149) SHA1(94e882e9cc041ac8f292136c1ce2d21340ac5e7f) )
+	ROM_LOAD( "ent-005_02", 0x38000, 0x8000, CRC(43d51697) SHA1(7af3f16f9519184ae63d8818bbc52a2ba897f275) )
+	ROM_LOAD( "sbt-005_01", 0x48000, 0x8000, CRC(40a3c1c7) SHA1(62bb7adf1aefa8e6b4fe3e9b52ac4638bcca477a) ) // unique Strange But True question ROMs
+	ROM_LOAD( "sbt-005_02", 0x58000, 0x8000, CRC(4c8f3a53) SHA1(3463bd7875da8127a3ac3cb03042c4f9d646e38e) ) // unique Strange But True question ROMs
+	ROM_LOAD( "rnp-005_01", 0x68000, 0x8000, CRC(fee2d0b0) SHA1(9c9abec4ce693fc2d3976f3d499213c2ce67c197) )
+	ROM_LOAD( "rnp-005_02", 0x78000, 0x8000, CRC(e54fc4bc) SHA1(4607974ed2bf83c475396fc1cbb1e09ad084ace8) )
+	ROM_LOAD( "sex-005_01", 0x88000, 0x8000, CRC(976352b0) SHA1(5f89caca410704ba8a90da3167ba18e45fb21d43) )
+	ROM_LOAD( "sex-005_02", 0x98000, 0x8000, CRC(5f148bc9) SHA1(2fd2cf819c2f395dcffad59857b3533fe3cce60b) )
 
 	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
 	ROM_LOAD( "sc-005", 0x00000, 0x0100, CRC(288ba0bd) SHA1(64868d80eca246b81da784441b3706c372c4e0f7) ) // 74S287 (==N82S129N) BPROM
@@ -2639,6 +2753,34 @@ ROM_END
 ROM_START( tictaca )
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "6221-23_u5-0c.u5", 0x00000, 0x8000, CRC(f0dd73f5) SHA1(f2988b84255ce5f7ea6d25150cdbae88b98e1be3) ) // 6221-23 U5-0C 02/11/86
+
+	ROM_REGION( 0x6000, "gfx1", 0 )
+	ROM_LOAD( "ttt1_u39.u39", 0x00000, 0x2000, CRC(dd79e824) SHA1(d65ee1c758293ddf8a5f4913878a2867ba526e68) )
+	ROM_LOAD( "ttt1_u38.u38", 0x02000, 0x2000, CRC(e1bf0fab) SHA1(291261ea817c42d6e8a19c17a2d3706fed7d78c4) )
+	ROM_LOAD( "ttt1_u37.u37", 0x04000, 0x2000, CRC(94f9c7f8) SHA1(494389983fb62fe2d772c276e659b6b20c531933) )
+
+	ROM_REGION( 0x2000, "gfx2", 0 )
+	ROM_LOAD( "ttt1_u40b.u40",    0x00000, 0x2000, CRC(ab0088eb) SHA1(23a05a4dc11a8497f4fc7e4a76085af15ff89cea) )
+
+	ROM_REGION( 0xa0000, "questions", ROMREGION_ERASEFF )
+	ROM_LOAD( "spo-004_01a.1", 0x08000, 0x8000, CRC(71b398a9) SHA1(5ea07c409afd52c7d08592b30ff0ff3b72c3f8c3) ) // Trivia categories are:
+	ROM_LOAD( "spo-004_02a.2", 0x18000, 0x8000, CRC(eb34672f) SHA1(c472fc4445fc434029a2740dfc1d9ab9b1ef9f87) ) // Sports, Entertainment, General Interest & Sex Trivia III
+	ROM_LOAD( "spo-004_03a.3", 0x28000, 0x8000, CRC(8eea30b9) SHA1(fe1d0332106631f56bc6c57a888da9e4e63fa52f) )
+	ROM_LOAD( "ent-004_01.4",  0x38000, 0x8000, CRC(3f45064d) SHA1(de109ac0b19fd1cd7f0020cc174c2da21708108c) )
+	ROM_LOAD( "ent-004_02a.5", 0x48000, 0x8000, CRC(f1c446cd) SHA1(9a6f18defbb64e202ae12e1a59502b8f2d6a58a6) )
+	ROM_LOAD( "ent-004_03.6",  0x58000, 0x8000, CRC(206cfc0d) SHA1(78f6b684713459a617096aa3ffe6e9e62583938c) )
+	ROM_LOAD( "gen-004_01a.7", 0x68000, 0x8000, CRC(d1584173) SHA1(7a2190203f478f446cc70c473c345e7cc332e049) )
+	ROM_LOAD( "gen-004_02a.8", 0x78000, 0x8000, CRC(d00ab1fd) SHA1(c94269c8a478e88f71aeca94c6f20fc05a9c62bd) )
+	ROM_LOAD( "sex-004_01a.9", 0x88000, 0x8000, CRC(9333dbca) SHA1(dd87e6f69d60580fdb6f979398edbeb1a51be355) )
+	ROM_LOAD( "sex-004_02a.a", 0x98000, 0x8000, CRC(6eda81f4) SHA1(6d64344691e3e52035a7d30fb3e762f0bd397db7) )
+
+	ROM_REGION( 0x0100, "prom", 0 ) // BPROM on Question ROM board used as KEY to decode questions
+	ROM_LOAD( "sc-004", 0x00000, 0x0100, NO_DUMP ) // 74S287 (==N82S129N) BPROM
+ROM_END
+
+ROM_START( tictacb )
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "6221-20_u5-0b.u5", 0x00000, 0x8000, CRC(22e7789c) SHA1(c298b9c6da36abbb784c356c1417a27867b70f88) ) // 6221-20 U5-0B 11/17/85
 
 	ROM_REGION( 0x6000, "gfx1", 0 )
 	ROM_LOAD( "ttt1_u39.u39", 0x00000, 0x2000, CRC(dd79e824) SHA1(d65ee1c758293ddf8a5f4913878a2867ba526e68) )
@@ -3022,9 +3164,14 @@ GAME( 1984, mroundup,   0,        pitboss, mroundup,  merit_state,        empty_
 GAME( 1984, chkndraw,   0,        pitboss, chkndraw,  merit_state,        empty_init,   ROT0,  "Merit", "Chicken Draw (2131-04, U5-1)",       MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
 GAME( 1984, chkndrawa,  chkndraw, pitboss, chkndraw,  merit_state,        empty_init,   ROT0,  "Merit", "Chicken Draw (2131-04, U5-0)",       MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
 
-GAME( 1987, riviera,    0,        riviera, riviera,   merit_state,        empty_init,   ROT0,  "Merit", "Riviera Hi-Score (2131-08, U5-4A)",  MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
-GAME( 1986, rivieraa,   riviera,  riviera, riviera,   merit_state,        empty_init,   ROT0,  "Merit", "Riviera Hi-Score (2131-08, U5-4)",   MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
-GAME( 1986, rivierab,   riviera,  riviera, rivierab,  merit_state,        empty_init,   ROT0,  "Merit", "Riviera Hi-Score (2131-08, U5-2D)",  MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1987, riviera,    0,        riviera, riviera,   merit_state,        empty_init,   ROT0,  "Merit",   "Riviera Hi-Score (2131-08, U5-4A)",  MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1986, rivieraa,   riviera,  riviera, riviera,   merit_state,        empty_init,   ROT0,  "Merit",   "Riviera Hi-Score (2131-08, U5-4)",   MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1986, rivierab,   riviera,  riviera, riviera,   merit_state,        empty_init,   ROT0,  "Merit",   "Riviera Hi-Score (2131-08, U5-3C)",  MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1986, rivierac,   riviera,  riviera, rivierab,  merit_state,        empty_init,   ROT0,  "Merit",   "Riviera Hi-Score (2131-08, U5-2D)",  MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS )
+GAME( 1986, rivierad,   riviera,  riviera, riviera,   merit_state,        empty_init,   ROT0,  "hack?",   "Riviera Hi-Score (2131-08P, set 1)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS ) // bad Merit logo, no Merit copyright text
+GAME( 1986, rivierae,   riviera,  riviera, riviera,   merit_state,        empty_init,   ROT0,  "Riviera", "Riviera Hi-Score (2131-08P, set 2)", MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS ) // graphics ROMs altered to remove Merit logo
+
+
 GAME( 1990, mosdraw,    0,        mosdraw, mosdraw,   merit_state,        empty_init,   ROT0,  "Merit", "Montana Super Draw (4436-05, U5-0)", MACHINE_NODEVICE_PRINTER | MACHINE_SUPPORTS_SAVE | MACHINE_IMPERFECT_GRAPHICS ) // needs printer and RTC hook up
 
 GAME( 1986, bigappg,    0,        bigappg, bigappg,   merit_state,        empty_init,   ROT0,  "Big Apple Games / Merit", "The Big Apple (2131-13, U5-0)",         MACHINE_SUPPORTS_SAVE )
@@ -3039,27 +3186,30 @@ GAME( 1989, msupstar,   0,        no_u40,  msupstar,  merit_state,        init_c
 
 // Trivia and Word games
 
-GAME( 1985, trvwz,      0,        trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz (6221-00)",                                  MACHINE_SUPPORTS_SAVE )
-GAME( 1985, trvwza,     trvwz,    trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz (6221-00, with Sex trivia)",                 MACHINE_SUPPORTS_SAVE )
-GAME( 1985, trvwzb,     trvwz,    trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz (6221-00, Alt Gen trivia)",                  MACHINE_SUPPORTS_SAVE )
-GAME( 1985, trvwzv,     trvwz,    trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT90, "Merit", "Trivia ? Whiz (6221-02, Vertical)",                        MACHINE_SUPPORTS_SAVE )
+GAME( 1985, trvwz,      0,        trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz (6221-03, U5-0, Rev B question ROMs)",       MACHINE_SUPPORTS_SAVE ) // Mixture of rev A & B question ROMs
+GAME( 1985, trvwza,     trvwz,    trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz (6221-00, Rev A question ROMs)",             MACHINE_SUPPORTS_SAVE ) // All rev A question ROMs
+GAME( 1985, trvwzb,     trvwz,    trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz (6221-00, Original rev question ROMs)",      MACHINE_SUPPORTS_SAVE ) // Original rev question ROMs
+GAME( 1985, trvwzs,     trvwz,    trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz (6221-00, with Sex trivia)",                 MACHINE_SUPPORTS_SAVE ) // All rev A question ROMs
+GAME( 1985, trvwzv,     trvwz,    trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT90, "Merit", "Trivia ? Whiz (6221-02, Vertical)",                        MACHINE_SUPPORTS_SAVE ) // Found with original rev question ROMs
 
-GAME( 1985, trvwz2,     0,        trvwhiz,  trivia,   merit_quiz_state,   init_key<2>,  ROT90, "Merit", "Trivia ? Whiz Edition 2 (6221-05)",                        MACHINE_SUPPORTS_SAVE )
-GAME( 1985, trvwz2a,    trvwz2,   trvwhiz,  trivia,   merit_quiz_state,   init_key<2>,  ROT90, "Merit", "Trivia ? Whiz Edition 2 (6221-05, Alt Sex trivia)",        MACHINE_SUPPORTS_SAVE )
+GAME( 1985, trvwz2,     0,        trvwhiz,  trivia,   merit_quiz_state,   init_key<2>,  ROT90, "Merit", "Trivia ? Whiz Edition 2 (6221-05, Rev A question ROMs)",   MACHINE_SUPPORTS_SAVE ) // All rev A question ROMs
+GAME( 1985, trvwz2a,    trvwz2,   trvwhiz,  trivia,   merit_quiz_state,   init_key<2>,  ROT90, "Merit", "Trivia ? Whiz Edition 2 (6221-05, Original rev Sex trivia ROMs)", MACHINE_SUPPORTS_SAVE ) // Original rev Sex trivia ROMs
 
 GAME( 1985, trvwz3,     0,        trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz Edition 3 (6221-05, U5-0D)",                 MACHINE_SUPPORTS_SAVE )
 GAME( 1985, trvwz3a,    trvwz3,   trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz Edition 3 (6221-05, U5-0C)",                 MACHINE_SUPPORTS_SAVE )
 GAME( 1985, trvwz3b,    trvwz3,   trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT0,  "Merit", "Trivia ? Whiz Edition 3 (6221-05, with Sex trivia III)",   MACHINE_SUPPORTS_SAVE )
-GAME( 1985, trvwz3v,    trvwz3,   trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT90, "Merit", "Trivia ? Whiz Edition 3 (6221-04, U5-0E, Vertical)",       MACHINE_SUPPORTS_SAVE )
+GAME( 1985, trvwz3v,    trvwz3,   trvwhiz,  trivia,   merit_quiz_state,   empty_init,   ROT90, "Merit", "Trivia ? Whiz Edition 3 (6221-04, U5-0E, vertical)",       MACHINE_SUPPORTS_SAVE )
 
 GAME( 1985, trvwz4,     0,        trvwhziv, trvwhziv, merit_quiz_state,   init_key<5>,  ROT0,  "Merit", "Trivia ? Whiz Edition 4 (6221-10, U5-0A)",                 MACHINE_SUPPORTS_SAVE )
-GAME( 1985, trvwz4v,    trvwz4,   trvwhziv, trvwhziv, merit_quiz_state,   init_key<5>,  ROT90, "Merit", "Trivia ? Whiz Edition 4 (6221-13, U5-0B, Vertical)",       MACHINE_SUPPORTS_SAVE )
-GAME( 1985, trvwz4va,   trvwz4,   trvwhziv, trvwhziv, merit_quiz_state,   init_key<5>,  ROT90, "Merit", "Trivia ? Whiz Edition 4 (6221-13, U5-0B, Vertical, Alt Sex trivia)", MACHINE_SUPPORTS_SAVE )
+GAME( 1985, trvwz4a,    trvwz4,   trvwhziv, trvwhziv, merit_quiz_state,   init_key<5>,  ROT0,  "Merit", "Trivia ? Whiz Edition 4 (6221-10, U5-0A, alt Strange But True trivia)", MACHINE_SUPPORTS_SAVE )
+GAME( 1985, trvwz4v,    trvwz4,   trvwhziv, trvwhziv, merit_quiz_state,   init_key<5>,  ROT90, "Merit", "Trivia ? Whiz Edition 4 (6221-13, U5-0B, vertical)",       MACHINE_SUPPORTS_SAVE )
+GAME( 1985, trvwz4va,   trvwz4,   trvwhziv, trvwhziv, merit_quiz_state,   init_key<5>,  ROT90, "Merit", "Trivia ? Whiz Edition 4 (6221-13, U5-0B, vertical, alt Sex trivia)", MACHINE_SUPPORTS_SAVE )
 
 GAME( 1985, tictac,     0,        tictac,   tictac,   merit_quiz_state,   init_key<8>,  ROT0,  "Merit", "Tic Tac Trivia (6221-23, U5-0C, 07/07/86)",                MACHINE_SUPPORTS_SAVE ) // all new trivia categories
 GAME( 1985, tictaca,    tictac,   tictac,   tictac,   merit_quiz_state,   init_key<4>,  ROT0,  "Merit", "Tic Tac Trivia (6221-23, U5-0C, 02/11/86)",                MACHINE_SUPPORTS_SAVE )
+GAME( 1985, tictacb,    tictac,   tictac,   tictac,   merit_quiz_state,   init_key<4>,  ROT0,  "Merit", "Tic Tac Trivia (6221-20, U5-0B, 11/17/85)",                MACHINE_SUPPORTS_SAVE )
 GAME( 1985, tictacuk,   tictac,   tictac,   tictac,   merit_quiz_state,   init_key<6>,  ROT0,  "Merit / Barcrest", "Tic Tac Trivia (6221-25, U5-0E, 05/08/86, UK)", MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE ) // different trivia categories
-GAME( 1985, tictacv,    tictac,   tictac,   tictac,   merit_quiz_state,   init_key<4>,  ROT90, "Merit", "Tic Tac Trivia (6221-22, U5-0, Vertical)",                 MACHINE_SUPPORTS_SAVE )
+GAME( 1985, tictacv,    tictac,   tictac,   tictac,   merit_quiz_state,   init_key<4>,  ROT90, "Merit", "Tic Tac Trivia (6221-22, U5-0, vertical)",                 MACHINE_SUPPORTS_SAVE )
 
 GAME( 1986, phrcraze,   0,        phrcraze, phrcrazs, merit_quiz_state,   init_key<7>,  ROT0,  "Merit", "Phraze Craze (6221-40, U5-3A, Expanded Questions)",        MACHINE_SUPPORTS_SAVE )
 GAME( 1986, phrcrazea,  phrcraze, phrcraze, phrcrazs, merit_quiz_state,   init_key<7>,  ROT0,  "Merit", "Phraze Craze (6221-40, U5-3, Expanded Questions)",         MACHINE_SUPPORTS_SAVE )
@@ -3068,7 +3218,7 @@ GAME( 1986, phrcrazec,  phrcraze, phrcraze, phrcraza, merit_quiz_state,   init_k
 GAME( 1986, phrcrazev,  phrcraze, phrcraze, phrcrazs, merit_quiz_state,   init_key<7>,  ROT90, "Merit", "Phraze Craze (6221-45, U5-2, Vertical)",                   MACHINE_SUPPORTS_SAVE )
 
 GAME( 1987, dtrvwz5,   0,         dtrvwz5,  dtrvwz5,  merit_quiz_state,   init_dtrvwz5, ROT0,  "Merit", "Deluxe Trivia ? Whiz Edition 5 (6221-70, U5-0A)",          MACHINE_SUPPORTS_SAVE )
-GAME( 1987, dtrvwz5v,  dtrvwz5,   dtrvwz5,  dtrvwz5,  merit_quiz_state,   init_dtrvwz5, ROT90, "Merit", "Deluxe Trivia ? Whiz Edition 5 (6221-75, U5-0, Vertical)", MACHINE_SUPPORTS_SAVE )
+GAME( 1987, dtrvwz5v,  dtrvwz5,   dtrvwz5,  dtrvwz5,  merit_quiz_state,   init_dtrvwz5, ROT90, "Merit", "Deluxe Trivia ? Whiz Edition 5 (6221-75, U5-0, vertical)", MACHINE_SUPPORTS_SAVE )
 
 GAME( 1986, matchem,   0,         couple,   matchem,  merit_state,        init_crt209,  ROT0,  "Merit",   "Match'em Up (6221-51, U5-1)",                            MACHINE_SUPPORTS_SAVE )
 GAME( 1986, matchemg,  matchem,   couple,   matchemg, merit_state,        init_crt209,  ROT0,  "Merit",   "Match'em Up (6221-55, U5-1, German)",                    MACHINE_SUPPORTS_SAVE )

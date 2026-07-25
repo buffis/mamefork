@@ -527,7 +527,7 @@ void mm1_state::common(machine_config &config)
 	I8085A(config, m_maincpu, 6.144_MHz_XTAL);
 	m_maincpu->set_addrmap(AS_PROGRAM, &mm1_state::mm1_map);
 	m_maincpu->in_sid_func().set(FUNC(mm1_state::dsra_r));
-	m_maincpu->out_sod_func().set(KB_TAG, FUNC(mm1_keyboard_device::bell_w));
+	m_maincpu->out_sod_func().set(KB_TAG, FUNC(mm1_keyboard_device::bell_w)).invert();
 
 	config.set_perfect_quantum(m_maincpu);
 
@@ -537,7 +537,7 @@ void mm1_state::common(machine_config &config)
 	m_io->set_data_width(8);
 	m_io->set_addr_width(7);
 
-	I8212(config, m_iop, 0);
+	I8212(config, m_iop);
 	m_iop->int_wr_callback().set_inputline(m_maincpu, I8085_RST65_LINE);
 	m_iop->di_rd_callback().set(KB_TAG, FUNC(mm1_keyboard_device::read));
 
@@ -563,7 +563,7 @@ void mm1_state::common(machine_config &config)
 	m_dmac->out_iow_callback<3>().set(m_fdc, FUNC(upd765_family_device::dma_w));
 	m_dmac->out_dack_callback<3>().set(FUNC(mm1_state::dack3_w));
 
-	PIT8253(config, m_pit, 0);
+	PIT8253(config, m_pit);
 	m_pit->set_clk<0>(6.144_MHz_XTAL/2/2);
 	m_pit->out_handler<0>().set(FUNC(mm1_state::itxc_w));
 	m_pit->set_clk<1>(6.144_MHz_XTAL/2/2);

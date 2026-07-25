@@ -45,6 +45,7 @@
 #include "emu.h"
 #include "bwg.h"
 #include "formats/ti99_dsk.h"
+#include "formats/hxchfe_dsk.h"
 #include "machine/rescap.h"
 
 // ----------------------------------
@@ -583,6 +584,7 @@ void snug_bwg_device::floppy_formats(format_registration &fr)
 	fr.add_mfm_containers();
 	fr.add(FLOPPY_TI99_SDF_FORMAT);
 	fr.add(FLOPPY_TI99_TDF_FORMAT);
+	fr.add(FLOPPY_HFE_FORMAT);
 }
 
 static void bwg_floppies(device_slot_interface &device)
@@ -627,7 +629,7 @@ void snug_bwg_device::device_add_mconfig(machine_config& config)
 	m_crulatch8_15->q_out_cb<2>().set(FUNC(snug_bwg_device::dden_w));
 
 	// TODO: Replace this by the actual 74HC4538
-	TTL74123(config, m_motormf, 0);
+	TTL74123(config, m_motormf);
 	m_motormf->out_cb().set(FUNC(snug_bwg_device::motorona_w));
 	m_motormf->set_connection_type(TTL74123_GROUNDED);
 	m_motormf->set_resistor_value(RES_K(200));

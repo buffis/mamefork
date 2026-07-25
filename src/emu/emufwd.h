@@ -235,7 +235,9 @@ class sound_manager;
 class sound_stream;
 
 // declared in speaker.h
+class sound_io_device;
 class speaker_device;
+class microphone_device;
 
 // declared in tilemap.h
 class tilemap_device;
@@ -246,7 +248,9 @@ class tilemap_t;
 class ui_manager;
 
 // declared in uiinput.h
+class ui_event_sink;
 class ui_input_manager;
+class ui_input_manager_impl;
 
 // declared in validity.h
 class validity_checker;

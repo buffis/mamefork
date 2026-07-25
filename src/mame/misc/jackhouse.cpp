@@ -53,17 +53,15 @@ public:
 
 	{ }
 
-	void jackhouse(machine_config &config);
+	void jackhouse(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override { m_lamps.resolve(); };
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
-
-	void io_map(address_map &map);
-	void program_map(address_map &map);
-	void ramdac_map(address_map &map);
+	void io_map(address_map &map) ATTR_COLD;
+	void program_map(address_map &map) ATTR_COLD;
+	void ramdac_map(address_map &map) ATTR_COLD;
 
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	TILE_GET_INFO_MEMBER(get_fg_tile_info);
@@ -520,11 +518,11 @@ static INPUT_PORTS_START( jackhouse )
 	PORT_START("IN2")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("2-1") PORT_CODE(KEYCODE_J)              // unknown
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("2-2") PORT_CODE(KEYCODE_K)              // unknown
-	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_CUSTOM )  PORT_READ_LINE_DEVICE_MEMBER("hopper", ticket_dispenser_device, line_r)
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_CUSTOM )  PORT_READ_LINE_DEVICE_MEMBER("hopper", FUNC(ticket_dispenser_device::line_r))
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_OTHER ) PORT_NAME("2-4") PORT_CODE(KEYCODE_M)              // unknown
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_GAMBLE_KEYOUT )                                            // attendant pay key
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_GAMBLE_PAYOUT )                                            // hopper payout button
-	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_GAMBLE_SERVICE )         PORT_NAME("Confirm / Test Mode")  // confirm / test mode
+	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_SERVICE1 )               PORT_NAME("Confirm / Test Mode")  // confirm / test mode
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_GAMBLE_BOOK )            PORT_NAME("Record Mode")          // books-record / color test
 
 	PORT_START("IN3")
@@ -700,7 +698,7 @@ void jackhouse_state::jackhouse(machine_config &config)
 
 	PALETTE(config, m_palette).set_entries(0x300);
 
-	ramdac_device &ramdac(RAMDAC(config, "ramdac", 0, m_palette));
+	ramdac_device &ramdac(RAMDAC(config, "ramdac", m_palette));
 	ramdac.set_addrmap(0, &jackhouse_state::ramdac_map);
 	ramdac.set_color_base(0);
 

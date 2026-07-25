@@ -150,7 +150,7 @@ public:
 	void ltcasino(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 	required_device_array<pia6821_device, 2> m_pia;
@@ -167,7 +167,7 @@ protected:
 	tilemap_t *m_tilemap;
 
 private:
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	uint32_t screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	TILE_GET_INFO_MEMBER(tile_info);
@@ -190,7 +190,7 @@ public:
 	void mv4in1(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void palette(palette_device &palette) const;
@@ -223,8 +223,8 @@ void ltcasino_state::main_map(address_map &map)
 
 static INPUT_PORTS_START( ltcasino )
 	PORT_START("COIN")
-	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_COIN1) PORT_WRITE_LINE_DEVICE_MEMBER("pia0", pia6821_device, ca1_w)
-	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_COIN2) PORT_WRITE_LINE_DEVICE_MEMBER("pia0", pia6821_device, cb1_w)
+	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_COIN1) PORT_WRITE_LINE_DEVICE_MEMBER("pia0", FUNC(pia6821_device::ca1_w))
+	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_COIN2) PORT_WRITE_LINE_DEVICE_MEMBER("pia0", FUNC(pia6821_device::cb1_w))
 
 	PORT_START("Q")
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_POKER_HOLD1) PORT_NAME("Button 1")
@@ -483,13 +483,11 @@ void ltcasin2_state::init_mv4in1()
 void ltcasino_state::machine_start()
 {
 	m_tilemap = &machine().tilemap().create(*m_gfxdecode, tilemap_get_info_delegate(*this, FUNC(ltcasino_state::tile_info)), TILEMAP_SCAN_ROWS, 8, 8, 64, 32);
-	m_lamps.resolve();
 }
 
 void ltcasin2_state::machine_start()
 {
 	m_tilemap = &machine().tilemap().create(*m_gfxdecode, tilemap_get_info_delegate(*this, FUNC(ltcasin2_state::tile_info)), TILEMAP_SCAN_ROWS, 8, 8, 64, 32);
-	m_lamps.resolve();
 }
 
 uint8_t ltcasino_state::input_s_r()

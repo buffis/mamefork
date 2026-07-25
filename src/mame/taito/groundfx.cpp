@@ -103,7 +103,7 @@ public:
 	void init_groundfx();
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_shared_ptr<u32> m_ram;
@@ -141,7 +141,7 @@ private:
 	INTERRUPT_GEN_MEMBER(interrupt);
 	void draw_sprites(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int do_hack, int x_offs, int y_offs);
 
-	void prg_map(address_map &map);
+	void prg_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -555,7 +555,7 @@ void groundfx_state::groundfx(machine_config &config)
 	adc.in_callback<2>().set_ioport("WHEEL");
 	adc.in_callback<3>().set_ioport("ACCEL");
 
-	tc0510nio_device &tc0510nio(TC0510NIO(config, "tc0510nio", 0));
+	tc0510nio_device &tc0510nio(TC0510NIO(config, "tc0510nio"));
 	tc0510nio.read_2_callback().set_ioport("BUTTONS");
 	tc0510nio.read_3_callback().set("eeprom", FUNC(eeprom_serial_93cxx_device::do_read)).lshift(7);
 	tc0510nio.read_3_callback().append(FUNC(groundfx_state::frame_counter_r)).lshift(0);
@@ -577,22 +577,21 @@ void groundfx_state::groundfx(machine_config &config)
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_groundfx);
 	PALETTE(config, m_palette).set_format(palette_device::xRGB_888, 16384);
 
-	TC0620SCC(config, m_tc0620scc, 0);
+	TC0620SCC(config, m_tc0620scc);
 	m_tc0620scc->set_offsets(50, 8);
 	m_tc0620scc->set_palette(m_palette);
 
-	TC0480SCP(config, m_tc0480scp, 0);
+	TC0480SCP(config, m_tc0480scp);
 	m_tc0480scp->set_palette(m_palette);
 	m_tc0480scp->set_offsets(0x24, 0);
 	m_tc0480scp->set_offsets_tx(-1, 0);
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
-	taito_en_device &taito_en(TAITO_EN(config, "taito_en", 0));
-	taito_en.add_route(0, "lspeaker", 1.0);
-	taito_en.add_route(1, "rspeaker", 1.0);
+	taito_en_device &taito_en(TAITO_EN(config, "taito_en"));
+	taito_en.add_route(0, "speaker", 1.0, 0);
+	taito_en.add_route(1, "speaker", 1.0, 1);
 }
 
 /***************************************************************************
@@ -669,4 +668,4 @@ void groundfx_state::init_groundfx()
 } // anonymous namespace
 
 
-GAME( 1992, groundfx, 0, groundfx, groundfx, groundfx_state, init_groundfx, ROT0, "Taito Corporation", "Ground Effects / Super Ground Effects (Japan)", MACHINE_NODEVICE_LAN | MACHINE_SUPPORTS_SAVE )
+GAME( 1992, groundfx, 0, groundfx, groundfx, groundfx_state, init_groundfx, ROT0, "Taito", "Ground Effects / Super Ground Effects (Japan)", MACHINE_NODEVICE_LAN | MACHINE_SUPPORTS_SAVE )

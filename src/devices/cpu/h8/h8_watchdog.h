@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "h8.h"
+#include "h8_cpu_base.h"
 #include "h8_intc.h"
 
 class h8_watchdog_device : public device_t {
@@ -39,8 +39,8 @@ public:
 	void rst_w(offs_t offset, u16 data, u16 mem_mask = ~0);
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	enum {
@@ -59,8 +59,8 @@ private:
 	static const int div_bh[8];
 	static const int div_s[8];
 
-	required_device<h8_device> m_cpu;
-	required_device<h8_intc_device> m_intc;
+	required_device<h8_cpu_base> m_cpu;
+	required_device<h8_intc_base> m_intc;
 	int m_irq;
 	int m_type;
 	u8 m_tcnt, m_tcsr, m_rst;

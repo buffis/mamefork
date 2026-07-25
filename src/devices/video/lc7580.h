@@ -34,7 +34,7 @@ pin     desc
 class lc7580_device : public device_t, public device_nvram_interface
 {
 public:
-	lc7580_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
+	lc7580_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock = 0);
 
 	// configuration helpers
 	auto write_segs() { return m_write_segs.bind(); } // S pins, COM1/COM2 in offset
@@ -48,7 +48,7 @@ protected:
 	lc7580_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock);
 
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	virtual void device_reset() override { refresh_output(); }
 
 	// device_nvram_interface implementation

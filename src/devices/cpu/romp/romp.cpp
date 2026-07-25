@@ -18,6 +18,8 @@
 #include "romp.h"
 #include "rompdasm.h"
 
+#include <bit>
+
 #define LOG_INTERRUPT (1U << 1)
 
 //#define VERBOSE     (LOG_INTERRUPT)
@@ -122,6 +124,7 @@ void romp_device::execute_run()
 
 		if (m_branch_state == WAIT)
 		{
+			debugger_wait_hook();
 			m_icount = 0;
 			return;
 		}
@@ -894,7 +897,7 @@ void romp_device::execute_run()
 				flags_log(m_gpr[R2]);
 				break;
 			case 0xf5: // clz: count leading zeros
-				m_gpr[R2] = count_leading_zeros_32(u16(m_gpr[R3])) - 16;
+				m_gpr[R2] = std::countl_zero(u16(m_gpr[R3]));
 				break;
 
 			case 0xf9: // mc03: move character zero from three
@@ -953,7 +956,6 @@ void romp_device::execute_run()
 			// TODO: assume iar is updated
 			m_scr[IAR] = updated_iar;
 			break;
-
 		}
 	}
 }
@@ -1018,7 +1020,11 @@ device_memory_interface::space_config_vector romp_device::memory_space_config() 
 bool romp_device::memory_translate(int spacenum, int intention, offs_t &address, address_space *&target_space)
 {
 	target_space = &space(spacenum);
-	return true;
+
+	if (m_scr[ICS] & ICS_TM)
+		return m_mmu->translate(address);
+	else
+		return true;
 }
 
 std::unique_ptr<util::disasm_interface> romp_device::create_disassembler()

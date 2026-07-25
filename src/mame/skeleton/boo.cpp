@@ -46,7 +46,7 @@ private:
 
 	uint32_t screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void program_map(address_map &map);
+	void program_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -169,4 +169,4 @@ ROM_END
 } // anonymous namespace
 
 
-GAME( 2000, boo1000, 0, boo, boo, boo_state, empty_init, ROT0, "JK Amusement", "Boo 1000", MACHINE_IS_SKELETON )
+GAME( 2000, boo1000, 0, boo, boo, boo_state, empty_init, ROT0, "JK Amusement", "Boo 1000", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

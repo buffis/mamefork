@@ -31,7 +31,7 @@ class nmc9306_device :  public device_t,
 {
 public:
 	// construction/destruction
-	nmc9306_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	nmc9306_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	void cs_w(int state);
 	void sk_w(int state);
@@ -40,7 +40,7 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 	// device_nvram_interface overrides
 	virtual void nvram_default() override;
@@ -48,11 +48,13 @@ protected:
 	virtual bool nvram_write(util::write_stream &file) override;
 
 private:
-	inline uint16_t read(offs_t offset);
+	optional_memory_region m_region;
+
+	inline u16 read(offs_t offset);
 	inline void write(offs_t offset, u16 data);
 	inline void erase(offs_t offset);
 
-	uint16_t m_register[16];
+	u16 m_register[16];
 
 	int m_bits;
 	int m_state;

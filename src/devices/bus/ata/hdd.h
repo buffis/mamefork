@@ -8,8 +8,8 @@
 
 ***************************************************************************/
 
-#ifndef MAME_BUS_ATA_IDEHD_H
-#define MAME_BUS_ATA_IDEHD_H
+#ifndef MAME_BUS_ATA_HDD_H
+#define MAME_BUS_ATA_HDD_H
 
 #pragma once
 
@@ -27,7 +27,7 @@ class ide_hdd_device : public ide_hdd_device_base, public device_ata_interface
 {
 public:
 	// construction/destruction
-	ide_hdd_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	ide_hdd_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock = 0);
 
 	// device_ata_interface implementation
 	virtual uint16_t read_dma() override { return dma_r(); }
@@ -89,4 +89,4 @@ private:
 DECLARE_DEVICE_TYPE(IDE_HARDDISK, ide_hdd_device)
 DECLARE_DEVICE_TYPE(ATA_CF, ata_cf_device)
 
-#endif // MAME_BUS_ATA_IDEHD_H
+#endif // MAME_BUS_ATA_HDD_H

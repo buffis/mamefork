@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:Angelo Salese
 
-#ifndef MAME_BUS_FP1060IO_H
-#define MAME_BUS_FP1060IO_H
+#ifndef MAME_BUS_FP1000_FP1060IO_H
+#define MAME_BUS_FP1000_FP1060IO_H
 
 #pragma once
 
@@ -21,11 +21,11 @@ public:
 	virtual void remap_cb() override;
 
 protected:
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
-	virtual void device_add_mconfig(machine_config &config) override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
 	required_device_array<fp1060io_exp_slot_device, 4> m_subslot;
 	required_device_array<input_merger_device, 4> m_irqs_int;
 
@@ -35,5 +35,4 @@ private:
 
 DECLARE_DEVICE_TYPE(FP1060IO, fp1060io_device)
 
-
-#endif // MAME_BUS_FP1060IO_H
+#endif // MAME_BUS_FP1000_FP1060IO_H

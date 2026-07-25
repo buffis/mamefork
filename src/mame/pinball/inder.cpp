@@ -73,17 +73,19 @@ public:
 		, m_io_outputs(*this, "out%d", 0U)
 	{ }
 
-	void inder(machine_config &config);
-	void brvteam(machine_config &config);
-	void canasta(machine_config &config);
-	void lapbylap(machine_config &config);
+	void inder(machine_config &config) ATTR_COLD;
+	void brvteam(machine_config &config) ATTR_COLD;
+	void canasta(machine_config &config) ATTR_COLD;
+	void lapbylap(machine_config &config) ATTR_COLD;
 
-	void init_0();
-	void init_1();
+	void init_0() ATTR_COLD;
+	void init_1() ATTR_COLD;
+
+protected:
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
-	virtual void machine_reset() override;
-	virtual void machine_start() override;
 	u8 ppic_r();
 	void ppia_w(u8 data);
 	void ppib_w(u8 data);
@@ -114,12 +116,12 @@ private:
 	void q9a_w(int state);
 	void qc9b_w(int state);
 	void update_mus();
-	void brvteam_map(address_map &map);
-	void canasta_map(address_map &map);
-	void main_map(address_map &map);
-	void audio_map(address_map &map);
-	void lapbylap_main_map(address_map &map);
-	void lapbylap_audio_map(address_map &map);
+	void brvteam_map(address_map &map) ATTR_COLD;
+	void canasta_map(address_map &map) ATTR_COLD;
+	void main_map(address_map &map) ATTR_COLD;
+	void audio_map(address_map &map) ATTR_COLD;
+	void lapbylap_main_map(address_map &map) ATTR_COLD;
+	void lapbylap_audio_map(address_map &map) ATTR_COLD;
 
 	bool m_pc0 = false;
 	u8 m_game = 0U;
@@ -1334,9 +1336,6 @@ void inder_state::machine_start()
 {
 	genpin_class::machine_start();
 
-	m_digits.resolve();
-	m_io_outputs.resolve();
-
 	save_item(NAME(m_pc0));
 	save_item(NAME(m_game));
 	save_item(NAME(m_portc));
@@ -1498,16 +1497,16 @@ void inder_state::inder(machine_config &config)
 	ppi.in_pc_callback().set(FUNC(inder_state::ppic_r));
 	ppi.out_pc_callback().set(FUNC(inder_state::ppic_w));
 
-	TTL7474(config, m_7a, 0);
+	TTL7474(config, m_7a);
 	m_7a->comp_output_cb().set(FUNC(inder_state::qc7a_w));
 
-	TTL7474(config, m_9a, 0); // HCT74
+	TTL7474(config, m_9a); // HCT74
 	m_9a->output_cb().set(FUNC(inder_state::q9a_w));
 
-	TTL7474(config, m_9b, 0); // HCT74
+	TTL7474(config, m_9b); // HCT74
 	m_9b->comp_output_cb().set(FUNC(inder_state::qc9b_w));
 
-	HCT157(config, m_13, 0);
+	HCT157(config, m_13);
 	m_13->out_callback().set("msm", FUNC(msm5205_device::data_w));
 }
 
@@ -1557,6 +1556,10 @@ ROM_START(pinmoonl)
 	ROM_LOAD("ci-23.bin", 0x10000, 0x10000, CRC(eac346da) SHA1(7c4c26ae089dda0dcd7300fd1ecabf5a91099c41))
 	ROM_LOAD("ci-22.bin", 0x20000, 0x10000, CRC(379740da) SHA1(83ad13ab7f1f37c78397d8e830bd74c5a7aea758))
 	ROM_LOAD("ci-21.bin", 0x30000, 0x10000, CRC(0febb4a7) SHA1(e6cc1b26ddfe9cd58da29de2a50a83ce50afe323))
+
+	ROM_REGION(0x4000, "bonus", ROMREGION_ERASEFF) // On "Bonus expansion board"
+	ROM_LOAD("inder_sa_m17_moon_ligh_bonus_rom_1.ci1", 0x0000, 0x2000, CRC(2c45fd1e) SHA1(4cd1336271d77d9acb7c81a5461546842e946dc3))
+	ROM_LOAD("inder_sa_m17_moon_ligh_bonus_rom_2.ci2", 0x2000, 0x2000, CRC(c0dc1523) SHA1(511657cc01fbbb5146e32ef26a9b259250df3fb6))
 ROM_END
 
 /*-------------------------------------------------------------------
@@ -1717,9 +1720,9 @@ GAME(1988,  pinclown, 0,      inder, pinclown, inder_state, init_1, ROT0, "Inder
 GAME(1989,  corsario, 0,      inder, corsario, inder_state, init_1, ROT0, "Inder", "Corsario",           MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
 GAME(1990,  mundial,  0,      inder, mundial,  inder_state, init_1, ROT0, "Inder", "Mundial 90",         MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
 GAME(1991,  atleta,   0,      inder, atleta,   inder_state, init_1, ROT0, "Inder", "Atleta",             MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1991,  larana,   0,      inder, larana,   inder_state, init_0, ROT0, "Inder", "La Rana (set 1)",    MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
-GAME(1991,  larana2,  larana, inder, larana,   inder_state, init_0, ROT0, "Inder", "La Rana (set 2)",    MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME(1991,  larana,   0,      inder, larana,   inder_state, init_0, ROT0, "Inder", "La Rana (set 1)",    MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
+GAME(1991,  larana2,  larana, inder, larana,   inder_state, init_0, ROT0, "Inder", "La Rana (set 2)",    MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )
 GAME(1992,  ind250cc, 0,      inder, ind250cc, inder_state, init_1, ROT0, "Inder", "250 CC",             MACHINE_MECHANICAL | MACHINE_SUPPORTS_SAVE )
 
 // Unknown sound hardware, unknown machine (using 'larana' inputs until proper ones are figured out).
-GAME(1991, indunkgam, 0, inder, larana, inder_state, init_0, ROT0, "Inder", "unknown gambling game on Inder pinball hardware", MACHINE_IS_SKELETON_MECHANICAL | MACHINE_SUPPORTS_SAVE )
+GAME(1991, indunkgam, 0, inder, larana, inder_state, init_0, ROT0, "Inder", "unknown gambling game on Inder pinball hardware", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK | MACHINE_SUPPORTS_SAVE )

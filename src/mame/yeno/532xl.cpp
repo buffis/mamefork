@@ -54,10 +54,10 @@ public:
 	{ }
 
 	// machine configs
-	void y532xl(machine_config &config);
+	void y532xl(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	// devices/pointers
@@ -75,7 +75,7 @@ private:
 	u8 m_control = 0xff;
 
 	// address maps
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 
 	// I/O handlers
 	void update_display();
@@ -88,9 +88,6 @@ private:
 
 void y532xl_state::machine_start()
 {
-	m_out_digit.resolve();
-	m_out_lcd.resolve();
-
 	// register for savestates
 	save_item(NAME(m_led_data));
 	save_item(NAME(m_cb_mux));
@@ -247,7 +244,7 @@ void y532xl_state::y532xl(machine_config &config)
 	m_board->set_nvram_enable(true);
 
 	// video hardware
-	HD61603(config, m_lcd, 0);
+	HD61603(config, m_lcd);
 	m_lcd->write_segs().set(FUNC(y532xl_state::lcd_seg_w));
 
 	PWM_DISPLAY(config, m_display).set_size(9, 8);

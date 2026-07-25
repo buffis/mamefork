@@ -33,10 +33,13 @@ public:
 
 protected:
 	// device_t overrides
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	// i2c_hle_interface overrides
 	virtual u8 read_data(u16 offset) override;
 	virtual const char *get_tag() override { return tag(); }
+
+	// an empty socket has no SPD EEPROM, so it must not respond on the bus
+	virtual bool is_present() const override { return m_size != SIZE_SLOT_EMPTY; }
 
 private:
 	u8 m_data[256];

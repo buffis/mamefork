@@ -425,12 +425,12 @@ test1f diagnostic hacks:
 #include "emu.h"
 #include "saturn.h"
 
+#include "saturn_cdb.h"
+#include "saturn_cd_hle.h"
+
 #include "cpu/m68000/m68000.h"
 #include "cpu/scudsp/scudsp.h"
 #include "machine/nvram.h"
-#include "machine/smpc.h"
-#include "machine/stvcd.h"
-#include "saturn_cdb.h"
 
 #include "bus/saturn/bram.h"
 #include "bus/saturn/dram.h"
@@ -451,7 +451,7 @@ public:
 		: saturn_state(mconfig, type, tag)
 		, m_exp(*this, "exp")
 		, m_nvram(*this, "nvram")
-		, m_stvcd(*this, "stvcd")
+		, m_saturn_cd_hle(*this, "saturn_cd_hle")
 		, m_ctrl1(*this, "ctrl1")
 		, m_ctrl2(*this, "ctrl2")
 	{ }
@@ -462,7 +462,7 @@ public:
 	void saturnus(machine_config &config);
 	void saturnkr(machine_config &config);
 
-	template <bool is_pal> void init_saturn();
+	void init_saturn();
 
 	DECLARE_INPUT_CHANGED_MEMBER(tray_open);
 	DECLARE_INPUT_CHANGED_MEMBER(tray_close);
@@ -517,14 +517,14 @@ private:
 
 	required_device<sat_cart_slot_device> m_exp;
 	required_device<nvram_device> m_nvram;
-	required_device<stvcd_device> m_stvcd;
+	required_device<saturn_cd_hle_device> m_saturn_cd_hle;
 
 	required_device<saturn_control_port_device> m_ctrl1;
 	required_device<saturn_control_port_device> m_ctrl2;
 
-	void saturn_mem(address_map &map);
-	void sound_mem(address_map &map);
-	void scsp_mem(address_map &map);
+	void saturn_mem(address_map &map) ATTR_COLD;
+	void sound_mem(address_map &map) ATTR_COLD;
+	void scsp_mem(address_map &map) ATTR_COLD;
 };
 
 
@@ -546,38 +546,43 @@ uint32_t sat_console_state::abus_dummy_r(offs_t offset)
 void sat_console_state::saturn_mem(address_map &map)
 {
 	map(0x00000000, 0x0007ffff).rom().mirror(0x20000000).region("bios", 0).nopw(); // bios
-	map(0x00100000, 0x0010007f).rw(m_smpc_hle, FUNC(smpc_hle_device::read), FUNC(smpc_hle_device::write));
-	map(0x00180000, 0x0018ffff).rw(FUNC(sat_console_state::saturn_backupram_r), FUNC(sat_console_state::saturn_backupram_w)).share("share1");
+	map(0x00100000, 0x0010007f).mirror(0x2007ff80).m(m_smpc_hle, FUNC(smpc_hle_device::io_map));
+	map(0x00180000, 0x0018ffff).rw(FUNC(sat_console_state::backupram_r), FUNC(sat_console_state::backupram_w)).share("share1");
 	map(0x00200000, 0x002fffff).ram().mirror(0x20100000).share("workram_l");
-	map(0x01000000, 0x017fffff).w(FUNC(sat_console_state::saturn_minit_w));
-	map(0x01800000, 0x01ffffff).w(FUNC(sat_console_state::saturn_sinit_w));
+	map(0x01000000, 0x017fffff).w("dcc", FUNC(saturn_dcc_device::minit_w));
+	map(0x01800000, 0x01ffffff).w("dcc", FUNC(saturn_dcc_device::sinit_w));
 //  map(0x02000000, 0x023fffff).rom().mirror(0x20000000); // Cartridge area
 //  map(0x02400000, 0x027fffff).ram(); // External Data RAM area
 //  map(0x04000000, 0x047fffff).ram(); // External Battery RAM area
 	map(0x04ffffff, 0x04ffffff).r(FUNC(sat_console_state::saturn_cart_type_r));
 	map(0x05000000, 0x057fffff).r(FUNC(sat_console_state::abus_dummy_r));
-	map(0x05800000, 0x0589ffff).rw(m_stvcd, FUNC(stvcd_device::stvcd_r), FUNC(stvcd_device::stvcd_w));
+	map(0x05800000, 0x0589ffff).m(m_saturn_cd_hle, FUNC(saturn_cd_hle_device::amap));
 	/* Sound */
-	map(0x05a00000, 0x05a7ffff).rw(FUNC(sat_console_state::saturn_soundram_r), FUNC(sat_console_state::saturn_soundram_w));
+	map(0x05a00000, 0x05a7ffff).rw(FUNC(sat_console_state::soundram_r), FUNC(sat_console_state::soundram_w));
 	map(0x05b00000, 0x05b00fff).rw(m_scsp, FUNC(scsp_device::read), FUNC(scsp_device::write));
 	/* VDP1 */
-	map(0x05c00000, 0x05c7ffff).rw(FUNC(sat_console_state::saturn_vdp1_vram_r), FUNC(sat_console_state::saturn_vdp1_vram_w));
-	map(0x05c80000, 0x05cbffff).rw(FUNC(sat_console_state::saturn_vdp1_framebuffer0_r), FUNC(sat_console_state::saturn_vdp1_framebuffer0_w));
-	map(0x05d00000, 0x05d0001f).rw(FUNC(sat_console_state::saturn_vdp1_regs_r), FUNC(sat_console_state::saturn_vdp1_regs_w));
-	map(0x05e00000, 0x05e7ffff).mirror(0x80000).rw(FUNC(sat_console_state::saturn_vdp2_vram_r), FUNC(sat_console_state::saturn_vdp2_vram_w));
-	map(0x05f00000, 0x05f7ffff).rw(FUNC(sat_console_state::saturn_vdp2_cram_r), FUNC(sat_console_state::saturn_vdp2_cram_w));
-	map(0x05f80000, 0x05fbffff).rw(FUNC(sat_console_state::saturn_vdp2_regs_r), FUNC(sat_console_state::saturn_vdp2_regs_w));
-	map(0x05fe0000, 0x05fe00cf).m(m_scu, FUNC(sega_scu_device::regs_map)); //rw(FUNC(sat_console_state::saturn_scu_r), FUNC(sat_console_state::saturn_scu_w));
+	map(0x05c00000, 0x05c7ffff).rw(FUNC(sat_console_state::vdp1_vram_r), FUNC(sat_console_state::vdp1_vram_w));
+	map(0x05c80000, 0x05cbffff).rw(FUNC(sat_console_state::vdp1_framebuffer0_r), FUNC(sat_console_state::vdp1_framebuffer0_w));
+	map(0x05d00000, 0x05d0001f).rw(FUNC(sat_console_state::vdp1_regs_r), FUNC(sat_console_state::vdp1_regs_w));
+	/* VDP2 */
+	map(0x05e00000, 0x05e7ffff).mirror(0x80000).rw(FUNC(sat_console_state::vdp2_vram_r), FUNC(sat_console_state::vdp2_vram_w));
+	map(0x05f00000, 0x05f7ffff).rw(FUNC(sat_console_state::vdp2_cram_r), FUNC(sat_console_state::vdp2_cram_w));
+	map(0x05f80000, 0x05fbffff).rw(FUNC(sat_console_state::vdp2_regs_r), FUNC(sat_console_state::vdp2_regs_w));
+	map(0x05f80000, 0x05fbffff).m(m_vdp2, FUNC(saturn_vdp2_device::regs_map));
+	/* SCU */
+	map(0x05fe0000, 0x05fe00cf).m(m_scu, FUNC(saturn_scu_device::regs_map));
+
 	map(0x06000000, 0x060fffff).ram().mirror(0x21f00000).share("workram_h");
 	map(0x40000000, 0x46ffffff).nopw(); // associative purge page
 	map(0x60000000, 0x600003ff).nopw(); // cache address array
 	map(0xc0000000, 0xc0000fff).ram(); // cache data array, Dragon Ball Z sprites relies on this
 }
 
+// NOTE: waitstate weights should be +2/+1, going +2 for both r/w kills BIOS startup sound already.
 void sat_console_state::sound_mem(address_map &map)
 {
-	map(0x000000, 0x0fffff).ram().share("sound_ram");
-	map(0x100000, 0x100fff).rw(m_scsp, FUNC(scsp_device::read), FUNC(scsp_device::write));
+	map(0x000000, 0x0fffff).before_delay(NAME([](offs_t) { return 1; })).ram().share("sound_ram");
+	map(0x100000, 0x100fff).before_delay(NAME([](offs_t) { return 1; })).rw(m_scsp, FUNC(scsp_device::read), FUNC(scsp_device::write));
 }
 
 void sat_console_state::scsp_mem(address_map &map)
@@ -589,25 +594,20 @@ void sat_console_state::scsp_mem(address_map &map)
 INPUT_CHANGED_MEMBER(sat_console_state::tray_open)
 {
 	if(newval)
-		m_stvcd->set_tray_open();
+		m_saturn_cd_hle->set_tray_open();
 }
 
 INPUT_CHANGED_MEMBER(sat_console_state::tray_close)
 {
 	if(newval)
-		m_stvcd->set_tray_close();
+		m_saturn_cd_hle->set_tray_close();
 }
 
 static INPUT_PORTS_START( saturn )
 	PORT_START("RESET") /* hardwired buttons */
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_CHANGED_MEMBER("smpc", smpc_hle_device, trigger_nmi_r, 0) PORT_NAME("Reset Button")
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_CHANGED_MEMBER(DEVICE_SELF, sat_console_state, tray_open,0) PORT_NAME("Tray Open Button")
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_CHANGED_MEMBER(DEVICE_SELF, sat_console_state, tray_close,0) PORT_NAME("Tray Close")
-
-	PORT_START("fake")
-	PORT_CONFNAME(0x01,0x00,"Master-Slave Comms")
-	PORT_CONFSETTING(0x00,"Normal (400 cycles)")
-	PORT_CONFSETTING(0x01,"One Shot (Hack)")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_CHANGED_MEMBER("smpc", FUNC(smpc_hle_device::trigger_nmi_r), 0) PORT_NAME("Reset Button")
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(sat_console_state::tray_open), 0) PORT_NAME("Tray Open Button")
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(sat_console_state::tray_close), 0) PORT_NAME("Tray Close")
 INPUT_PORTS_END
 
 
@@ -681,13 +681,12 @@ MACHINE_START_MEMBER(sat_console_state, saturn)
 	}
 
 	// save states
-//  save_pointer(NAME(m_scu_regs), 0x100/4);
 	save_item(NAME(m_en_68k));
 	save_item(NAME(m_scsp_last_line));
-	save_item(NAME(m_vdp2.odd));
 }
 
-/* Die Hard Trilogy tests RAM address 0x25e7ffe bit 2 with Slave during FRT minit irq, in-development tool for breaking execution of it? */
+// diehardt tests RAM address $25e7ffe bit 2 with Slave during FRT minit irq
+// in-development tool for breaking execution of it?
 uint32_t sat_console_state::saturn_null_ram_r()
 {
 	return 0xffffffff;
@@ -713,8 +712,7 @@ MACHINE_RESET_MEMBER(sat_console_state,saturn)
 	m_maincpu->set_unscaled_clock(MASTER_CLOCK_320/2);
 	m_slave->set_unscaled_clock(MASTER_CLOCK_320/2);
 
-	m_vdp2.old_crmd = -1;
-	m_vdp2.old_tvmd = -1;
+	m_vdp2_legacy.old_crmd = -1;
 }
 
 uint8_t sat_console_state::saturn_pdr1_direct_r()
@@ -755,7 +753,7 @@ inline uint8_t sat_console_state::saturn_direct_port_read(bool which)
 		case 0x40: res = smpc_th_control_mode(ctrl_read,which); break;
 		case 0x60: res = smpc_direct_mode(ctrl_read,which); break;
 		default:
-			popmessage("SMPC: unemulated control method %02x, contact MAMEdev",cur_mode & 0x60);
+			popmessage("SMPC: unemulated control method %02x",cur_mode & 0x60);
 			break;
 	}
 
@@ -811,21 +809,26 @@ uint8_t sat_console_state::smpc_direct_mode(uint16_t in_value,bool which)
 void sat_console_state::saturn(machine_config &config)
 {
 	/* basic machine hardware */
-	SH7604(config, m_maincpu, MASTER_CLOCK_352/2); // 28.6364 MHz
+	SH7604(config, m_maincpu, MASTER_CLOCK_352 / 2); // 28.6364 MHz
 	m_maincpu->set_addrmap(AS_PROGRAM, &sat_console_state::saturn_mem);
 	m_maincpu->set_is_slave(0);
+	m_maincpu->set_irq_acknowledge_callback(m_scu, FUNC(saturn_scu_device::irq_ack_cb));
 	TIMER(config, "scantimer").configure_scanline(FUNC(sat_console_state::saturn_scanline), "screen", 0, 1);
 
-	SH7604(config, m_slave, MASTER_CLOCK_352/2); // 28.6364 MHz
+	SH7604(config, m_slave, MASTER_CLOCK_352 / 2); // 28.6364 MHz
 	m_slave->set_addrmap(AS_PROGRAM, &sat_console_state::saturn_mem);
 	m_slave->set_is_slave(1);
-	TIMER(config, "slave_scantimer").configure_scanline(FUNC(sat_console_state::saturn_slave_scanline), "screen", 0, 1);
+	m_slave->set_irq_acknowledge_callback(m_dcc, FUNC(saturn_dcc_device::irq_ack_cb));
+
+	SATURN_DCC(config, m_dcc, MASTER_CLOCK_352);
+	m_dcc->set_master_cpu(m_maincpu);
+	m_dcc->set_slave_cpu(m_slave);
 
 	M68000(config, m_audiocpu, 11289600); //256 x 44100 Hz = 11.2896 MHz
 	m_audiocpu->set_addrmap(AS_PROGRAM, &sat_console_state::sound_mem);
 	m_audiocpu->reset_cb().set(FUNC(sat_console_state::m68k_reset_callback));
 
-	SEGA_SCU(config, m_scu, 0);
+	SATURN_SCU(config, m_scu, MASTER_CLOCK_352);
 	m_scu->set_hostcpu(m_maincpu);
 
 //  SH-1
@@ -845,7 +848,7 @@ void sat_console_state::saturn(machine_config &config)
 	m_smpc_hle->system_reset_handler().set(FUNC(saturn_state::system_reset_w));
 	m_smpc_hle->system_halt_handler().set(FUNC(saturn_state::system_halt_w));
 	m_smpc_hle->dot_select_handler().set(FUNC(saturn_state::dot_select_w));
-	m_smpc_hle->interrupt_handler().set(m_scu, FUNC(sega_scu_device::smpc_irq_w));
+	m_smpc_hle->interrupt_handler().set(m_scu, FUNC(saturn_scu_device::smpc_irq_w));
 
 	MCFG_MACHINE_START_OVERRIDE(sat_console_state,saturn)
 	MCFG_MACHINE_RESET_OVERRIDE(sat_console_state,saturn)
@@ -855,27 +858,34 @@ void sat_console_state::saturn(machine_config &config)
 	/* video hardware */
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
 	m_screen->set_raw(MASTER_CLOCK_320/8, 427, 0, 320, 263, 0, 224);
-	m_screen->set_screen_update(FUNC(sat_console_state::screen_update_stv_vdp2));
+	m_screen->set_screen_update(FUNC(sat_console_state::screen_update_vdp2));
+
+//	SATURN_VDP1(config, m_vdp1, MASTER_CLOCK_320);
+
+	SATURN_VDP2(config, m_vdp2, MASTER_CLOCK_320);
+	m_vdp2->set_screen_tag("screen");
+	m_vdp2->set_is_pal(false);
+	m_vdp2->vint_cb().set(FUNC(sat_console_state::vint_callback));
+	m_vdp2->hint_cb().set(FUNC(sat_console_state::hint_callback));
 
 	PALETTE(config, m_palette).set_entries(2048+(2048*2)); //standard palette + extra memory for rgb brightness.
 
 	GFXDECODE(config, m_gfxdecode, m_palette, gfx_stv);
 
-	MCFG_VIDEO_START_OVERRIDE(sat_console_state,stv_vdp2)
+	MCFG_VIDEO_START_OVERRIDE(sat_console_state,vdp2_video_start)
 
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	SCSP(config, m_scsp, 8467200*8/3); // 8.4672 MHz EXTCLK * 8 / 3 = 22.5792 MHz
 	m_scsp->set_addrmap(0, &sat_console_state::scsp_mem);
 	m_scsp->irq_cb().set(FUNC(saturn_state::scsp_irq));
-	m_scsp->main_irq_cb().set(m_scu, FUNC(sega_scu_device::sound_req_w));
-	m_scsp->add_route(0, "lspeaker", 1.0);
-	m_scsp->add_route(1, "rspeaker", 1.0);
+	m_scsp->main_irq_cb().set(m_scu, FUNC(saturn_scu_device::sound_req_w));
+	m_scsp->add_route(0, "speaker", 1.0, 0);
+	m_scsp->add_route(1, "speaker", 1.0, 1);
 
-	stvcd_device &stvcd(STVCD(config, "stvcd", 0));
-	stvcd.add_route(0, "scsp", 1.0, 0);
-	stvcd.add_route(1, "scsp", 1.0, 1);
+	SATURN_CD_HLE(config, m_saturn_cd_hle);
+	m_saturn_cd_hle->add_route(0, "scsp", 1.0, 0);
+	m_saturn_cd_hle->add_route(1, "scsp", 1.0, 1);
 
 	SATURN_CONTROL_PORT(config, "ctrl1", saturn_controls, "joypad");
 	SATURN_CONTROL_PORT(config, "ctrl2", saturn_controls, "joypad");
@@ -899,6 +909,7 @@ void sat_console_state::saturnus(machine_config &config)
 	SATURN_CDB(config, "saturn_cdb", 16000000);
 
 	SOFTWARE_LIST(config, "cd_list").set_original("saturn").set_filter("NTSC-U");
+	SOFTWARE_LIST(config, "photocd_list").set_compatible("photo_cd");
 
 	SATURN_CART_SLOT(config, "exp", saturn_cart, nullptr);
 	SOFTWARE_LIST(config, "cart_list").set_original("sat_cart");
@@ -909,9 +920,12 @@ void sat_console_state::saturnus(machine_config &config)
 void sat_console_state::saturneu(machine_config &config)
 {
 	saturn(config);
+	m_vdp2->set_is_pal(true);
+
 	SATURN_CDB(config, "saturn_cdb", 16000000);
 
 	SOFTWARE_LIST(config, "cd_list").set_original("saturn").set_filter("PAL");
+	SOFTWARE_LIST(config, "photocd_list").set_compatible("photo_cd");
 
 	SATURN_CART_SLOT(config, "exp", saturn_cart, nullptr);
 	SOFTWARE_LIST(config, "cart_list").set_original("sat_cart");
@@ -925,6 +939,7 @@ void sat_console_state::saturnjp(machine_config &config)
 	SATURN_CDB(config, "saturn_cdb", 16000000);
 
 	SOFTWARE_LIST(config, "cd_list").set_original("saturn").set_filter("NTSC-J");
+	SOFTWARE_LIST(config, "photocd_list").set_compatible("photo_cd");
 
 	SATURN_CART_SLOT(config, "exp", saturn_cart, nullptr);
 	SOFTWARE_LIST(config, "cart_list").set_original("sat_cart");
@@ -946,11 +961,8 @@ void sat_console_state::saturnkr(machine_config &config)
 }
 
 
-template <bool is_pal> void sat_console_state::init_saturn()
+void sat_console_state::init_saturn()
 {
-	// TODO: setter for (missing) VDP2 device
-	m_vdp2.pal = is_pal;
-
 	// set compatible options
 	m_maincpu->sh2drc_set_options(SH2DRC_STRICT_VERIFY|SH2DRC_STRICT_PCREL);
 	m_slave->sh2drc_set_options(SH2DRC_STRICT_VERIFY|SH2DRC_STRICT_PCREL);
@@ -962,13 +974,6 @@ template <bool is_pal> void sat_console_state::init_saturn()
 	m_slave->sh2drc_add_fastram(0x00200000, 0x002fffff, 0, &m_workram_l[0]);
 	m_slave->sh2drc_add_fastram(0x06000000, 0x060fffff, 0, &m_workram_h[0]);
 
-	/* amount of time to boost interleave for on MINIT / SINIT, needed for communication to work */
-	m_minit_boost = 400;
-	m_sinit_boost = 400;
-	m_minit_boost_timeslice = attotime::zero;
-	m_sinit_boost_timeslice = attotime::zero;
-
-//  m_scu_regs = make_unique_clear<uint32_t[]>(0x100/4);
 	m_backupram = make_unique_clear<uint8_t[]>(0x8000);
 }
 
@@ -1021,9 +1026,9 @@ ROM_START( hisaturn )
 ROM_END
 
 /*    YEAR  NAME      PARENT  COMPAT  MACHINE   INPUT   CLASS              INIT           COMPANY    FULLNAME            FLAGS */
-CONS( 1994, saturn,   0,      0,      saturnus, saturn, sat_console_state, init_saturn<false>, "Sega",    "Saturn (USA)",     MACHINE_NOT_WORKING )
-CONS( 1994, saturnjp, saturn, 0,      saturnjp, saturn, sat_console_state, init_saturn<false>, "Sega",    "Saturn (Japan)",   MACHINE_NOT_WORKING )
-CONS( 1994, saturneu, saturn, 0,      saturneu, saturn, sat_console_state, init_saturn<true>,  "Sega",    "Saturn (PAL)",     MACHINE_NOT_WORKING )
-CONS( 1995, saturnkr, saturn, 0,      saturnkr, saturn, sat_console_state, init_saturn<false>, "Samsung", "Saturn (Korea)",   MACHINE_NOT_WORKING )
-CONS( 1995, vsaturn,  saturn, 0,      saturnjp, saturn, sat_console_state, init_saturn<false>, "JVC",     "V-Saturn",         MACHINE_NOT_WORKING )
-CONS( 1995, hisaturn, saturn, 0,      saturnjp, saturn, sat_console_state, init_saturn<false>, "Hitachi", "HiSaturn",         MACHINE_NOT_WORKING )
+CONS( 1994, saturn,   0,      0,      saturnus, saturn, sat_console_state, init_saturn, "Sega",    "Saturn (USA)",     MACHINE_NOT_WORKING )
+CONS( 1994, saturnjp, saturn, 0,      saturnjp, saturn, sat_console_state, init_saturn, "Sega",    "Saturn (Japan)",   MACHINE_NOT_WORKING )
+CONS( 1994, saturneu, saturn, 0,      saturneu, saturn, sat_console_state, init_saturn, "Sega",    "Saturn (PAL)",     MACHINE_NOT_WORKING )
+CONS( 1995, saturnkr, saturn, 0,      saturnkr, saturn, sat_console_state, init_saturn, "Samsung", "Saturn (Korea)",   MACHINE_NOT_WORKING )
+CONS( 1995, vsaturn,  saturn, 0,      saturnjp, saturn, sat_console_state, init_saturn, "JVC",     "V-Saturn",         MACHINE_NOT_WORKING )
+CONS( 1995, hisaturn, saturn, 0,      saturnjp, saturn, sat_console_state, init_saturn, "Hitachi", "HiSaturn",         MACHINE_NOT_WORKING )

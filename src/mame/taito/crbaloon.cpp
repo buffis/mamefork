@@ -68,7 +68,7 @@ void crbaloon_state::pc3092_w(offs_t offset, uint8_t data)
 }
 
 
-CUSTOM_INPUT_MEMBER(crbaloon_state::pc3092_r)
+ioport_value crbaloon_state::pc3092_r()
 {
 	uint32_t ret;
 
@@ -295,7 +295,7 @@ static INPUT_PORTS_START( crbaloon )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_NAME("Name Reset")
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_SERVICE1 )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_TILT )
-	PORT_BIT( 0xf0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(crbaloon_state, pc3092_r)
+	PORT_BIT( 0xf0, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_CUSTOM_MEMBER(FUNC(crbaloon_state::pc3092_r))
 
 	PORT_START("PC3092")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_START1 )
@@ -433,5 +433,5 @@ ROM_END
  *
  *************************************/
 
-GAME( 1980, crbaloon,  0,        crbaloon, crbaloon, crbaloon_state, empty_init, ROT90, "Taito Corporation", "Crazy Balloon (set 1)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-GAME( 1980, crbaloon2, crbaloon, crbaloon, crbaloon, crbaloon_state, empty_init, ROT90, "Taito Corporation", "Crazy Balloon (set 2)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1980, crbaloon,  0,        crbaloon, crbaloon, crbaloon_state, empty_init, ROT90, "Taito", "Crazy Balloon (set 1)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1980, crbaloon2, crbaloon, crbaloon, crbaloon, crbaloon_state, empty_init, ROT90, "Taito", "Crazy Balloon (set 2)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )

@@ -101,7 +101,7 @@ public:
 	int frame_counter_r();
 
 protected:
-	virtual void video_start() override;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -150,8 +150,9 @@ private:
 	INTERRUPT_GEN_MEMBER(interrupt);
 	void draw_sprites_pre(int x_offs, int y_offs);
 	void draw_sprites(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, const u32 *primasks, int priority);
+	rgb_t color_xrgb555(u16 data);
 
-	void main_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
 };
 
 
@@ -584,6 +585,11 @@ void galastrm_renderer::tc0610_rotate_draw(bitmap_ind16 &srcbitmap, const rectan
                 SCREEN REFRESH
 **************************************************************/
 
+rgb_t galastrm_state::color_xrgb555(u16 data)
+{
+	return rgb_t(pal5bit(data >> 10), pal5bit(data >> 5), pal5bit(data >> 0));
+}
+
 u32 galastrm_state::screen_update(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
 {
 	u8 layer[5];
@@ -750,7 +756,7 @@ void galastrm_state::main_map(address_map &map)
 	map(0x600000, 0x6007ff).rw("taito_en:dpram", FUNC(mb8421_device::left_r), FUNC(mb8421_device::left_w)); // Sound shared RAM
 	map(0x800000, 0x80ffff).rw(m_tc0480scp, FUNC(tc0480scp_device::ram_r), FUNC(tc0480scp_device::ram_w));        // tilemaps
 	map(0x830000, 0x83002f).rw(m_tc0480scp, FUNC(tc0480scp_device::ctrl_r), FUNC(tc0480scp_device::ctrl_w));
-	map(0x900000, 0x900003).rw(m_tc0110pcr, FUNC(tc0110pcr_device::word_r), FUNC(tc0110pcr_device::step1_rbswap_word_w));
+	map(0x900000, 0x900003).rw(m_tc0110pcr, FUNC(tc0110pcr_device::word_r), FUNC(tc0110pcr_device::word_w));
 	map(0xb00000, 0xb00003).w(FUNC(galastrm_state::tc0610_w<0>));
 	map(0xc00000, 0xc00003).w(FUNC(galastrm_state::tc0610_w<1>));
 	map(0xd00000, 0xd0ffff).rw(m_tc0100scn, FUNC(tc0100scn_device::ram_r), FUNC(tc0100scn_device::ram_w));        // piv tilemaps
@@ -765,7 +771,7 @@ void galastrm_state::main_map(address_map &map)
 static INPUT_PORTS_START( galastrm )
 	PORT_START("IN0")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_START1 )
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(galastrm_state, frame_counter_r)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_MEMBER(FUNC(galastrm_state::frame_counter_r))
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN )
@@ -781,7 +787,7 @@ static INPUT_PORTS_START( galastrm )
 	PORT_BIT( 0x10, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x20, IP_ACTIVE_LOW, IPT_UNKNOWN )
 	PORT_BIT( 0x40, IP_ACTIVE_LOW, IPT_UNKNOWN )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", eeprom_serial_93cxx_device, do_read)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_CUSTOM ) PORT_READ_LINE_DEVICE_MEMBER("eeprom", FUNC(eeprom_serial_93cxx_device::do_read))
 
 	PORT_START("IN2")
 	PORT_SERVICE_NO_TOGGLE( 0x01, IP_ACTIVE_LOW )
@@ -839,7 +845,7 @@ void galastrm_state::galastrm(machine_config &config)
 	adc.in_callback<0>().set_ioport("STICKX");
 	adc.in_callback<1>().set_ioport("STICKY");
 
-	tc0510nio_device &tc0510nio(TC0510NIO(config, "tc0510nio", 0));
+	tc0510nio_device &tc0510nio(TC0510NIO(config, "tc0510nio"));
 	tc0510nio.read_2_callback().set_ioport("IN0");
 	tc0510nio.read_3_callback().set_ioport("IN1");
 	tc0510nio.write_3_callback().set("eeprom", FUNC(eeprom_serial_93cxx_device::clk_write)).bit(5);
@@ -859,23 +865,24 @@ void galastrm_state::galastrm(machine_config &config)
 
 	GFXDECODE(config, m_gfxdecode, m_tc0110pcr, gfx_galastrm);
 
-	TC0100SCN(config, m_tc0100scn, 0);
+	TC0100SCN(config, m_tc0100scn);
 	m_tc0100scn->set_offsets(-48, -56);
 	m_tc0100scn->set_palette(m_tc0110pcr);
 
-	TC0480SCP(config, m_tc0480scp, 0);
+	TC0480SCP(config, m_tc0480scp);
 	m_tc0480scp->set_palette(m_tc0110pcr);
 	m_tc0480scp->set_offsets(-40, -3);
 
-	TC0110PCR(config, m_tc0110pcr, 0);
+	TC0110PCR(config, m_tc0110pcr);
+	m_tc0110pcr->set_shift(0);
+	m_tc0110pcr->set_color_callback(FUNC(galastrm_state::color_xrgb555));
 
 	// sound hardware
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
-	taito_en_device &taito_en(TAITO_EN(config, "taito_en", 0));
-	taito_en.add_route(0, "lspeaker", 1.0);
-	taito_en.add_route(1, "rspeaker", 1.0);
+	taito_en_device &taito_en(TAITO_EN(config, "taito_en"));
+	taito_en.add_route(0, "speaker", 1.0, 0);
+	taito_en.add_route(1, "speaker", 1.0, 1);
 }
 
 
@@ -934,4 +941,4 @@ ROM_END
 } // anonymous namespace
 
 
-GAME( 1992, galastrm, 0, galastrm, galastrm, galastrm_state, empty_init, ROT0, "Taito Corporation", "Galactic Storm (Japan)", MACHINE_IMPERFECT_GRAPHICS | MACHINE_SUPPORTS_SAVE )
+GAME( 1992, galastrm, 0, galastrm, galastrm, galastrm_state, empty_init, ROT0, "Taito", "Galactic Storm (Japan)", MACHINE_IMPERFECT_GRAPHICS | MACHINE_SUPPORTS_SAVE )

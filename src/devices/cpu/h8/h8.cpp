@@ -27,7 +27,7 @@
 #include "h8d.h"
 
 h8_device::h8_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock, address_map_constructor map_delegate) :
-	cpu_device(mconfig, type, tag, owner, clock),
+	h8_cpu_base(mconfig, type, tag, owner, clock),
 	device_nvram_interface(mconfig, *this),
 	m_program_config("program", ENDIANNESS_BIG, 16, 16, 0, map_delegate),
 	m_internal_ram(*this, "internal_ram"),
@@ -357,7 +357,7 @@ void h8_device::execute_run()
 		while(m_icount > m_bcount) {
 			if(m_inst_state < 0x10000) {
 				m_PPC = m_NPC;
-				if(machine().debug_flags & DEBUG_FLAG_ENABLED)
+				if(debugger_enabled())
 					debugger_instruction_hook(m_NPC);
 			}
 			do_exec_full();

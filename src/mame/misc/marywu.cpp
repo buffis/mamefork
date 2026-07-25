@@ -14,11 +14,13 @@
     31 LEDs, 13 modules of double-digit 7-seg displays and 4 push-buttons).
   * we may also have user inputs from the coin slot and from the
     cabinet buttons, for making bets.
+  * stuck at error 03.
+
 **************************************************************************/
 
 #include "emu.h"
 
-#include "cpu/mcs51/mcs51.h"
+#include "cpu/mcs51/i80c51.h"
 #include "machine/nvram.h"
 #include "machine/i8279.h"
 #include "sound/ay8910.h"
@@ -37,12 +39,13 @@ public:
 		, m_digits(*this, "digit%u", 0U)
 		, m_leds(*this, "led%u", 0U)
 		, m_inputs(*this, { "KEYS1", "KEYS2", "DSW", "PUSHBUTTONS" })
+		, m_p1(*this, "P1")
 	{ }
 
-	void marywu(machine_config &config);
+	void marywu(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	void display_7seg_data_w(uint8_t data);
@@ -52,36 +55,40 @@ private:
 	void ay2_port_a_w(uint8_t data);
 	void ay2_port_b_w(uint8_t data);
 	uint8_t keyboard_r();
-	void io_map(address_map &map);
-	void program_map(address_map &map);
+	uint8_t i80c31_p1_r();
+	void i80c31_p1_w(uint8_t data);
+	void data_map(address_map &map) ATTR_COLD;
+	void program_map(address_map &map) ATTR_COLD;
 
 	uint8_t m_selected_7seg_module = 0;
+	uint8_t m_p1_out = 0xff;
 
 	output_finder<32> m_digits;
 	output_finder<30> m_leds;
 	required_ioport_array<4> m_inputs;
+	required_ioport m_p1;
 };
 
 static INPUT_PORTS_START( marywu )
 	PORT_START("KEYS1")
-	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_Q)
-	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_W)
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_E)
-	PORT_BIT(0x10, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_R)
-	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_T)
-	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_Y)
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_U)
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_I)
+	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_Q)
+	PORT_BIT(0x40, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_W)
+	PORT_BIT(0x20, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_E)
+	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_R)
+	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_T)
+	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_Y)
+	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_U)
+	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_I)
 
 	PORT_START("KEYS2")
-	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_A)
-	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_S)
-	PORT_BIT(0x20, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_D)
-	PORT_BIT(0x10, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_F)
-	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_G)
-	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_H)
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_J)
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_CODE(KEYCODE_K)
+	PORT_BIT(0x80, IP_ACTIVE_HIGH, IPT_COIN1)  PORT_IMPULSE(01) PORT_CODE(KEYCODE_A) // If press or IP_ACTIVE_LOW or press will cause error 30.
+	PORT_BIT(0x40, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_S)
+	PORT_BIT(0x20, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_D)
+	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_F)
+	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_G)
+	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_H)
+	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_J)
+	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYPAD) PORT_CODE(KEYCODE_K)
 
 	PORT_START("DSW")
 	PORT_DIPUNKNOWN_DIPLOC( 0x01, 0x01, "DSW:1")
@@ -94,11 +101,15 @@ static INPUT_PORTS_START( marywu )
 	PORT_DIPUNKNOWN_DIPLOC( 0x80, 0x80, "DSW:8")
 
 	PORT_START("PUSHBUTTONS")
-	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_BUTTON1) // K0
-	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_BUTTON2) // K1
-	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_BUTTON3) // K2
-	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_BUTTON4) // K3
-	PORT_BIT(0xf0, IP_ACTIVE_HIGH, IPT_UNUSED )
+	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_BUTTON1) // K0
+	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_BUTTON2) // K1
+	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_BUTTON3) // K2
+	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_BUTTON4) // K3
+	PORT_BIT(0xf0, IP_ACTIVE_LOW, IPT_UNUSED )
+
+	PORT_START("P1")
+	PORT_BIT(0x40, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("P1.6") PORT_CODE(KEYCODE_C) // If press or IP_ACTIVE_LOW Will cause Error 30 if press
+	PORT_BIT(0x80, IP_ACTIVE_LOW,  IPT_KEYPAD) PORT_NAME("P1.7") PORT_CODE(KEYCODE_V) // If press during startup, it will cause error 76.
 INPUT_PORTS_END
 
 void marywu_state::ay1_port_a_w(uint8_t data)
@@ -145,6 +156,25 @@ uint8_t marywu_state::keyboard_r()
 	}
 }
 
+uint8_t marywu_state::i80c31_p1_r()
+{
+	// meter feedback is read here. Fails with error 02 if it doesn't get the expected value.
+	uint8_t const ioport_val = m_p1->read();
+	uint8_t meter_fb = 0x00;
+
+	if (!BIT(m_p1_out, 0))
+		meter_fb = (BIT(m_p1_out, 1) << 4) | (BIT(m_p1_out, 2) << 5);
+
+	return (ioport_val & 0xcf) | meter_fb;
+}
+
+void marywu_state::i80c31_p1_w(uint8_t data)
+{
+	// m_hopper->motor_w(BIT(data, 3));
+
+	m_p1_out = data;
+}
+
 void marywu_state::display_7seg_data_w(uint8_t data)
 {
 	static const uint8_t patterns[16] = { 0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7c, 0x07, 0x7f, 0x67, 0, 0, 0, 0, 0, 0 }; // HEF4511BP (7 seg display driver)
@@ -158,7 +188,7 @@ void marywu_state::program_map(address_map &map)
 	map(0x0000, 0x7fff).rom();
 }
 
-void marywu_state::io_map(address_map &map)
+void marywu_state::data_map(address_map &map)
 {
 	map(0x8000, 0x87ff).mirror(0x0800).ram().share("nvram"); /* HM6116: 2kbytes of Static RAM */
 	map(0x9000, 0x9001).mirror(0x0ffc).rw("ay1", FUNC(ay8910_device::data_r), FUNC(ay8910_device::address_data_w));
@@ -169,8 +199,8 @@ void marywu_state::io_map(address_map &map)
 
 void marywu_state::machine_start()
 {
-	m_digits.resolve();
-	m_leds.resolve();
+	save_item(NAME(m_selected_7seg_module));
+	save_item(NAME(m_p1_out));
 }
 
 void marywu_state::marywu(machine_config &config)
@@ -182,8 +212,10 @@ void marywu_state::marywu(machine_config &config)
 	/* basic machine hardware */
 	i80c31_device &maincpu(I80C31(config, "maincpu", XTAL(10'738'635))); //actual CPU is a Winbond w78c31b-24
 	maincpu.set_addrmap(AS_PROGRAM, &marywu_state::program_map);
-	maincpu.set_addrmap(AS_IO, &marywu_state::io_map);
+	maincpu.set_addrmap(AS_DATA, &marywu_state::data_map);
 	//TODO: figure out what each bit is mapped to in the 80c31 ports P1 and P3
+	maincpu.port_in_cb<1>().set(FUNC(marywu_state::i80c31_p1_r));
+	maincpu.port_out_cb<1>().set(FUNC(marywu_state::i80c31_p1_w));
 
 	NVRAM(config, "nvram", nvram_device::DEFAULT_ALL_0);
 

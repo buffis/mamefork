@@ -1,8 +1,8 @@
 // license:BSD-3-Clause
 // copyright-holders:
 
-#ifndef MAME_BUS_SUPERACAN_SLOT_H
-#define MAME_BUS_SUPERACAN_SLOT_H
+#ifndef MAME_BUS_SUPRACAN_SLOT_H
+#define MAME_BUS_SUPRACAN_SLOT_H
 
 #include "imagedev/cartrom.h"
 
@@ -55,10 +55,7 @@ public:
 	superacan_cart_slot_device(machine_config const &mconfig, char const *tag, device_t *owner, u32 clock, T &&opts, char const *dflt)
 		: superacan_cart_slot_device(mconfig, tag, owner, clock)
 	{
-		option_reset();
-		opts(*this);
-		set_default_option(dflt);
-		set_fixed(false);
+		set_options(std::forward<T>(opts), dflt, false);
 	}
 	superacan_cart_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
 	virtual ~superacan_cart_slot_device();
@@ -80,11 +77,11 @@ public:
 
 protected:
 	// device_t implementation
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 	device_superacan_cart_interface *m_cart;
 };
 
 DECLARE_DEVICE_TYPE(SUPERACAN_CART_SLOT, superacan_cart_slot_device)
 
-#endif // MAME_BUS_SUPERACAN_SLOT_H
+#endif // MAME_BUS_SUPRACAN_SLOT_H

@@ -78,6 +78,7 @@ public:
 		m_lock(*this, "LOCK"),
 		m_caps(*this, "CAPS"),
 		m_40_80(*this, "40_80"),
+		m_portswap(*this, "JOYSWAP"),
 		m_z80en(0),
 		m_loram(1),
 		m_hiram(1),
@@ -122,9 +123,10 @@ public:
 	required_ioport m_lock;
 	required_ioport m_caps;
 	required_ioport m_40_80;
+	optional_ioport m_portswap;
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	inline void check_interrupts();
 	int read_pla(offs_t offset, offs_t ca, offs_t vma, int ba, int rw, int aec, int z80io, int ms3, int ms2, int ms1, int ms0);
@@ -233,12 +235,12 @@ public:
 	void c128dcr(machine_config &config);
 	void c128dcrp(machine_config &config);
 	void c128d81(machine_config &config);
-	void m8502_mem(address_map &map);
-	void vdc_videoram_map(address_map &map);
-	void vic_colorram_map(address_map &map);
-	void vic_videoram_map(address_map &map);
-	void z80_io(address_map &map);
-	void z80_mem(address_map &map);
+	void m8502_mem(address_map &map) ATTR_COLD;
+	void vdc_videoram_map(address_map &map) ATTR_COLD;
+	void vic_colorram_map(address_map &map) ATTR_COLD;
+	void vic_videoram_map(address_map &map) ATTR_COLD;
+	void z80_io(address_map &map) ATTR_COLD;
+	void z80_mem(address_map &map) ATTR_COLD;
 };
 
 
@@ -840,17 +842,22 @@ static INPUT_PORTS_START( c128 )
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("ALT") PORT_CODE(KEYCODE_F7) PORT_CHAR(UCHAR_MAMEKEY(LALT))
 
 	PORT_START( "RESTORE" )
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("RESTORE") PORT_CODE(KEYCODE_PRTSCR) PORT_WRITE_LINE_DEVICE_MEMBER(DEVICE_SELF, c128_state, write_restore)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("RESTORE") PORT_CODE(KEYCODE_PRTSCR) PORT_WRITE_LINE_MEMBER(FUNC(c128_state::write_restore))
 
 	PORT_START( "LOCK" )
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("SHIFT LOCK") PORT_CODE(KEYCODE_CAPSLOCK) PORT_TOGGLE PORT_CHAR(UCHAR_MAMEKEY(CAPSLOCK))
 	PORT_BIT( 0x7f, IP_ACTIVE_LOW, IPT_UNUSED )
 
 	PORT_START( "CAPS" )
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, c128_state, caps_lock, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(c128_state::caps_lock), 0)
 
 	PORT_START( "40_80" )
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_KEYBOARD ) PORT_NAME("40/80 DISPLAY") PORT_CODE(KEYCODE_F11) PORT_TOGGLE
+
+	PORT_START( "JOYSWAP" )
+	PORT_CONFNAME( 0x01, 0x00, "Swap joystick ports" )
+	PORT_CONFSETTING( 0x01, "Joystick in swapped port" )
+	PORT_CONFSETTING( 0x00, "Joystick in assigned port" )
 INPUT_PORTS_END
 
 
@@ -892,7 +899,7 @@ static INPUT_PORTS_START( c128_de )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("_  { <  > }") PORT_CODE(KEYCODE_TILDE)              PORT_CHAR('_')
 
 	PORT_MODIFY( "CAPS" )
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("ASCII/DIN") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, c128_state, caps_lock, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("ASCII/DIN") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(c128_state::caps_lock), 0)
 INPUT_PORTS_END
 
 
@@ -947,7 +954,7 @@ static INPUT_PORTS_START( c128_fr )
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("1  !  { &  1 }") PORT_CODE(KEYCODE_1)              PORT_CHAR('1') PORT_CHAR('!')
 
 	PORT_MODIFY( "CAPS" )
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK ASCII/CC") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, c128_state, caps_lock, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK ASCII/CC") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(c128_state::caps_lock), 0)
 INPUT_PORTS_END
 #endif
 
@@ -1029,7 +1036,7 @@ static INPUT_PORTS_START( c128_se )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("_  { <  > }") PORT_CODE(KEYCODE_TILDE)    PORT_CHAR('_')
 
 	PORT_MODIFY( "CAPS" )
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK ASCII/CC") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, c128_state, caps_lock, 0)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_KEYBOARD ) PORT_NAME("CAPS LOCK ASCII/CC") PORT_CODE(KEYCODE_F8) PORT_TOGGLE PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(c128_state::caps_lock), 0)
 INPUT_PORTS_END
 
 
@@ -1112,23 +1119,25 @@ void c128_state::vic_k_w(uint8_t data)
 uint8_t c128_state::sid_potx_r()
 {
 	uint8_t data = 0xff;
+	vcs_control_port_device *cur1 = m_portswap->read() ? m_joy2 : m_joy1;
+	vcs_control_port_device *cur2 = m_portswap->read() ? m_joy1 : m_joy2;
 
 	switch (m_cia1->pa_r() >> 6)
 	{
-	case 1: data = m_joy1->read_pot_x(); break;
-	case 2: data = m_joy2->read_pot_x(); break;
+	case 1: data = cur1->read_pot_x(); break;
+	case 2: data = cur2->read_pot_x(); break;
 	case 3:
-		if (m_joy1->has_pot_x() && m_joy2->has_pot_x())
+		if (cur1->has_pot_x() && cur2->has_pot_x())
 		{
-			data = 1 / (1 / m_joy1->read_pot_x() + 1 / m_joy2->read_pot_x());
+			data = 1 / (1 / cur1->read_pot_x() + 1 / cur2->read_pot_x());
 		}
-		else if (m_joy1->has_pot_x())
+		else if (cur1->has_pot_x())
 		{
-			data = m_joy1->read_pot_x();
+			data = cur1->read_pot_x();
 		}
-		else if (m_joy2->has_pot_x())
+		else if (cur2->has_pot_x())
 		{
-			data = m_joy2->read_pot_x();
+			data = cur2->read_pot_x();
 		}
 		break;
 	}
@@ -1139,23 +1148,25 @@ uint8_t c128_state::sid_potx_r()
 uint8_t c128_state::sid_poty_r()
 {
 	uint8_t data = 0xff;
+	vcs_control_port_device *cur1 = m_portswap->read() ? m_joy2 : m_joy1;
+	vcs_control_port_device *cur2 = m_portswap->read() ? m_joy1 : m_joy2;
 
 	switch (m_cia1->pa_r() >> 6)
 	{
-	case 1: data = m_joy1->read_pot_y(); break;
-	case 2: data = m_joy2->read_pot_y(); break;
+	case 1: data = cur1->read_pot_y(); break;
+	case 2: data = cur2->read_pot_y(); break;
 	case 3:
-		if (m_joy1->has_pot_y() && m_joy2->has_pot_y())
+		if (cur1->has_pot_y() && cur2->has_pot_y())
 		{
-			data = 1 / (1 / m_joy1->read_pot_y() + 1 / m_joy2->read_pot_y());
+			data = 1 / (1 / cur1->read_pot_y() + 1 / cur2->read_pot_y());
 		}
-		else if (m_joy1->has_pot_y())
+		else if (cur1->has_pot_y())
 		{
-			data = m_joy1->read_pot_y();
+			data = cur1->read_pot_y();
 		}
-		else if (m_joy2->has_pot_y())
+		else if (cur2->has_pot_y())
 		{
-			data = m_joy2->read_pot_y();
+			data = cur2->read_pot_y();
 		}
 		break;
 	}
@@ -1186,9 +1197,10 @@ uint8_t c128_state::cia1_pa_r()
 	*/
 
 	uint8_t data = 0xff;
+	vcs_control_port_device *cur2 = m_portswap->read() ? m_joy1 : m_joy2;
 
 	// joystick
-	uint8_t joy_b = m_joy2->read_joy();
+	uint8_t joy_b = cur2->read_joy();
 
 	data &= (0xf0 | (joy_b & 0x0f));
 	data &= ~(!BIT(joy_b, 5) << 4);
@@ -1233,7 +1245,8 @@ void c128_state::cia1_pa_w(uint8_t data)
 
 	*/
 
-	m_joy2->joy_w(data & 0x1f);
+	vcs_control_port_device *cur2 = m_portswap->read() ? m_joy1 : m_joy2;
+	cur2->joy_w(data & 0x1f);
 }
 
 uint8_t c128_state::cia1_pb_r()
@@ -1254,9 +1267,10 @@ uint8_t c128_state::cia1_pb_r()
 	*/
 
 	uint8_t data = 0xff;
+	vcs_control_port_device *cur1 = m_portswap->read() ? m_joy2 : m_joy1;
 
 	// joystick
-	uint8_t joy_a = m_joy1->read_joy();
+	uint8_t joy_a = cur1->read_joy();
 
 	data &= (0xf0 | (joy_a & 0x0f));
 	data &= ~(!BIT(joy_a, 5) << 4);
@@ -1297,7 +1311,9 @@ void c128_state::cia1_pb_w(uint8_t data)
 
 	*/
 
-	m_joy1->joy_w(data & 0x1f);
+	vcs_control_port_device *cur1 = m_portswap->read() ? m_joy2 : m_joy1;
+
+	cur1->joy_w(data & 0x1f);
 
 	m_vic->lp_w(BIT(data, 4));
 }

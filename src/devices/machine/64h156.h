@@ -102,9 +102,9 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 	virtual void device_clock_changed() override;
-	virtual void device_reset() override;
+	virtual void device_reset() override ATTR_COLD;
 
 	TIMER_CALLBACK_MEMBER(update_tick);
 
@@ -168,7 +168,7 @@ private:
 	void rollback();
 	bool write_next_bit(bool bit, const attotime &limit);
 	void start_writing(const attotime &tm);
-	void commit(const attotime &tm);
+	void commit(const attotime &tm, bool force = false);
 	void stop_writing(const attotime &tm);
 	void live_delay(int state);
 	void live_sync();

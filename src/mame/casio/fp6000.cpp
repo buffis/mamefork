@@ -16,6 +16,7 @@
 ****************************************************************************/
 
 #include "emu.h"
+
 #include "cpu/i86/i86.h"
 #include "machine/pic8259.h"
 #include "machine/pit8253.h"
@@ -24,6 +25,7 @@
 #include "bus/centronics/ctronics.h"
 #include "fp6000_kbd.h"
 #include "imagedev/cassette.h"
+
 #include "emupal.h"
 #include "screen.h"
 #include "speaker.h"
@@ -38,8 +40,8 @@ namespace {
 class fp6000_state : public driver_device
 {
 public:
-	fp6000_state(const machine_config &mconfig, device_type type, const char *tag)
-		: driver_device(mconfig, type, tag),
+	fp6000_state(const machine_config &mconfig, device_type type, const char *tag) :
+		driver_device(mconfig, type, tag),
 		m_maincpu(*this, "maincpu"),
 		m_pic(*this, "pic"),
 		m_pit(*this, "pit"),
@@ -57,8 +59,8 @@ public:
 	void fp6000(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -75,8 +77,8 @@ private:
 	required_shared_ptr<uint16_t> m_vram;
 	required_shared_ptr<uint16_t> m_pcg;
 
-	void fp6000_io(address_map &map);
-	void fp6000_map(address_map &map);
+	void fp6000_io(address_map &map) ATTR_COLD;
+	void fp6000_map(address_map &map) ATTR_COLD;
 
 	emu_timer *m_pit_timer = nullptr;
 	void pit_timer0_w(int state);
@@ -460,10 +462,10 @@ void fp6000_state::fp6000(machine_config &config)
 	m_maincpu->set_addrmap(AS_IO, &fp6000_state::fp6000_io);
 	m_maincpu->set_irq_acknowledge_callback(m_pic, FUNC(pic8259_device::inta_cb));
 
-	PIC8259(config, m_pic, 0);
+	PIC8259(config, m_pic);
 	m_pic->out_int_callback().set_inputline(m_maincpu, INPUT_LINE_IRQ0);
 
-	PIT8253(config, m_pit, 0);
+	PIT8253(config, m_pit);
 	m_pit->set_clk<0>(16000000 / 16); // 1 MHz
 	m_pit->out_handler<0>().set(FUNC(fp6000_state::pit_timer0_w)).invert();
 	m_pit->set_clk<2>(16000000 / 8); // 2 MHz?

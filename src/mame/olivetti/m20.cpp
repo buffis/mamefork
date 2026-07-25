@@ -96,8 +96,8 @@ private:
 
 	required_device<palette_device> m_palette;
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	uint16_t i8259_r(offs_t offset);
 	void i8259_w(offs_t offset, uint16_t data);
@@ -109,9 +109,9 @@ private:
 	void int_w(int state);
 	MC6845_UPDATE_ROW(update_row);
 
-	void m20_data_mem(address_map &map);
-	void m20_io(address_map &map);
-	void m20_program_mem(address_map &map);
+	void m20_data_mem(address_map &map) ATTR_COLD;
+	void m20_io(address_map &map) ATTR_COLD;
+	void m20_program_mem(address_map &map) ATTR_COLD;
 
 	offs_t m_memsize = 0;
 	uint8_t m_port21 = 0;
@@ -779,16 +779,16 @@ void m20_state::m20(machine_config &config)
 
 	I8255A(config, m_i8255, 0);
 
-	I8251(config, m_kbdi8251, 0);
+	I8251(config, m_kbdi8251);
 	m_kbdi8251->txd_handler().set("kbd", FUNC(rs232_port_device::write_txd));
 	m_kbdi8251->rxrdy_handler().set(m_i8259, FUNC(pic8259_device::ir4_w));
 
-	I8251(config, m_ttyi8251, 0);
+	I8251(config, m_ttyi8251);
 	m_ttyi8251->txd_handler().set("rs232", FUNC(rs232_port_device::write_txd));
 	m_ttyi8251->rxrdy_handler().set(m_i8259, FUNC(pic8259_device::ir3_w));
 	m_ttyi8251->txrdy_handler().set(m_i8259, FUNC(pic8259_device::ir5_w));
 
-	pit8253_device &pit8253(PIT8253(config, "pit8253", 0));
+	pit8253_device &pit8253(PIT8253(config, "pit8253"));
 	pit8253.set_clk<0>(1230782);
 	pit8253.out_handler<0>().set(FUNC(m20_state::tty_clock_tick_w));
 	pit8253.set_clk<1>(1230782);
@@ -796,7 +796,7 @@ void m20_state::m20(machine_config &config)
 	pit8253.set_clk<2>(1230782);
 	pit8253.out_handler<2>().set(FUNC(m20_state::timer_tick_w));
 
-	PIC8259(config, m_i8259, 0);
+	PIC8259(config, m_i8259);
 	m_i8259->out_int_callback().set(FUNC(m20_state::int_w));
 
 	rs232_port_device &kbd(RS232_PORT(config, "kbd", keyboard, "m20"));
@@ -852,4 +852,4 @@ ROM_END
 //    YEAR  NAME  PARENT  COMPAT  MACHINE  INPUT  CLASS      INIT        COMPANY     FULLNAME           FLAGS
 COMP( 1981, m20,  0,      0,      m20,     0,     m20_state, empty_init, "Olivetti", "Olivetti L1 M20", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
 COMP( 1981, m40,  m20,    0,      m20,     0,     m20_state, empty_init, "Olivetti", "Olivetti L1 M40", MACHINE_NOT_WORKING | MACHINE_NO_SOUND )
-COMP( 1986, m44,  0,      0,      m20,     0,     m20_state, empty_init, "Olivetti", "Olivetti L1 M44", MACHINE_IS_SKELETON )
+COMP( 1986, m44,  0,      0,      m20,     0,     m20_state, empty_init, "Olivetti", "Olivetti L1 M44", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

@@ -60,9 +60,9 @@ public:
 	void spdheat(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void video_start() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
+	virtual void video_start() override ATTR_COLD;
 
 private:
 	required_device<cpu_device> m_maincpu;
@@ -85,10 +85,10 @@ private:
 	uint32_t m_sub_data = 0;
 	uint32_t m_sub_status = 0;
 
-	void main_map(address_map &map);
-	void sub_map(address_map &map);
-	void sub_io_map(address_map &map);
-	void sound_map(address_map &map);
+	void main_map(address_map &map) ATTR_COLD;
+	void sub_map(address_map &map) ATTR_COLD;
+	void sub_io_map(address_map &map) ATTR_COLD;
+	void sound_map(address_map &map) ATTR_COLD;
 
 	void sub_dac_w(uint8_t data);
 	void sub_nmi_w(uint8_t data);
@@ -936,5 +936,5 @@ ROM_END
  *
  *************************************/
 
-GAME( 1985, spdheat,  0,       spdheat, spdheat,  spdheat_state, empty_init, ROT0, "Taito Corporation", "Super Dead Heat (World)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
-GAME( 1985, spdheatj, spdheat, spdheat, spdheatj, spdheat_state, empty_init, ROT0, "Taito Corporation", "Super Dead Heat (Japan)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1985, spdheat,  0,       spdheat, spdheat,  spdheat_state, empty_init, ROT0, "Taito", "Super Dead Heat (World)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )
+GAME( 1985, spdheatj, spdheat, spdheat, spdheatj, spdheat_state, empty_init, ROT0, "Taito", "Super Dead Heat (Japan)", MACHINE_IMPERFECT_SOUND | MACHINE_SUPPORTS_SAVE )

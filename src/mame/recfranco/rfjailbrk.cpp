@@ -65,7 +65,7 @@ public:
 	void rfjailbrk(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
+	virtual void machine_start() override ATTR_COLD;
 
 private:
 	required_device<i80188_cpu_device> m_maincpu;
@@ -90,8 +90,8 @@ void rfjailbrk_state::rfjailbrk(machine_config &config)
 	I8255A(config, "pia5"); // OKI M82C55A-2V
 	I8255A(config, "pia6"); // OKI M82C55A-2V
 
-	PIC8259(config, "pic1", 0); // CS82C59A
-	PIC8259(config, "pic2", 0); // CS82C59A
+	PIC8259(config, "pic1"); // CS82C59A
+	PIC8259(config, "pic2"); // CS82C59A
 
 	// Sound hardware
 
@@ -119,4 +119,4 @@ ROM_END
 } // anonymous namespace
 
 //   YEAR  NAME       PARENT  MACHINE    INPUT      CLASS            INIT        ROT   COMPANY               FULLNAME                                        FLAGS
-GAME(2000, rfjailbrk, 0,      rfjailbrk, rfjailbrk, rfjailbrk_state, empty_init, ROT0, "Recreativos Franco", "Jail Break (Recreativos Franco slot machine)", MACHINE_IS_SKELETON_MECHANICAL)
+GAME(2000, rfjailbrk, 0,      rfjailbrk, rfjailbrk, rfjailbrk_state, empty_init, ROT0, "Recreativos Franco", "Jail Break (Recreativos Franco slot machine)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING | MACHINE_MECHANICAL | MACHINE_REQUIRES_ARTWORK)

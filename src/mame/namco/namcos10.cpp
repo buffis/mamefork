@@ -16,7 +16,6 @@ This document covers all the known Namco System 10 games, including....
 *Aim For Cash (AFC2 Ver.A)                                                    (C) Namco, 2004
 Ball Pom Line  (no sticker, ROM VER. B0 FEB 09 2005 15:29:02)                 (C) Namco, 2005
 *Dice ROM                                                                     (C) Namco, 2004
-*Dokidoki! Flower                                                             (C) Namco, 2004
 ***Drum Master                                                                (C) Namco, 2001
 ***Drum Master 2                                                              (C) Namco, 2001
 ***Drum Master 3                                                              (C) Namco, 2002
@@ -30,11 +29,11 @@ Gegege no Kitaro Yokai Yokocho Matsuri de Battle Ja (GYM1 Ver.A)              (C
 GekiToride-Jong Space (10011 Ver.A)                                           (C) Namco/Metro, 2001
 Golgo 13 Juusei no Requiem (GLT1 Ver.A)                                       (C) Namco/8ing/Raizing, 2001
 Gunbalina (GNN1 Ver. A)                                                       (C) Namco, 2000
-*Hard Puncher Hajime no Ippo: The Fighting                                    (C) Namco/Taito, 2001
+Hard Puncher Hajime no Ippo: The Fighting (VER.2.02J)                         (C) Namco/Taito, 2001
 Hard Puncher Hajime no Ippo 2 - The Fighting! - Ouja e no chousen (VER.2.00J) (C) Namco/Taito, 2002
 *Honne Hakkenki                                                               (C) Namco, 2001
 Keroro Gunsou Pekopon Shinryaku Shirei De Arimasu! (KRG1 Ver.A)               (C) Namco, 2006
-**Knock Down 2001 / KO2001 (KD11 Ver.B)                                       (C) Namco, 2001
+Knock Down 2001 / KO2001 (KD11 Ver.B)                                         (C) Namco, 2001
 Kono e Tako (RAN Ver.A, 10021 Ver.A reprogrammed Gamshara PCB)                (C) Mitchell 2003
 Kotoba no Puzzle Mojipittan (KPM1 Ver.A)                                      (C) Namco, 2001
 Medal no Tatsujin (MTL1 SPR0B)                                                (C) Namco, 2005
@@ -55,10 +54,11 @@ Puzz Ball (PZB1 Ver. C)                                                       (C
 Seishun-Quiz Colorful High School (CHS1 Ver.A)                                (C) Namco, 2002
 Sekai Kaseki Hakken (Japan, SKH1 Ver.A)                                       (C) Namco, 2004
 *Shamisen Brothers (KT-SB2 Ver.A + CDROM)                                     (C) Kato/Konami, 2003
-*Slot no Oujisama / Slot Prince (SLO1 Ver.A)                                  (C) Namco, 2003
+Slot no Oujisama / Slot Prince (SLO1 Ver.A)                                   (C) Namco, 2003
 Slot no Oujisama / Slot Prince (SLO1 Ver.B)                                   (C) Namco, 2003
 Star Trigon (STT1 Ver.A)                                                      (C) Namco, 2002
 Sugorotic JAPAN (STJ1 Ver.A)                                                  (C) Namco, 2002
+Sugorotic JAPAN (STJ1 Ver.B)                                                  (C) Namco, 2002
 Sugorotic JAPAN (STJ1 Ver.C)                                                  (C) Namco, 2002
 *Taiko no Tatsujin  (with CDROM?)                                             (C) Namco, 2001
 Taiko no Tatsujin 2 (TK21 Ver.C & CDROM NM-002 TK21-A)                        (C) Namco, 2001
@@ -313,8 +313,10 @@ Puzz Ball                                           PZB1  Ver.A   KC013A   8E, 8
 Puzz Ball                                           PZB1  Ver.C   KC013A   8E, 8D               N/A           also has a Namco S10 MGEX10 (8681960201) PCB, unverified title
 Sekai Kaseki Hakken                                 SKH1  Ver.A   KC035A   8E, 8D               N/A           also has a Namco S10 MGEX10 (8681960201) PCB, unverified title
 Slot no Oujisama/Slot Prince                        SLO1  Ver.B   KC023A   8E, 8D               N/A           also has a Namco S10 MGEX10 (8681960201) PCB
+Slot no Oujisama/Slot Prince                        SLO1  Ver.A   KC023A   8E, 8D               N/A           also has a Namco S10 MGEX10 (8681960201) PCB
 Star Trigon                                         STT1  Ver.A   KC019A   8E, 8D               N/A           I/O board = none
 Sugorotic JAPAN                                     STJ1  Ver.C   KC014A   8E, 8D               N/A           also has a Namco S10 MGEX10 (8681960201) PCB
+Sugorotic JAPAN                                     STJ1  Ver.B   KC014A   8E, 8D               N/A           also has a Namco S10 MGEX10 (8681960201) PCB
 Sugorotic JAPAN                                     STJ1  Ver.A   KC014A   8E, 8D               N/A           also has a Namco S10 MGEX10 (8681960201) PCB
 Taiko no Tatsujin 2                                 TK21  Ver.C   KC010A   8E, 8D, 7E           NM-002        KEYCUS is marked KC007A, KC010A is a sticker on top. I/O board = ?. For all TK* games see note 2 and 3
 Taiko no Tatsujin 3                                 TK31  Ver.A   KC016A   8E, 8D, 7E           NM-003        I/O board = ?
@@ -442,8 +444,8 @@ Notes:
                CN2 - 10-pin connector for controls
 
 This PCB is used on..
-Hajime no Ippo Hard Puncher   - CPLD marked F06-01. I/O board = none
-Hajime no Ippo Hard Puncher 2 - sticker HAZIMENO IPPO2 K91J0893A, HAZIME'NO IPPO2 VER.2.00J. CPLD marked F06-03. I/O board = unknown sensor board
+Hajime no Ippo Hard Puncher   - sticker HAZIME NO IPPO K91J0873A, HAZIME NO IPPO VER.2.02J. CPLD marked F06-01. I/O board = none
+Hajime no Ippo Hard Puncher 2 - sticker HAZIME NO IPPO2 K91J0893A, HAZIME'NO IPPO2 VER.2.00J. CPLD marked F06-03. I/O board = unknown sensor board
 
 Notes: There is a hidden "MEM(N)DATA CHECK SUM DISP" menu available in ippo2 that can be accessed by holding Speed Sensor Up + Start + Select during boot.
 
@@ -676,6 +678,8 @@ User data note:
 #include "screen.h"
 #include "speaker.h"
 
+#include "endianness.h"
+
 
 namespace {
 
@@ -702,23 +706,22 @@ public:
 protected:
 	using unscramble_func = uint16_t (*)(uint16_t);
 
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
-	virtual void device_resolve_objects() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void namcos10_base(machine_config &config);
-	void namcos10_exio(machine_config &config);
-	void namcos10_mgexio(machine_config &config);
-	void namcos10_exfinalio(machine_config &config);
+	void namcos10_base(machine_config &config) ATTR_COLD;
+	void namcos10_exio(machine_config &config) ATTR_COLD;
+	void namcos10_mgexio(machine_config &config) ATTR_COLD;
+	void namcos10_exfinalio(machine_config &config) ATTR_COLD;
 
-	void namcos10_map_inner(address_map &map);
-	void namcos10_map(address_map &map);
+	void namcos10_map_inner(address_map &map) ATTR_COLD;
+	void namcos10_map(address_map &map) ATTR_COLD;
 
-	void namcos10_map_exio_inner(address_map &map);
-	void namcos10_map_exio(address_map &map);
+	void namcos10_map_exio_inner(address_map &map) ATTR_COLD;
+	void namcos10_map_exio(address_map &map) ATTR_COLD;
 
-	void namcos10_map_mgexio_inner(address_map &map);
-	void namcos10_map_mgexio(address_map &map);
+	void namcos10_map_mgexio_inner(address_map &map) ATTR_COLD;
+	void namcos10_map_mgexio(address_map &map) ATTR_COLD;
 
 	required_device<psxcpu_device> m_maincpu;
 	optional_device<ns10_decrypter_device> m_decrypter;
@@ -801,21 +804,21 @@ public:
 		, m_nand(*this, "nand")
 	{ }
 
-	void ns10_mrdrilr2(machine_config &config);
+	void ns10_mrdrilr2(machine_config &config) ATTR_COLD;
 
-	void init_mrdrilr2();
+	void init_mrdrilr2() ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
-	void namcos10_memm(machine_config &config);
+	void namcos10_memm(machine_config &config) ATTR_COLD;
 
-	void namcos10_memm_map_inner(address_map &map);
-	void namcos10_memm_map(address_map &map);
+	void namcos10_memm_map_inner(address_map &map) ATTR_COLD;
+	void namcos10_memm_map(address_map &map) ATTR_COLD;
 
-	void memm_driver_init();
+	void memm_driver_init() ATTR_COLD;
 
 	void crypto_switch_w(uint16_t data);
 	uint16_t range_r(offs_t offset);
@@ -840,49 +843,49 @@ public:
 		, m_data_xor(0xaaaa)
 	{ }
 
-	void ns10_ballpom(machine_config &config);
-	void ns10_chocovdr(machine_config &config);
-	void ns10_gahaha(machine_config &config);
-	void ns10_gahaha2(machine_config &config);
-	void ns10_gamshara(machine_config &config);
-	void ns10_gegemdb(machine_config &config);
-	void ns10_gjspace(machine_config &config);
-	void ns10_kd2001(machine_config &config);
-	void ns10_keroro(machine_config &config);
-	void ns10_knpuzzle(machine_config &config);
-	void ns10_konotako(machine_config &config);
-	void ns10_medalnt(machine_config &config);
-	void ns10_medalnt2(machine_config &config);
-	void ns10_mrdrilrg(machine_config &config);
-	void ns10_nflclsfb(machine_config &config);
-	void ns10_pacmball(machine_config &config);
-	void ns10_panikuru(machine_config &config);
-	void ns10_ptblank3(machine_config &config);
-	void ns10_puzzball(machine_config &config);
-	void ns10_sekaikh(machine_config &config);
-	void ns10_slotouji(machine_config &config);
-	void ns10_startrgn(machine_config &config);
-	void ns10_sugorotic(machine_config &config);
-	void ns10_taiko2(machine_config &config);
-	void ns10_taiko3(machine_config &config);
-	void ns10_taiko4(machine_config &config);
-	void ns10_taiko5(machine_config &config);
-	void ns10_taiko6(machine_config &config);
-	void ns10_taikort(machine_config &config);
+	void ns10_ballpom(machine_config &config) ATTR_COLD;
+	void ns10_chocovdr(machine_config &config) ATTR_COLD;
+	void ns10_gahaha(machine_config &config) ATTR_COLD;
+	void ns10_gahaha2(machine_config &config) ATTR_COLD;
+	void ns10_gamshara(machine_config &config) ATTR_COLD;
+	void ns10_gegemdb(machine_config &config) ATTR_COLD;
+	void ns10_gjspace(machine_config &config) ATTR_COLD;
+	void ns10_kd2001(machine_config &config) ATTR_COLD;
+	void ns10_keroro(machine_config &config) ATTR_COLD;
+	void ns10_knpuzzle(machine_config &config) ATTR_COLD;
+	void ns10_konotako(machine_config &config) ATTR_COLD;
+	void ns10_medalnt(machine_config &config) ATTR_COLD;
+	void ns10_medalnt2(machine_config &config) ATTR_COLD;
+	void ns10_mrdrilrg(machine_config &config) ATTR_COLD;
+	void ns10_nflclsfb(machine_config &config) ATTR_COLD;
+	void ns10_pacmball(machine_config &config) ATTR_COLD;
+	void ns10_panikuru(machine_config &config) ATTR_COLD;
+	void ns10_ptblank3(machine_config &config) ATTR_COLD;
+	void ns10_puzzball(machine_config &config) ATTR_COLD;
+	void ns10_sekaikh(machine_config &config) ATTR_COLD;
+	void ns10_slotouji(machine_config &config) ATTR_COLD;
+	void ns10_startrgn(machine_config &config) ATTR_COLD;
+	void ns10_sugorotic(machine_config &config) ATTR_COLD;
+	void ns10_taiko2(machine_config &config) ATTR_COLD;
+	void ns10_taiko3(machine_config &config) ATTR_COLD;
+	void ns10_taiko4(machine_config &config) ATTR_COLD;
+	void ns10_taiko5(machine_config &config) ATTR_COLD;
+	void ns10_taiko6(machine_config &config) ATTR_COLD;
+	void ns10_taikort(machine_config &config) ATTR_COLD;
 
-	void memn_driver_init();
+	void memn_driver_init() ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void namcos10_memn_base(machine_config &config);
-	void namcos10_memn(machine_config &config);
+	void namcos10_memn_base(machine_config &config) ATTR_COLD;
+	void namcos10_memn(machine_config &config) ATTR_COLD;
 
-	void namcos10_memn_map(address_map &map);
+	void namcos10_memn_map(address_map &map) ATTR_COLD;
 
-	void namcos10_nand_k9f2808u0b(machine_config &config, int nand_count);
-	void namcos10_nand_k9f5608u0d(machine_config &config, int nand_count);
+	void namcos10_nand_k9f2808u0b(machine_config &config, int nand_count) ATTR_COLD;
+	void namcos10_nand_k9f5608u0d(machine_config &config, int nand_count) ATTR_COLD;
 
 	void pio_dma_read(uint32_t *p_n_psxram, uint32_t n_address, int32_t n_size);
 	void pio_dma_write(uint32_t *p_n_psxram, uint32_t n_address, int32_t n_size);
@@ -893,7 +896,7 @@ protected:
 	uint8_t m_nand_rnb_state[16];
 
 private:
-	void namcos10_memn_map_inner(address_map &map);
+	void namcos10_memn_map_inner(address_map &map) ATTR_COLD;
 
 	void nand_copy(uint8_t *nand_base, uint16_t *dst, uint32_t address, int len);
 
@@ -927,20 +930,20 @@ public:
 		, m_p3_analog(*this, "P3_ANALOG%u", 1U)
 	{ }
 
-	void ns10_g13jnr(machine_config &config);
-	void ns10_nicetsuk(machine_config &config);
-	void ns10_squizchs(machine_config &config);
+	void ns10_g13jnr(machine_config &config) ATTR_COLD;
+	void ns10_nicetsuk(machine_config &config) ATTR_COLD;
+	void ns10_squizchs(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
 	void namcos10_memp3_base(machine_config &config);
 
-	void namcos10_memp3_map_inner(address_map &map);
-	void namcos10_memp3_map(address_map &map);
-	void mcu_map(address_map &map);
+	void namcos10_memp3_map_inner(address_map &map) ATTR_COLD;
+	void namcos10_memp3_map(address_map &map) ATTR_COLD;
+	void mcu_map(address_map &map) ATTR_COLD;
 
 	template <int Port> uint8_t port_read(offs_t offset);
 	template <int Port> void port_write(offs_t offset, uint8_t data);
@@ -1002,17 +1005,18 @@ public:
 		m_data_xor = 0x5300; // TODO: does the default value change depending on the game?
 	}
 
-	void ns10_ippo2(machine_config &config);
+	void ns10_ippo(machine_config &config) ATTR_COLD;
+	void ns10_ippo2(machine_config &config) ATTR_COLD;
 
 protected:
-	virtual void machine_reset() override;
+	virtual void machine_reset() override ATTR_COLD;
 
 private:
-	void namcos10_memio_base(machine_config &config);
-	void namcos10_memio_map(address_map &map);
-	void namcos10_memio_map_inner(address_map &map);
+	void namcos10_memio_base(machine_config &config) ATTR_COLD;
+	void namcos10_memio_map(address_map &map) ATTR_COLD;
+	void namcos10_memio_map_inner(address_map &map) ATTR_COLD;
 
-	void namcos10_nand_tc58256aft(machine_config &config, int nand_count);
+	void namcos10_nand_tc58256aft(machine_config &config, int nand_count) ATTR_COLD;
 
 	void nand_dataxor_w(offs_t offset, uint16_t data, uint16_t mem_mask = ~0);
 };
@@ -1075,11 +1079,6 @@ void namcos10_state::machine_reset()
 	std::fill(std::begin(m_mgexio_coin_start_time), std::end(m_mgexio_coin_start_time), attotime::never);
 }
 
-void namcos10_state::device_resolve_objects()
-{
-	m_mgexio_outputs.resolve();
-}
-
 TIMER_DEVICE_CALLBACK_MEMBER(namcos10_state::io_update_interrupt_callback)
 {
 	m_int |= 8; // I/O interrupt
@@ -1101,15 +1100,14 @@ void namcos10_state::namcos10_base(machine_config &config)
 	SCREEN(config, "screen", SCREEN_TYPE_RASTER);
 
 	/* sound hardware */
-	SPEAKER(config, "lspeaker").front_left();
-	SPEAKER(config, "rspeaker").front_right();
+	SPEAKER(config, "speaker", 2).front();
 
 	// CXD2938Q; SPU with CD-ROM controller - also seen in PSone, 101.4912MHz / 2
 	// TODO: This must be replaced with a proper CXD2938Q device, CD-ROM functionality of chip not used
 	spu_device &spu(SPU(config, "spu", XTAL(101'491'200)/2, m_maincpu.target()));
 	spu.set_stream_flags(STREAM_SYNCHRONOUS);
-	spu.add_route(0, "lspeaker", 0.75);
-	spu.add_route(1, "rspeaker", 0.75);
+	spu.add_route(0, "speaker", 0.75, 0);
+	spu.add_route(1, "speaker", 0.75, 1);
 
 	// TODO: Trace main PCB to see where JAMMA I/O goes and/or how int10 can be triggered (SM10MA3?)
 	m_io_update_interrupt.bind().set("maincpu:irq", FUNC(psxirq_device::intin10));
@@ -1313,7 +1311,7 @@ void namcos10_state::i2c_update()
 
 void namcos10_state::namcos10_exio(machine_config &config)
 {
-	namcos10_exio_device &exio(NAMCOS10_EXIO(config, m_exio, 0));
+	namcos10_exio_device &exio(NAMCOS10_EXIO(config, m_exio));
 
 	exio.analog_callback().set([this] (offs_t offset) {
 		return m_exio_analog[offset].read_safe(0);
@@ -1381,7 +1379,7 @@ void namcos10_state::namcos10_mgexio(machine_config &config)
 
 	// TODO: puzzball wants to see IRQ 2 triggering. Where from MGEXIO does that come? Probably a port
 
-	namcos10_mgexio_device &mgexio(NAMCOS10_MGEXIO(config, m_exio, 0));
+	namcos10_mgexio_device &mgexio(NAMCOS10_MGEXIO(config, m_exio));
 
 	HOPPER(config, m_mgexio_hopper[0], attotime::from_msec(100));
 	HOPPER(config, m_mgexio_hopper[1], attotime::from_msec(100));
@@ -1643,7 +1641,7 @@ void namcos10_memm_state::ns10_mrdrilr2(machine_config &config)
 {
 	namcos10_memm(config);
 	/* decrypter device (CPLD in hardware?) */
-	MRDRILR2_DECRYPTER(config, m_decrypter, 0);
+	MRDRILR2_DECRYPTER(config, m_decrypter);
 }
 
 
@@ -1867,7 +1865,7 @@ void namcos10_memn_state::memn_driver_init()
 void namcos10_memn_state::namcos10_nand_k9f2808u0b(machine_config &config, int nand_count)
 {
 	for (int i = 0; i < nand_count; i++) {
-		SAMSUNG_K9F2808U0B(config, m_nand[i], 0);
+		SAMSUNG_K9F2808U0B(config, m_nand[i]);
 		m_nand[i]->rnb_wr_callback().set([this, i] (int state) { m_nand_rnb_state[i] = state != 1; });
 	}
 }
@@ -1875,7 +1873,7 @@ void namcos10_memn_state::namcos10_nand_k9f2808u0b(machine_config &config, int n
 void namcos10_memn_state::namcos10_nand_k9f5608u0d(machine_config &config, int nand_count)
 {
 	for (int i = 0; i < nand_count; i++) {
-		SAMSUNG_K9F5608U0D(config, m_nand[i], 0);
+		SAMSUNG_K9F5608U0D(config, m_nand[i]);
 		m_nand[i]->rnb_wr_callback().set([this, i] (int state) { m_nand_rnb_state[i] = state != 1; });
 	}
 }
@@ -1892,7 +1890,7 @@ void namcos10_memn_state::ns10_ballpom(machine_config &config)
 	m_unscrambler = [] (uint16_t data) { return bitswap<16>(data, 0xd, 0xc, 0xe, 0xf, 0xa, 0xb, 0x8, 0x9, 0x5, 0x4, 0x6, 0x7, 0x1, 0x3, 0x0, 0x2); };
 
 	/* decrypter device (CPLD in hardware?) */
-	// BALLPOM_DECRYPTER(config, m_decrypter, 0);
+	// BALLPOM_DECRYPTER(config, m_decrypter);
 }
 
 void namcos10_memn_state::ns10_chocovdr(machine_config &config)
@@ -2013,7 +2011,7 @@ void namcos10_memn_state::ns10_gegemdb(machine_config &config)
 	m_unscrambler = [] (uint16_t data) { return bitswap<16>(data, 0xd, 0xf, 0xc, 0xe, 0x9, 0x8, 0xb, 0xa, 0x4, 0x5, 0x7, 0x6, 0x1, 0x3, 0x0, 0x2); };
 
 	/* decrypter device (CPLD in hardware?) */
-	// GEGEMDB_DECRYPTER(config, m_decrypter, 0);
+	// GEGEMDB_DECRYPTER(config, m_decrypter);
 }
 
 void namcos10_memn_state::ns10_gjspace(machine_config &config)
@@ -2899,8 +2897,8 @@ void namcos10_memp3_state::namcos10_memp3_base(machine_config &config)
 	});
 
 	LC82310(config, m_lc82310, XTAL(16'934'400));
-	m_lc82310->add_route(0, "lspeaker", 1.0);
-	m_lc82310->add_route(1, "rspeaker", 1.0);
+	m_lc82310->add_route(0, "speaker", 1.0, 0);
+	m_lc82310->add_route(1, "speaker", 1.0, 1);
 }
 
 void namcos10_memp3_state::machine_start()
@@ -3059,7 +3057,7 @@ void namcos10_memio_state::namcos10_memio_map(address_map &map)
 void namcos10_memio_state::namcos10_nand_tc58256aft(machine_config &config, int nand_count)
 {
 	for (int i = 0; i < nand_count; i++) {
-		TOSHIBA_TC58256AFT(config, m_nand[i], 0);
+		TOSHIBA_TC58256AFT(config, m_nand[i]);
 		m_nand[i]->rnb_wr_callback().set([this, i] (int state) { m_nand_rnb_state[i] = state != 1; });
 	}
 }
@@ -3068,6 +3066,14 @@ void namcos10_memio_state::nand_dataxor_w(offs_t offset, uint16_t data, uint16_t
 {
 	// logerror("%s: nand_dataxor_w: %04x\n", machine().describe_context(), data);
 	m_data_xor = ((data & 0xff) << 8) | (data >> 8);
+}
+
+void namcos10_memio_state::ns10_ippo(machine_config &config)
+{
+	namcos10_memio_base(config);
+	namcos10_nand_k9f2808u0b(config, 6);
+
+	m_unscrambler = [] (uint16_t data) { return bitswap<16>(data, 0xf, 0xe, 0xd, 0xc, 0xb, 0xa, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0); };
 }
 
 void namcos10_memio_state::ns10_ippo2(machine_config &config)
@@ -3174,6 +3180,9 @@ static INPUT_PORTS_START( gamshara )
 	PORT_DIPNAME( 0x7f, 0x7f, DEF_STR( Region ) ) PORT_DIPLOCATION("SW1:8,7,6,5,4,3,2")
 	PORT_DIPSETTING(0x7f, DEF_STR( Japan ) ) // JPN
 	PORT_DIPSETTING(0x6e, DEF_STR( World ) ) // ETC
+	PORT_DIPNAME( 0x80, 0x80, DEF_STR( Service_Mode ) ) PORT_DIPLOCATION("SW1:1") // read on boot / restart only, but if turned you can exit through menu selection (6: Exit Test) - using F2 don't allow this option
+	PORT_DIPSETTING( 0x80, DEF_STR( Off ) )
+	PORT_DIPSETTING( 0x00, DEF_STR( On ) )
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( startrgn )
@@ -3352,8 +3361,8 @@ static INPUT_PORTS_START( mgexio_medal )
 	PORT_BIT( 0x80, IP_ACTIVE_LOW, IPT_TILT )
 
 	PORT_START("MGEXIO_COIN")
-	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_NAME("Coin Sensor(L)") PORT_CHANGED_MEMBER(DEVICE_SELF, namcos10_state, mgexio_coin_start, 0)
-	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_NAME("Coin Sensor(R)") PORT_CHANGED_MEMBER(DEVICE_SELF, namcos10_state, mgexio_coin_start, 1)
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_COIN1 ) PORT_NAME("Coin Sensor(L)") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(namcos10_state::mgexio_coin_start), 0)
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_COIN2 ) PORT_NAME("Coin Sensor(R)") PORT_CHANGED_MEMBER(DEVICE_SELF, FUNC(namcos10_state::mgexio_coin_start), 1)
 
 INPUT_PORTS_END
 
@@ -3434,6 +3443,11 @@ INPUT_PORTS_END
 
 static INPUT_PORTS_START( ptblank3 )
 	PORT_INCLUDE(namcos10)
+
+	PORT_MODIFY("SYSTEM")
+	PORT_DIPNAME( 0x80, 0x80, DEF_STR( Service_Mode ) ) PORT_DIPLOCATION("SW1:1")
+	PORT_DIPSETTING( 0x80, DEF_STR( Off ) )
+	PORT_DIPSETTING( 0x00, DEF_STR( On ) )
 
 	PORT_MODIFY("IN1")
 	PORT_BIT( 0x0fff6f6f, IP_ACTIVE_LOW, IPT_UNUSED )
@@ -3862,6 +3876,17 @@ ROM_START( slotouji )
 	ROM_LOAD( "k9f2808u0b.8d", 0x0000000, 0x1080000, CRC(7f3744fe) SHA1(5ad4d700a274a4d5b87dff3706a9b958c1aa4763) )
 ROM_END
 
+ROM_START( slotoujia )
+	ROM_REGION32_LE( 0x400000, "maincpu:rom", 0 )
+	ROM_FILL( 0x0000000, 0x400000, 0x55 )
+
+	ROM_REGION32_LE( 0x1080000, "nand0", 0 )
+	ROM_LOAD( "k9f2808u0b.8e", 0x0000000, 0x1080000, CRC(9c64859f) SHA1(b0609744f37ca16e4a5c5f2c5e6e1fb16357f634) )
+
+	ROM_REGION32_LE( 0x1080000, "nand1", 0 )
+	ROM_LOAD( "k9f2808u0b.8d", 0x0000000, 0x1080000, CRC(70ba4025) SHA1(8957dc0c56a385534d65b793592d40fdeebb1230) )
+ROM_END
+
 ROM_START( startrgn )
 	ROM_REGION32_LE( 0x400000, "maincpu:rom", 0 )
 	ROM_FILL( 0x0000000, 0x400000, 0x55 )
@@ -3882,6 +3907,17 @@ ROM_START( sugorotc )
 
 	ROM_REGION32_LE( 0x1080000, "nand1", 0 )
 	ROM_LOAD( "stj1verc_1.8d", 0x0000000, 0x1080000, CRC(a7a20960) SHA1(72bc89637f966fe23a84c34346be3cdc20d712e5) )
+ROM_END
+
+ROM_START( sugorotcb )
+	ROM_REGION32_LE( 0x400000, "maincpu:rom", 0 )
+	ROM_FILL( 0x0000000, 0x400000, 0x55 )
+
+	ROM_REGION32_LE( 0x1080000, "nand0", 0 )
+	ROM_LOAD( "k9f2808u0b.8e", 0x0000000, 0x1080000, CRC(4f2a62c2) SHA1(db38a2976e464c5499791150ad31d281071b7337) )
+
+	ROM_REGION32_LE( 0x1080000, "nand1", 0 )
+	ROM_LOAD( "k9f2808u0b.8d", 0x0000000, 0x1080000, CRC(796fb7c9) SHA1(3cd8fbe115bcb3a304b49e26c0e8155391c26a98) )
 ROM_END
 
 ROM_START( sugorotca )
@@ -4102,6 +4138,32 @@ ROM_START( squizchs )
 	ROM_LOAD( "chs1vera_13.1b", 0x0000000, 0x1080000, CRC(739e3b1e) SHA1(d7a25984d939d69de11b0fea000e51fdb4759163) )
 ROM_END
 
+ROM_START( ippo )
+	ROM_REGION32_LE( 0x400000, "maincpu:rom", 0 )
+	ROM_FILL( 0x0000000, 0x400000, 0x55 )
+
+	ROM_REGION32_LE( 0x1080000, "nand0", 0 )
+	ROM_LOAD( "k9f2808u0a.ic4", 0x0000000, 0x1080000, CRC(f93878db) SHA1(921d316b74368d5ebeddb3c40fec7911f2ad33eb) )
+
+	ROM_REGION32_LE( 0x1080000, "nand1", 0 )
+	ROM_LOAD( "k9f2808u0a.ic8", 0x0000000, 0x1080000, CRC(142744bc) SHA1(fadc3265f87cd9fc3774e4c32a8e46167b397acf) )
+
+	ROM_REGION32_LE( 0x1080000, "nand2", 0 )
+	ROM_LOAD( "k9f2808u0a.ic5", 0x0000000, 0x1080000, CRC(3880d85b) SHA1(b7459b2e7bac02383ac67229927b38f8b796e2b0) )
+
+	ROM_REGION32_LE( 0x1080000, "nand3", 0 )
+	ROM_LOAD( "k9f2808u0a.ic9", 0x0000000, 0x1080000, CRC(da2fcdbb) SHA1(7f509c0c21442dc17beda6cfd086aebfc33a658c) )
+
+	ROM_REGION32_LE( 0x1080000, "nand4", 0 )
+	ROM_LOAD( "k9f2808u0a.ic6", 0x0000000, 0x1080000, CRC(d791a383) SHA1(90917d818c4697ed7977901bbbd54b6bcc74b718) )
+
+	ROM_REGION32_LE( 0x1080000, "nand5", 0 )
+	ROM_LOAD( "k9f2808u0a.ic10", 0x0000000, 0x1080000, CRC(f997c4d1) SHA1(88e79dd9985b5f6199ab608c8923299a6fdf7ced) )
+
+	ROM_REGION( 0x157, "plds", 0 )
+	ROM_LOAD( "f06-02.ic15", 0x000, 0x157, NO_DUMP ) // PAL20V8
+ROM_END
+
 ROM_START( ippo2 )
 	ROM_REGION32_LE( 0x400000, "maincpu:rom", 0 )
 	ROM_FILL( 0x0000000, 0x400000, 0x55 )
@@ -4166,11 +4228,13 @@ GAME( 2002, puzzball,  0,        ns10_puzzball,  mgexio_medal, namcos10_memn_sta
 GAME( 2002, puzzballa, puzzball, ns10_puzzball,  mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Puzz Ball (Japan, PZB1 Ver.A)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // Feb 15 2002 11:28:06
 GAME( 2002, startrgn,  0,        ns10_startrgn,  startrgn,     namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Star Trigon (Japan, STT1 Ver.A)", MACHINE_IMPERFECT_SOUND )
 GAME( 2002, sugorotc,  0,        ns10_sugorotic, mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Sugorotic JAPAN (STJ1 Ver.C)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // Aug  6 2002 13:23:31
+GAME( 2002, sugorotcb, sugorotc, ns10_sugorotic, mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Sugorotic JAPAN (STJ1 Ver.B)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // May 12 2002 10:43:07
 GAME( 2002, sugorotca, sugorotc, ns10_sugorotic, mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Sugorotic JAPAN (STJ1 Ver.A)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // Feb 15 2002 11:23:57
 GAME( 2003, konotako,  0,        ns10_konotako,  konotako,     namcos10_memn_state,  memn_driver_init, ROT0, "Mitchell",          "Kono e Tako (10021 Ver.A)", MACHINE_IMPERFECT_SOUND )
 GAME( 2003, nflclsfb,  0,        ns10_nflclsfb,  nflclsfb,     namcos10_memn_state,  memn_driver_init, ROT0, "Namco / Metro",     "NFL Classic Football (US, NCF3 Ver.A.)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_CONTROLS | MACHINE_IMPERFECT_SOUND )
 GAME( 2003, pacmball,  0,        ns10_pacmball,  mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Pacman BALL (PMB2 Ver.A.)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND )
 GAME( 2003, slotouji,  0,        ns10_slotouji,  mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Slot no Oujisama / Slot Prince (Japan, SLO1 Ver. B)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_CONTROLS | MACHINE_IMPERFECT_SOUND | MACHINE_UNEMULATED_PROTECTION ) // May 2 2003, decrypter not done yet
+GAME( 2003, slotoujia, slotouji, ns10_slotouji,  mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Slot no Oujisama / Slot Prince (Japan, SLO1 Ver. A)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_CONTROLS | MACHINE_IMPERFECT_SOUND | MACHINE_UNEMULATED_PROTECTION ) // decrypter not done yet
 GAME( 2004, sekaikh,   0,        ns10_sekaikh,   mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Sekai Kaseki Hakken (Japan, SKH1 Ver.B)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_CONTROLS | MACHINE_IMPERFECT_SOUND )
 GAME( 2004, sekaikha,  sekaikh,  ns10_sekaikh,   mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Sekai Kaseki Hakken (Japan, SKH1 Ver.A)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_CONTROLS | MACHINE_IMPERFECT_SOUND )
 GAME( 2005, ballpom,   0,        ns10_ballpom,   mgexio_medal, namcos10_memn_state,  memn_driver_init, ROT0, "Namco",             "Ball Pom Line", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_CONTROLS | MACHINE_IMPERFECT_SOUND ) // ROM VER. B0 FEB 09 2005 15:29:02 in test mode, boots but requires MGEXIO to proceed
@@ -4193,4 +4257,5 @@ GAME( 2002, nicetsuk,  0,        ns10_nicetsuk,  nicetsuk,     namcos10_memp3_st
 GAME( 2003, squizchs,  0,        ns10_squizchs,  squizchs,     namcos10_memp3_state, memn_driver_init, ROT0, "Namco",                      "Seishun-Quiz Colorful High School (CHS1 Ver.A)", MACHINE_IMPERFECT_SOUND )
 
 // MEM/IO
+GAME( 2001, ippo,      0,        ns10_ippo,      ippo2,        namcos10_memio_state, memn_driver_init, ROT0, "Taito",             "Hard Puncher Hajime no Ippo - The Fighting! (VER.2.02J)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // 2001/06/23 14:15:16
 GAME( 2002, ippo2,     0,        ns10_ippo2,     ippo2,        namcos10_memio_state, memn_driver_init, ROT0, "Taito",             "Hard Puncher Hajime no Ippo 2 - The Fighting! - Ouja e no chousen (VER.2.00J)", MACHINE_NOT_WORKING | MACHINE_IMPERFECT_SOUND ) // copyright 2001 but 2002/01/20 18:27:18 in ROM e 2002 on flyer

@@ -48,10 +48,12 @@
 */
 
 #include "emu.h"
-#include "cpu/mcs51/mcs51.h"
+
+#include "cpu/mcs51/i80c51.h"
 #include "machine/i2cmem.h"
 #include "machine/pcf8583.h"
-#include "machine/roc10937.h"
+#include "video/roc10937.h"
+
 #include "speaker.h"
 
 namespace {
@@ -68,8 +70,8 @@ public:
 	void zunknecta(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	required_device<cpu_device> m_maincpu;
 };
@@ -91,9 +93,9 @@ void marsvending_state::marsvending(machine_config &config)
 
 	PCF8583(config, "clock", 32.768_kHz_XTAL); // PCF8583P
 
-	I2C_24C04(config, "i2cmem", 0); // X24C04P
+	I2C_24C04(config, "i2cmem"); // X24C04P
 
-	ROC10957(config, "display", 0); // Rockwell 10957P-40 or compatible, 10 digits, 16 segments per digit (character with decimal point and comma tail)
+	ROC10957(config, "display"); // Rockwell 10957P-40 or compatible, 10 digits, 16 segments per digit (character with decimal point and comma tail)
 
 	SPEAKER(config, "mono").front_center();
 }
@@ -112,5 +114,5 @@ ROM_END
 } // anonymous namespace
 
 
-SYST( 1990, apvm110,  0,       0, marsvending, marsvending, marsvending_state, empty_init, "Mars Electronics", "Automatic Products Vending Machine model 110 (set 1)", MACHINE_IS_SKELETON )
-SYST( 1990, apvm110a, apvm110, 0, marsvending, marsvending, marsvending_state, empty_init, "Mars Electronics", "Automatic Products Vending Machine model 110 (set 2)", MACHINE_IS_SKELETON )
+SYST( 1990, apvm110,  0,       0, marsvending, marsvending, marsvending_state, empty_init, "Mars Electronics", "Automatic Products Vending Machine model 110 (set 1)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+SYST( 1990, apvm110a, apvm110, 0, marsvending, marsvending, marsvending_state, empty_init, "Mars Electronics", "Automatic Products Vending Machine model 110 (set 2)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )

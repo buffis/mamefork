@@ -42,13 +42,12 @@
 #include "formats/ap_dsk35.h"
 #include "layout/generic.h"
 
+#include "endianness.h"
+
 #define LOG_RAM (1U << 1)
 
 #define VERBOSE (0)
 #include "logmacro.h"
-
-static constexpr u32 C7M  = 7833600;
-static constexpr u32 C15M = (C7M * 2);
 
 //**************************************************************************
 //  DEVICE DEFINITIONS
@@ -65,6 +64,11 @@ static INPUT_PORTS_START( v8 )
 	PORT_CONFSETTING( 0x01, "15\" Portrait Display (640x870)")
 	PORT_CONFSETTING( 0x02, "12\" RGB (512x384)")
 	PORT_CONFSETTING( 0x06, "13\" RGB (640x480)")
+
+	PORT_START("config")
+	PORT_CONFNAME(0x01, 0x01, "Diagnostic mode")
+	PORT_CONFSETTING(0x01, "Disabled")
+	PORT_CONFSETTING(0x00, "Enabled")
 INPUT_PORTS_END
 
 //-------------------------------------------------
@@ -85,9 +89,9 @@ void v8_device::map(address_map &map)
 	map(0x000000, 0x0fffff).r(FUNC(v8_device::rom_switch_r));
 
 	map(0x500000, 0x501fff).rw(FUNC(v8_device::mac_via_r), FUNC(v8_device::mac_via_w));
-	map(0x514000, 0x515fff).rw(m_asc, FUNC(asc_device::read), FUNC(asc_device::write));
-	map(0x524000, 0x525fff).rw(FUNC(v8_device::dac_r), FUNC(v8_device::dac_w));
-	map(0x526000, 0x527fff).rw(FUNC(v8_device::pseudovia_r), FUNC(v8_device::pseudovia_w));
+	map(0x514000, 0x515fff).rw(m_asc, FUNC(asc_base_device::read), FUNC(asc_base_device::write));
+	map(0x524000, 0x525fff).rw(m_ariel, FUNC(ariel_device::read), FUNC(ariel_device::write));
+	map(0x526000, 0x527fff).rw(m_pseudovia, FUNC(pseudovia_device::read), FUNC(pseudovia_device::write));
 
 	map(0x540000, 0x5bffff).rw(FUNC(v8_device::vram_r), FUNC(v8_device::vram_w));
 }
@@ -101,12 +105,10 @@ void v8_device::device_add_mconfig(machine_config &config)
 	SCREEN(config, m_screen, SCREEN_TYPE_RASTER);
 	m_screen->set_raw(25175000, 800, 0, 640, 525, 0, 480);
 	m_screen->set_screen_update(FUNC(v8_device::screen_update));
-	m_screen->screen_vblank().set(FUNC(v8_device::slot_irq_w<0x40>));
+	m_screen->screen_vblank().set(m_pseudovia, FUNC(pseudovia_device::slot_irq_w<0x40>));
 	config.set_default_layout(layout_monitors);
 
-	PALETTE(config, m_palette).set_entries(256);
-
-	R65NC22(config, m_via1, C7M / 10);
+	R65NC22(config, m_via1, 15.6672_MHz_XTAL / 20);
 	m_via1->readpa_handler().set(FUNC(v8_device::via_in_a));
 	m_via1->readpb_handler().set(FUNC(v8_device::via_in_b));
 	m_via1->writepa_handler().set(FUNC(v8_device::via_out_a));
@@ -114,10 +116,20 @@ void v8_device::device_add_mconfig(machine_config &config)
 	m_via1->cb2_handler().set(FUNC(v8_device::via_out_cb2));
 	m_via1->irq_handler().set(FUNC(v8_device::via1_irq));
 
-	ASC(config, m_asc, C15M, asc_device::asc_type::V8);
-	m_asc->irqf_callback().set(FUNC(v8_device::asc_irq));
-	m_asc->add_route(0, tag(), 1.0);
-	m_asc->add_route(1, tag(), 1.0);
+	ASC_V8(config, m_asc, 15.6672_MHz_XTAL);
+	m_asc->irqf_callback().set(m_pseudovia, FUNC(pseudovia_device::asc_irq_w));
+	m_asc->add_route(0, tag(), 1.0, 0);
+	m_asc->add_route(1, tag(), 1.0, 1);
+
+	APPLE_V8_PSEUDOVIA(config, m_pseudovia, 15.6672_MHz_XTAL);
+	m_pseudovia->writepb_handler().set(FUNC(v8_device::via2_pb_w));
+	m_pseudovia->readconfig_handler().set(FUNC(v8_device::via2_config_r));
+	m_pseudovia->writeconfig_handler().set(FUNC(v8_device::via2_config_w));
+	m_pseudovia->readvideo_handler().set(FUNC(v8_device::via2_video_config_r));
+	m_pseudovia->writevideo_handler().set(FUNC(v8_device::via2_video_config_w));
+	m_pseudovia->irq_callback().set(FUNC(v8_device::via2_irq));
+
+	ARIEL(config, m_ariel);
 }
 
 //-------------------------------------------------
@@ -134,9 +146,12 @@ v8_device::v8_device(const machine_config &mconfig, device_type type, const char
 	device_sound_interface(mconfig, *this),
 	m_maincpu(*this, finder_base::DUMMY_TAG),
 	m_screen(*this, "screen"),
-	m_palette(*this, "palette"),
+	m_ariel(*this, "ramdac"),
 	m_asc(*this, "asc"),
+	m_pseudovia(*this, "pseudovia"),
+	m_config_port(*this, "config"),
 	m_overlay(false),
+	m_video_config(0),
 	write_pb4(*this),
 	write_pb5(*this),
 	write_cb2(*this),
@@ -146,6 +161,7 @@ v8_device::v8_device(const machine_config &mconfig, device_type type, const char
 	m_montype(*this, "MONTYPE"),
 	m_via1(*this, "via1"),
 	m_rom(*this, finder_base::DUMMY_TAG),
+	m_config(0),
 	m_baseIs4M(false)
 {
 }
@@ -158,7 +174,7 @@ void v8_device::device_start()
 {
 	m_vram = std::make_unique<u32[]>(0x100000 / sizeof(u32));
 
-	m_stream = stream_alloc(8, 2, m_asc->clock(), STREAM_SYNCHRONOUS);
+	m_stream = stream_alloc(8, 2, 22257, STREAM_SYNCHRONOUS);
 
 	m_6015_timer = timer_alloc(FUNC(v8_device::mac_6015_tick), this);
 	m_6015_timer->adjust(attotime::never);
@@ -168,17 +184,9 @@ void v8_device::device_start()
 	save_item(NAME(m_via2_interrupt));
 	save_item(NAME(m_scc_interrupt));
 	save_item(NAME(m_last_taken_interrupt));
-	save_item(NAME(m_pseudovia_regs));
-	save_item(NAME(m_pseudovia_ier));
-	save_item(NAME(m_pseudovia_ifr));
-	save_item(NAME(m_pal_address));
-	save_item(NAME(m_pal_idx));
-	save_item(NAME(m_pal_control));
-	save_item(NAME(m_pal_colkey));
+	save_item(NAME(m_config));
+	save_item(NAME(m_video_config));
 	save_item(NAME(m_overlay));
-
-	m_pseudovia_ier = m_pseudovia_ifr = 0;
-	m_pal_address = m_pal_idx = m_pal_control = m_pal_colkey = 0;
 }
 
 //-------------------------------------------------
@@ -190,13 +198,6 @@ void v8_device::device_reset()
 	// start 60.15 Hz timer
 	m_6015_timer->adjust(attotime::from_hz(60.15), 0, attotime::from_hz(60.15));
 
-	std::fill_n(m_pseudovia_regs, 256, 0);
-	m_pseudovia_regs[0] = 0x4f;
-	m_pseudovia_regs[1] = 0x06;
-	m_pseudovia_regs[2] = 0x7f;
-	m_pseudovia_regs[3] = 0;
-	m_pseudovia_ier = 0;
-	m_pseudovia_ifr = 0;
 	m_via_interrupt = m_via2_interrupt = m_scc_interrupt = 0;
 	m_last_taken_interrupt = -1;
 
@@ -215,13 +216,10 @@ void v8_device::device_reset()
 	space.install_rom(0x00000000, memory_end & ~memory_mirror, memory_mirror, &m_rom[0]);
 }
 
-void v8_device::sound_stream_update(sound_stream &stream, std::vector<read_stream_view> const &inputs, std::vector<write_stream_view> &outputs)
+void v8_device::sound_stream_update(sound_stream &stream)
 {
-	for (int i = 0; i < inputs[0].samples(); i++)
-	{
-		outputs[0].put(i, inputs[0].get(i));
-		outputs[1].put(i, inputs[1].get(i));
-	}
+	stream.copy(0, 0);
+	stream.copy(1, 1);
 }
 
 u32 v8_device::rom_switch_r(offs_t offset)
@@ -250,7 +248,7 @@ TIMER_CALLBACK_MEMBER(v8_device::mac_6015_tick)
 
 u8 v8_device::via_in_a()
 {
-	return 0xd5;
+	return 0xd4 | (m_config_port->read() & 1);
 }
 
 u8 v8_device::via_in_b()
@@ -322,230 +320,35 @@ void v8_device::scc_irq_w(int state)
 	field_interrupts();
 }
 
-template <u8 mask>
-void v8_device::slot_irq_w(int state)
+void v8_device::slot2_irq_w(int state)
 {
-	if (state)
-	{
-		m_pseudovia_regs[2] &= ~mask;
-	}
-	else
-	{
-		m_pseudovia_regs[2] |= mask;
-	}
-
-	pseudovia_recalc_irqs();
+	m_pseudovia->slot_irq_w<0x20>(state);
 }
 
-template void v8_device::slot_irq_w<0x40>(int state);
-template void v8_device::slot_irq_w<0x20>(int state);
-template void v8_device::slot_irq_w<0x10>(int state);
-template void v8_device::slot_irq_w<0x08>(int state);
-template void v8_device::slot_irq_w<0x04>(int state);
-template void v8_device::slot_irq_w<0x02>(int state);
-template void v8_device::slot_irq_w<0x01>(int state);
-
-void v8_device::asc_irq(int state)
+u8 v8_device::via2_config_r()
 {
-	if (state == ASSERT_LINE)
-	{
-		m_pseudovia_regs[3] |= 0x10; // any VIA 2 interrupt | sound interrupt
-		pseudovia_recalc_irqs();
-	}
-	else
-	{
-		m_pseudovia_regs[3] &= ~0x10;
-		pseudovia_recalc_irqs();
-	}
+	return m_config | 0x04;
 }
 
-void v8_device::pseudovia_recalc_irqs()
+void v8_device::via2_config_w(u8 data)
 {
-	// check slot interrupts and bubble them down to IFR
-	u8 slot_irqs = (~m_pseudovia_regs[2]) & 0x78;
-	slot_irqs &= (m_pseudovia_regs[0x12] & 0x78);
-
-	if (slot_irqs)
-	{
-		m_pseudovia_regs[3] |= 2; // any slot
-	}
-	else // no slot irqs, clear the pending bit
-	{
-		m_pseudovia_regs[3] &= ~2; // any slot
-	}
-
-	u8 ifr = (m_pseudovia_regs[3] & m_pseudovia_ier) & 0x1b;
-
-	if (ifr != 0)
-	{
-		m_pseudovia_regs[3] = ifr | 0x80;
-		m_pseudovia_ifr = ifr | 0x80;
-
-		via2_irq(ASSERT_LINE);
-	}
-	else
-	{
-		via2_irq(CLEAR_LINE);
-	}
+	m_config = data;
+	ram_size(data);
 }
 
-u8 v8_device::pseudovia_r(offs_t offset)
+u8 v8_device::via2_video_config_r()
 {
-	int data = 0;
-
-	if (offset < 0x100)
-	{
-		data = m_pseudovia_regs[offset];
-
-		if (offset == 0x10)
-		{
-			data &= ~0x38;
-			data |= (m_montype->read() << 3);
-		}
-
-		// bit 7 of these registers always reads as 0 on pseudo-VIAs
-		if ((offset == 0x12) || (offset == 0x13))
-		{
-			data &= ~0x80;
-		}
-	}
-	else
-	{
-		offset >>= 9;
-
-		switch (offset)
-		{
-		case 13: // IFR
-			data = m_pseudovia_ifr;
-			break;
-
-		case 14: // IER
-			data = m_pseudovia_ier;
-			break;
-
-		default:
-			logerror("pseudovia_r: Unknown pseudo-VIA register %d access\n", offset);
-			break;
-		}
-	}
-	return data;
+	return m_montype->read() << 3;
 }
 
-void v8_device::pseudovia_w(offs_t offset, u8 data)
+void v8_device::via2_video_config_w(u8 data)
 {
-	if (offset < 0x100)
-	{
-		switch (offset)
-		{
-		case 0x00:  // 24/32 bit switch in bit 3 (&8)
-			write_hmmu_enable(BIT(data, 3));
-			break;
+	m_video_config = data;
+}
 
-		/* V8 config:
-		    bit 0 = Apple II mode (4bpp 560x384) (TODO)
-		    bit 1 = 512Row
-		    bit 2 = VRAM present
-		    bits 3-4 = always read 0, can't write
-		    bit 5 = bank B (motherboard soldered) size, 0 = 4MB, 1 = 2MB
-		    bits 6-7 = bank A (SIMM) size,
-		        0 = 0MB
-		        1 = 2MB
-		        2 = 4MB
-		        3 = 8MB
-		*/
-		case 0x01:
-			if (m_pseudovia_regs[offset] != data)
-			{
-				ram_size(data);
-			}
-			m_pseudovia_regs[offset] = data | 0x04; // we always have VRAM
-			break;
-
-		case 0x02:
-			m_pseudovia_regs[offset] |= (data & 0x40);
-			pseudovia_recalc_irqs();
-			break;
-
-		case 0x03:           // write here to ack
-			if (data & 0x80) // 1 bits write 1s
-			{
-				m_pseudovia_regs[offset] |= data & 0x7f;
-				m_pseudovia_ifr |= data & 0x7f;
-			}
-			else // 1 bits write 0s
-			{
-				m_pseudovia_regs[offset] &= ~(data & 0x7f);
-				m_pseudovia_ifr &= ~(data & 0x7f);
-			}
-			pseudovia_recalc_irqs();
-			break;
-
-		case 0x10:
-			m_pseudovia_regs[offset] = data;
-			break;
-
-		case 0x12:
-			if (data & 0x80) // 1 bits write 1s
-			{
-				m_pseudovia_regs[offset] |= data & 0x7f;
-			}
-			else // 1 bits write 0s
-			{
-				m_pseudovia_regs[offset] &= ~(data & 0x7f);
-			}
-			pseudovia_recalc_irqs();
-			break;
-
-		case 0x13:
-			if (data & 0x80) // 1 bits write 1s
-			{
-				m_pseudovia_regs[offset] |= data & 0x7f;
-
-				if (data == 0xff)
-					m_pseudovia_regs[offset] = 0x1f; // I don't know why this is special, but the IIci ROM's POST demands it
-			}
-			else // 1 bits write 0s
-			{
-				m_pseudovia_regs[offset] &= ~(data & 0x7f);
-			}
-			break;
-
-		default:
-			m_pseudovia_regs[offset] = data;
-			break;
-		}
-	}
-	else
-	{
-		offset >>= 9;
-
-		switch (offset)
-		{
-		case 13: // IFR
-			if (data & 0x80)
-			{
-				data = 0x7f;
-			}
-			pseudovia_recalc_irqs();
-			break;
-
-		case 14:             // IER
-			if (data & 0x80) // 1 bits write 1s
-			{
-				m_pseudovia_ier |= data & 0x7f;
-			}
-			else // 1 bits write 0s
-			{
-				m_pseudovia_ier &= ~(data & 0x7f);
-			}
-			pseudovia_recalc_irqs();
-			break;
-
-		default:
-			logerror("pseudovia_w: Unknown extended pseudo-VIA register %d access\n", offset);
-			break;
-		}
-	}
+void v8_device::via2_pb_w(u8 data)
+{
+	write_hmmu_enable(BIT(data, 3));
 }
 
 void v8_device::ram_size(u8 config)
@@ -689,58 +492,6 @@ void v8_device::vram_w(offs_t offset, u32 data, u32 mem_mask)
 	COMBINE_DATA(&m_vram[offset]);
 }
 
-u8 v8_device::dac_r(offs_t offset)
-{
-	switch (offset)
-	{
-	case 2:
-		return m_pal_control;
-
-	default:
-		return 0;
-	}
-}
-
-void v8_device::dac_w(offs_t offset, u8 data)
-{
-	switch (offset)
-	{
-	case 0:
-		m_pal_address = data;
-		m_pal_idx = 0;
-		break;
-
-	case 1:
-		switch (m_pal_idx)
-		{
-		case 0:
-			m_palette->set_pen_red_level(m_pal_address, data);
-			break;
-		case 1:
-			m_palette->set_pen_green_level(m_pal_address, data);
-			break;
-		case 2:
-			m_palette->set_pen_blue_level(m_pal_address, data);
-			break;
-		}
-		m_pal_idx++;
-		if (m_pal_idx == 3)
-		{
-			m_pal_idx = 0;
-			m_pal_address++;
-		}
-		break;
-
-	case 2:
-		m_pal_control = data;
-		break;
-
-	case 3:
-		m_pal_colkey = data;
-		break;
-	}
-}
-
 u32 v8_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
 {
 	int hres, vres;
@@ -763,9 +514,9 @@ u32 v8_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const 
 		break;
 	}
 
-	const pen_t *pens = m_palette->pens();
+	const pen_t *pens = m_ariel->pens();
 
-	switch (m_pseudovia_regs[0x10] & 7)
+	switch (m_video_config & 7)
 	{
 	case 0: // 1bpp
 	{
@@ -870,6 +621,10 @@ u32 v8_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const 
 // ================ eagle_device
 
 static INPUT_PORTS_START( eagle )
+	PORT_START("config")
+	PORT_CONFNAME(0x01, 0x01, "Diagnostic mode")
+	PORT_CONFSETTING(0x01, "Disabled")
+	PORT_CONFSETTING(0x00, "Enabled")
 INPUT_PORTS_END
 
 //-------------------------------------------------
@@ -886,10 +641,12 @@ void eagle_device::device_add_mconfig(machine_config &config)
 	v8_device::device_add_mconfig(config);
 	m_screen->set_raw(15.6672_MHz_XTAL, 704, 0, 512, 370, 0, 342);
 
-	ASC(config.replace(), m_asc, C15M, asc_device::asc_type::EAGLE);
-	m_asc->add_route(0, tag(), 1.0);
-	m_asc->add_route(1, tag(), 1.0);
-	m_asc->irqf_callback().set(FUNC(eagle_device::asc_irq));
+	ASC_V8(config.replace(), m_asc, 15.6672_MHz_XTAL);
+	m_asc->add_route(0, tag(), 1.0, 0);
+	m_asc->add_route(1, tag(), 1.0, 1);
+	m_asc->irqf_callback().set(m_pseudovia, FUNC(pseudovia_device::asc_irq_w));
+
+	m_pseudovia->readvideo_handler().set(FUNC(eagle_device::via2_video_config_r));
 }
 
 eagle_device::eagle_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)
@@ -899,20 +656,12 @@ eagle_device::eagle_device(const machine_config &mconfig, const char *tag, devic
 
 u8 eagle_device::via_in_a()
 {
-	return 0x93;
+	return 0x92 | (m_config_port->read() & 1);
 }
 
-u8 eagle_device::pseudovia_r(offs_t offset)
+u8 eagle_device::via2_video_config_r()
 {
-	if (offset < 0x100)
-	{
-		if (offset == 0x10)
-		{
-			return 0;
-		}
-	}
-
-	return v8_device::pseudovia_r(offset);
+	return 0;
 }
 
 u32 eagle_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
@@ -967,17 +716,19 @@ void spice_device::device_add_mconfig(machine_config &config)
 	v8_device::device_add_mconfig(config);
 	m_screen->set_raw(15.6672_MHz_XTAL, 640, 0, 512, 407, 0, 384);
 
-	ASC(config.replace(), m_asc, C15M, asc_device::asc_type::SONORA);
-	m_asc->add_route(0, tag(), 1.0);
-	m_asc->add_route(1, tag(), 1.0);
-	m_asc->irqf_callback().set(FUNC(spice_device::asc_irq));
+	ASC_SONORA(config.replace(), m_asc, 15.6672_MHz_XTAL);
+	m_asc->add_route(0, tag(), 1.0, 0);
+	m_asc->add_route(1, tag(), 1.0, 1);
+	m_asc->irqf_callback().set(m_pseudovia, FUNC(pseudovia_device::asc_irq_w));
 
-	SWIM2(config, m_fdc, C15M);
+	SWIM2(config, m_fdc, 15.6672_MHz_XTAL);
 	m_fdc->devsel_cb().set(FUNC(spice_device::devsel_w));
 	m_fdc->phases_cb().set(FUNC(spice_device::phases_w));
 
 	applefdintf_device::add_35_hd(config, m_floppy[0]);
 	applefdintf_device::add_35_nc(config, m_floppy[1]);
+
+	m_pseudovia->readvideo_handler().set(FUNC(spice_device::via2_video_config_r));
 }
 
 spice_device::spice_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 clock)
@@ -1003,20 +754,12 @@ void spice_device::device_start()
 
 u8 spice_device::via_in_a()
 {
-	return 0x83;
+	return 0x82;
 }
 
-u8 spice_device::pseudovia_r(offs_t offset)
+u8 spice_device::via2_video_config_r()
 {
-	if (offset < 0x100)
-	{
-		if (offset == 0x10)
-		{
-			return 0x02<<3;
-		}
-	}
-
-	return v8_device::pseudovia_r(offset);
+	return 0x02 << 3;
 }
 
 u32 spice_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
@@ -1025,8 +768,8 @@ u32 spice_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, con
 	hres = 512;
 	vres = 384;
 
-	const pen_t *pens = m_palette->pens();
-	switch (m_pseudovia_regs[0x10] & 7)
+	const pen_t *pens = m_ariel->pens();
+	switch (m_video_config & 7)
 	{
 	case 0: // 1bpp
 	{
@@ -1191,6 +934,8 @@ void tinkerbell_device::device_add_mconfig(machine_config &config)
 {
 	spice_device::device_add_mconfig(config);
 	m_screen->set_raw(25175000, 800, 0, 640, 525, 0, 480);
+
+	m_pseudovia->readvideo_handler().set(FUNC(tinkerbell_device::via2_video_config_r));
 }
 
 tinkerbell_device::tinkerbell_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)
@@ -1203,17 +948,9 @@ u8 tinkerbell_device::via_in_a()
 	return 0x84;
 }
 
-u8 tinkerbell_device::pseudovia_r(offs_t offset)
+u8 tinkerbell_device::via2_video_config_r()
 {
-	if (offset < 0x100)
-	{
-		if (offset == 0x10)
-		{
-			return 0x06 << 3;   // ID as an Apple 13" 640x480 monitor
-		}
-	}
-
-	return v8_device::pseudovia_r(offset);
+	return 0x06 << 3; // ID as an Apple 13" 640x480 monitor
 }
 
 u32 tinkerbell_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
@@ -1222,8 +959,8 @@ u32 tinkerbell_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap
 	hres = 640;
 	vres = 480;
 
-	const pen_t *pens = m_palette->pens();
-	switch (m_pseudovia_regs[0x10] & 7)
+	const pen_t *pens = m_ariel->pens();
+	switch (m_video_config & 7)
 	{
 	case 0: // 1bpp
 	{

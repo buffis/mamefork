@@ -17,8 +17,8 @@ public:
 	void tvtouch(machine_config &config);
 
 private:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
 	uint16_t porta_r(offs_t offset, uint16_t mem_mask = ~0);
 	uint16_t portb_r(offs_t offset, uint16_t mem_mask = ~0);
@@ -269,7 +269,7 @@ void jakks_tvtouch_state::tvtouch(machine_config &config)
 	m_maincpu->portb_out().set(FUNC(jakks_tvtouch_state::portb_w));
 	m_maincpu->portc_out().set(FUNC(jakks_tvtouch_state::portc_w));
 
-	I2C_24C04(config, m_i2cmem, 0);
+	I2C_24C04(config, m_i2cmem);
 }
 
 ROM_START( tvtchsw )

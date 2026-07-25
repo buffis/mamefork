@@ -1,7 +1,7 @@
 // license:BSD-3-Clause
 // copyright-holders:Wilbert Pol
-#ifndef MAME_BUS_SEGAAI_SLOT_H
-#define MAME_BUS_SEGAAI_SLOT_H
+#ifndef MAME_BUS_SEGAAI_SEGAAI_SLOT_H
+#define MAME_BUS_SEGAAI_SEGAAI_SLOT_H
 
 #pragma once
 
@@ -23,10 +23,7 @@ public:
 	segaai_card_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, T &&opts, const char *dflt)
 		: segaai_card_slot_device(mconfig, tag, owner, u32(0))
 	{
-		option_reset();
-		opts(*this);
-		set_default_option(dflt);
-		set_fixed(false);
+		set_options(std::forward<T>(opts), dflt, false);
 	}
 	segaai_card_slot_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
 	virtual ~segaai_card_slot_device();
@@ -44,7 +41,7 @@ public:
 	virtual std::string get_default_card_software(get_default_card_software_hook &hook) const override;
 
 protected:
-	virtual void device_start() override;
+	virtual void device_start() override ATTR_COLD;
 
 private:
 	optional_address_space m_address_space;
@@ -70,4 +67,4 @@ private:
 
 void segaai_cards(device_slot_interface &device);
 
-#endif
+#endif // MAME_BUS_SEGAAI_SEGAAI_SLOT_H

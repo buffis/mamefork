@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "h8.h"
+#include "h8_cpu_base.h"
 
 class h8_port_device : public device_t {
 public:
@@ -42,7 +42,7 @@ public:
 	bool nvram_write(util::write_stream &file);
 
 protected:
-	required_device<h8_device> m_cpu;
+	required_device<h8_cpu_base> m_cpu;
 
 	int m_address;
 	u8 m_default_ddr, m_ddr, m_pcr, m_odr;
@@ -50,8 +50,8 @@ protected:
 	u8 m_dr;
 	s32 m_last_output;
 
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 	void update_output();
 };
 

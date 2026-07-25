@@ -36,10 +36,10 @@ public:
 	void xd88_01(machine_config &config);
 
 protected:
-	virtual void machine_start() override;
-	virtual void machine_reset() override;
+	virtual void machine_start() override ATTR_COLD;
+	virtual void machine_reset() override ATTR_COLD;
 
-	void cpu_map(address_map &map);
+	void cpu_map(address_map &map) ATTR_COLD;
 
 private:
 	required_device<mc88100_device> m_cpu;
@@ -90,4 +90,4 @@ ROM_END
 } // anonymous namespace
 
 /*   YEAR  NAME     PARENT COMPAT MACHINE  INPUT CLASS       INIT        COMPANY      FULLNAME   FLAGS */
-COMP(1990, xd88_01, 0,     0,     xd88_01, 0,    xd88_state, empty_init, "Tektronix", "XD88/01", MACHINE_IS_SKELETON)
+COMP(1990, xd88_01, 0,     0,     xd88_01, 0,    xd88_state, empty_init, "Tektronix", "XD88/01", MACHINE_NO_SOUND | MACHINE_NOT_WORKING)

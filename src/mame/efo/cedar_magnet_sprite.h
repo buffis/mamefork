@@ -18,7 +18,7 @@ class cedar_magnet_sprite_device : public device_t, public cedar_magnet_board_in
 {
 public:
 	// construction/destruction
-	cedar_magnet_sprite_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock);
+	cedar_magnet_sprite_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock = 0);
 
 	void sprite_port80_w(u8 data);
 	void sprite_port84_w(u8 data);
@@ -32,13 +32,13 @@ public:
 
 	u32 draw(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int palbase);
 
-	void cedar_magnet_sprite_io(address_map &map);
-	void cedar_magnet_sprite_map(address_map &map);
-	void cedar_magnet_sprite_sub_ram_map(address_map &map);
+	void cedar_magnet_sprite_io(address_map &map) ATTR_COLD;
+	void cedar_magnet_sprite_map(address_map &map) ATTR_COLD;
+	void cedar_magnet_sprite_sub_ram_map(address_map &map) ATTR_COLD;
 protected:
-	virtual void device_add_mconfig(machine_config &config) override;
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_add_mconfig(machine_config &config) override ATTR_COLD;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 private:
 	void do_blit();

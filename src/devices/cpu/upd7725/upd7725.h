@@ -36,21 +36,21 @@ public:
 	auto p0() { return m_out_p0_cb.bind(); }
 	auto p1() { return m_out_p1_cb.bind(); }
 
-	uint8_t snesdsp_read(bool mode);
-	void snesdsp_write(bool mode, uint8_t data);
+	uint8_t status_r();
+	uint8_t data_r();
+	void data_w(uint8_t data);
 
 protected:
 	// construction/destruction
 	necdsp_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, uint32_t abits, uint32_t dbits);
 
 	// device_t implementation
-	virtual void device_start() override;
-	virtual void device_reset() override;
+	virtual void device_start() override ATTR_COLD;
+	virtual void device_reset() override ATTR_COLD;
 
 	// device_execute_interface implementation
 	virtual uint32_t execute_min_cycles() const noexcept override;
 	virtual uint32_t execute_max_cycles() const noexcept override;
-	virtual uint32_t execute_input_lines() const noexcept override;
 	virtual void execute_run() override;
 	virtual void execute_set_input(int inputnum, int state) override;
 
@@ -176,7 +176,10 @@ public:
 	upd96050_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
 
 	uint16_t dataram_r(uint16_t addr) { return dataRAM[addr & 0x07ff]; }
-	void dataram_w(uint16_t addr, uint16_t data) { dataRAM[addr & 0x07ff] = data; }
+	void dataram_w(uint16_t addr, uint16_t data, uint16_t mem_mask = uint16_t(~0))
+	{
+		COMBINE_DATA(&dataRAM[addr & 0x07ff]);
+	}
 };
 
 // device type definition

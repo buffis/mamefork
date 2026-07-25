@@ -33,19 +33,19 @@ class menu_file_selector : public menu
 public:
 	enum class result
 	{
-		INVALID = -1,
 		EMPTY = 0x1000,
 		SOFTLIST,
 		CREATE,
-		FILE
+		FILE,
+		MIDI
 	};
 
-	using handler_function = std::function<void (result result, std::string &&directory, std::string &&file)>;
+	using handler_function = std::function<void (result result, std::string const &directory, std::string const &file)>;
 
 	menu_file_selector(
 			mame_ui_manager &mui,
-			render_container &container,
-			device_image_interface *image,
+			render_target &target,
+			device_image_interface &image,
 			std::string_view directory,
 			std::string_view file,
 			bool has_empty,
@@ -65,6 +65,7 @@ private:
 	enum file_selector_entry_type
 	{
 		SELECTOR_ENTRY_TYPE_EMPTY,
+		SELECTOR_ENTRY_TYPE_MIDI,
 		SELECTOR_ENTRY_TYPE_CREATE,
 		SELECTOR_ENTRY_TYPE_SOFTWARE_LIST,
 		SELECTOR_ENTRY_TYPE_DRIVE,
@@ -85,15 +86,14 @@ private:
 
 	// internal state
 	handler_function const              m_handler;
-	device_image_interface *const       m_image;
 	std::string                         m_current_directory;
 	std::string                         m_current_file;
 	std::optional<text_layout>          m_path_layout;
 	std::pair<float, float>             m_path_position;
-	result                              m_result;
 	bool const                          m_has_empty;
 	bool const                          m_has_softlist;
 	bool const                          m_has_create;
+	bool const                          m_is_midi;
 	std::vector<file_selector_entry>    m_entrylist;
 	std::string                         m_filename;
 	std::pair<size_t, size_t>           m_clicked_directory;
@@ -119,7 +119,6 @@ class menu_select_rw : public menu
 public:
 	enum class result
 	{
-		INVALID = -1,
 		READONLY = 0x3000,
 		READWRITE,
 		WRITE_OTHER,
@@ -130,7 +129,7 @@ public:
 
 	menu_select_rw(
 			mame_ui_manager &mui,
-			render_container &container,
+			render_target &target,
 			bool can_in_place,
 			handler_function &&handler);
 	virtual ~menu_select_rw() override;
@@ -145,7 +144,6 @@ private:
 	// internal state
 	handler_function const  m_handler;
 	bool const              m_can_in_place;
-	result                  m_result;
 };
 
 } // namespace ui

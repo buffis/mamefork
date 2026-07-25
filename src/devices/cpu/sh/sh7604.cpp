@@ -149,6 +149,12 @@ void sh7604_device::device_start()
 	save_item(NAME(m_rstcsr));
 	save_item(NAME(m_wtcw));
 
+	// UBC
+	save_item(NAME(m_barah));
+	save_item(NAME(m_baral));
+	save_item(NAME(m_barbh));
+	save_item(NAME(m_barbl));
+
 	// DMAC
 	save_item(NAME(m_dmaor));
 	save_item(STRUCT_MEMBER(m_dmac, drcr));
@@ -197,6 +203,11 @@ void sh7604_device::device_reset()
 
 	m_wtcnt = 0;
 	m_wtcsr = 0;
+
+	m_barah = 0;
+	m_baral = 0;
+	m_barbh = 0;
+	m_barbl = 0;
 }
 
 void sh7604_device::sh7604_map(address_map &map)
@@ -262,6 +273,24 @@ void sh7604_device::sh7604_map(address_map &map)
 	map(0xffffff14, 0xffffff17).rw(FUNC(sh7604_device::dvdntl_r), FUNC(sh7604_device::dvdntl_w));
 	map(0xffffff18, 0xffffff1b).r(FUNC(sh7604_device::dvdnth_r));
 	map(0xffffff1c, 0xffffff1f).r(FUNC(sh7604_device::dvdntl_r));
+
+	// UBC
+	map(0xffffff40, 0xffffff41).rw(FUNC(sh7604_device::barah_r), FUNC(sh7604_device::barah_w));
+	map(0xffffff42, 0xffffff43).rw(FUNC(sh7604_device::baral_r), FUNC(sh7604_device::baral_w));
+//  map(0xffffff44, 0xffffff45).rw(FUNC(sh7604_device::bamrah_r), FUNC(sh7604_device::bamrah_w));
+//  map(0xffffff46, 0xffffff47).rw(FUNC(sh7604_device::bamral_r), FUNC(sh7604_device::bamral_w));
+//  map(0xffffff48, ).rw(FUNC(sh7604_device::bbra_r), FUNC(sh7604_device::bbra_w));
+
+	map(0xffffff60, 0xffffff61).rw(FUNC(sh7604_device::barbh_r), FUNC(sh7604_device::barbh_w));
+	map(0xffffff62, 0xffffff63).rw(FUNC(sh7604_device::barbl_r), FUNC(sh7604_device::barbl_w));
+//  map(0xffffff64, 0xffffff65).rw(FUNC(sh7604_device::bamrbh_r), FUNC(sh7604_device::bamrbh_w));
+//  map(0xffffff66, 0xffffff67).rw(FUNC(sh7604_device::bamrbl_r), FUNC(sh7604_device::bamrbl_w));
+//  map(0xffffff68, ).rw(FUNC(sh7604_device::bbrb_r), FUNC(sh7604_device::bbrb_w));
+//  map(0xffffff70, 0xffffff71).rw(FUNC(sh7604_device::bdrbh_r), FUNC(sh7604_device::bdrbh_w));
+//  map(0xffffff72, 0xffffff73).rw(FUNC(sh7604_device::bdrbl_r), FUNC(sh7604_device::bdrbl_w));
+//  map(0xffffff74, 0xffffff75).rw(FUNC(sh7604_device::bdmrbh_r), FUNC(sh7604_device::bdmrbh_w));
+//  map(0xffffff76, 0xffffff77).rw(FUNC(sh7604_device::bdmrbl_r), FUNC(sh7604_device::bdmrbl_w));
+//  map(0xffffff78, 0xffffff79).rw(FUNC(sh7604_device::brcr_r), FUNC(sh7604_device::brcr_w));
 
 	// DMAC
 	map(0xffffff80, 0xffffff83).rw(FUNC(sh7604_device::sar_r<0>), FUNC(sh7604_device::sar_w<0>));
@@ -1007,7 +1036,7 @@ void sh7604_device::vcra_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 
 uint16_t sh7604_device::vcrb_r()
 {
-	return m_vcrb;
+	return m_vcrb & 0x7f7f;
 }
 
 void sh7604_device::vcrb_w(offs_t offset, uint16_t data, uint16_t mem_mask)
@@ -1038,7 +1067,7 @@ uint16_t sh7604_device::vcrd_r()
 void sh7604_device::vcrd_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 {
 	COMBINE_DATA(&m_vcrd);
-	m_irq_vector.fov = (m_vcrc >> 8) & 0x7f;
+	m_irq_vector.fov = (m_vcrd >> 8) & 0x7f;
 	sh2_recalc_irq();
 }
 
@@ -1054,16 +1083,17 @@ void sh7604_device::vcrwdt_w(offs_t offset, uint16_t data, uint16_t mem_mask)
 	sh2_recalc_irq();
 }
 
+// VCRDIV is a word register where bits 6-0 have a meaning, reads back written word value
 uint32_t sh7604_device::vcrdiv_r()
 {
-	return m_vcrdiv & 0x7f;
+	return m_vcrdiv & 0xffff;
 }
 
 void sh7604_device::vcrdiv_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
 	COMBINE_DATA(&m_vcrdiv);
 	// TODO: unemulated, level is seemingly not documented/settable?
-	m_irq_vector.divu = data & 0x7f;
+	m_irq_vector.divu = m_vcrdiv & 0x7f;
 	sh2_recalc_irq();
 }
 
@@ -1073,21 +1103,20 @@ void sh7604_device::vcrdiv_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 
 uint32_t sh7604_device::dvcr_r()
 {
-	return (m_divu_ovfie ? 2 : 0) | (m_divu_ovf ? 1 : 0);
+	return (m_divu_ovfie << 1) | (m_divu_ovf << 0);
 }
 
 void sh7604_device::dvcr_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
 	if (ACCESSING_BITS_0_7)
 	{
-		if (data & 1)
-			m_divu_ovf = false;
-		if (data & 2)
-		{
-			m_divu_ovfie = BIT(data, 1);
-			if (m_divu_ovfie)
-				LOG("SH2: unemulated DIVU OVF interrupt enable\n");
-		}
+		// both bits are regular r/w
+		// - vblokbrk/sarukani writes a '0' to clear a divide by zero OVF when beating
+		//   a stage with game timer <= 10
+		m_divu_ovf = BIT(data, 0);
+		m_divu_ovfie = BIT(data, 1);
+		if (m_divu_ovfie)
+			LOG("SH2: unemulated DIVU OVF interrupt enable\n");
 		sh2_recalc_irq();
 	}
 }
@@ -1109,6 +1138,7 @@ uint32_t sh7604_device::dvdnt_r()
 
 void sh7604_device::dvdnt_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
+	// TODO: this is really a separate register that happens to be shared with DVDNTL
 	COMBINE_DATA(&m_dvdntl);
 	int32_t a = m_dvdntl;
 	int32_t b = m_dvsr;
@@ -1117,6 +1147,7 @@ void sh7604_device::dvdnt_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 	{
 		m_dvdntl = a / b;
 		m_dvdnth = a % b;
+		// TODO: 40 cycles
 	}
 	else
 	{
@@ -1124,6 +1155,7 @@ void sh7604_device::dvdnt_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 		m_dvdntl = 0x7fffffff;
 		m_dvdnth = 0x7fffffff;
 		sh2_recalc_irq();
+		// TODO: 8 cycles
 	}
 }
 
@@ -1157,11 +1189,13 @@ void sh7604_device::dvdntl_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 			m_dvdntl = 0x7fffffff;
 			m_dvdnth = 0x7fffffff;
 			sh2_recalc_irq();
+			// TODO: 6 cycles, plenty of these in saturn:vkyoute2
 		}
 		else
 		{
 			m_dvdntl = q;
 			m_dvdnth = a % b;
+			// TODO: 39 cycles
 		}
 	}
 	else
@@ -1170,7 +1204,54 @@ void sh7604_device::dvdntl_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 		m_dvdntl = 0x7fffffff;
 		m_dvdnth = 0x7fffffff;
 		sh2_recalc_irq();
+		// TODO: 6 cycles
 	}
+}
+
+/*
+ * UBC
+ */
+
+// TODO: bare-bones, used for proper 32x:aburnerju sound (on slave side) as buffer storage
+
+uint16_t sh7604_device::barah_r()
+{
+	return m_barah;
+}
+
+uint16_t sh7604_device::baral_r()
+{
+	return m_baral;
+}
+
+void sh7604_device::barah_w(offs_t offset, uint16_t data, uint16_t mem_mask)
+{
+	COMBINE_DATA(&m_barah);
+}
+
+void sh7604_device::baral_w(offs_t offset, uint16_t data, uint16_t mem_mask)
+{
+	COMBINE_DATA(&m_baral);
+}
+
+uint16_t sh7604_device::barbh_r()
+{
+	return m_barbh;
+}
+
+uint16_t sh7604_device::barbl_r()
+{
+	return m_barbl;
+}
+
+void sh7604_device::barbh_w(offs_t offset, uint16_t data, uint16_t mem_mask)
+{
+	COMBINE_DATA(&m_barbh);
+}
+
+void sh7604_device::barbl_w(offs_t offset, uint16_t data, uint16_t mem_mask)
+{
+	COMBINE_DATA(&m_barbl);
 }
 
 /*
@@ -1281,6 +1362,8 @@ void sh7604_device::ccr_w(uint8_t data)
 	m_ccr = data;
 }
 
+// BCR1/BCR2 are really 16-bit wide, when accessed as dword the upper part is used as unlock
+// method (0xa55axxxx) and reads back 0.
 uint32_t sh7604_device::bcr1_r()
 {
 	return (m_bcr1 & ~0xe008) | (m_is_slave ? 0x8000 : 0);
@@ -1288,7 +1371,16 @@ uint32_t sh7604_device::bcr1_r()
 
 void sh7604_device::bcr1_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
-	COMBINE_DATA(&m_bcr1);
+	if (ACCESSING_BITS_0_31)
+	{
+		if ((data & 0xffff0000) == 0xa55a0000)
+		{
+			COMBINE_DATA(&m_bcr1);
+			m_bcr1 &= 0xffff;
+		}
+	}
+	else if (ACCESSING_BITS_0_15)
+		COMBINE_DATA(&m_bcr1);
 }
 
 uint32_t sh7604_device::bcr2_r()
@@ -1298,7 +1390,16 @@ uint32_t sh7604_device::bcr2_r()
 
 void sh7604_device::bcr2_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 {
-	COMBINE_DATA(&m_bcr2);
+	if (ACCESSING_BITS_0_31)
+	{
+		if ((data & 0xffff0000) == 0xa55a0000)
+		{
+			COMBINE_DATA(&m_bcr2);
+			m_bcr2 &= 0xffff;
+		}
+	}
+	else if (ACCESSING_BITS_0_15)
+		COMBINE_DATA(&m_bcr2);
 }
 
 uint32_t sh7604_device::wcr_r()
@@ -1533,7 +1634,7 @@ void sh7604_device::dmaor_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 	if (ACCESSING_BITS_0_7)
 	{
 		uint8_t old = m_dmaor & 0xf;
-		m_dmaor = (data & ~6) | (old & m_dmaor & 6); // TODO: should this be old & data & 6? bug?
+		m_dmaor = (data & ~6) | (old & data & 6);
 		sh2_dmac_check(0);
 		sh2_dmac_check(1);
 	}
