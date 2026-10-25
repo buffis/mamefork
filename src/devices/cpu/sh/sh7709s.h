@@ -68,7 +68,7 @@ private:
 	bool m_cache_port_free;
 
 	bool cache_access(uint32_t address, bool write);
-	uint32_t access_penalty(uint32_t address, bool write);
+	uint32_t access_penalty(uint32_t address, bool write, bool &bus_access);
 
 	// Timing calculation/decode related functions
 	uint32_t get_wcr1_timing(uint32_t area);

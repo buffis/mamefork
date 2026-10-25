@@ -329,7 +329,7 @@ static uint64_t remaining_cycles(uint64_t elapsed, uint64_t cycles)
 }
 
 // cpu->bus cycle conversion hardcoded to 2x as cv1k sh3 runs the bus at 50mhz
-uint32_t sh7709s_device::access_penalty(uint32_t address, bool write)
+uint32_t sh7709s_device::access_penalty(uint32_t address, bool write, bool &bus_access)
 {
 	// Instead of emulating the whole pipeline since games execute logic + spinwait
 	// we can emulate the cache port contention by just flipping the port free every other
@@ -345,6 +345,7 @@ uint32_t sh7709s_device::access_penalty(uint32_t address, bool write)
 
 	m_cache_port_free = !m_cache_port_free;
 
+	bus_access = !is_in_cache;
 	if (is_in_cache)
 	{
 		// Background fill happening, drain the remaining fill words but leave the rest on the table
@@ -489,18 +490,25 @@ void sh7709s_device::update_access_cycles(uint32_t address, bool write)
 	// isn't visible is applied. This can be fixed with some extra sampling of
 	// surrounding cache lines on access but that carries a bit of extra cpu
 	// cost and quite a bit of code complexity
+	//
+	// m_last_op_cycle_count marks the end of the last bus access, so background bus
+	// work (burst tails, write-backs, WCR1 idle) drains while the CPU runs from the
+	// cache. Cache hits don't use the bus, so they leave it alone.
+	bool bus_access;
 #if !SH7709S_ICACHE_TRACKING_HEAVY
 	// For now only handle cacheable instruction fetch sampling when we do
 	// data accesses. The majority of uncached instruction fetches is
 	// handled in the cache flush timing
 	if (is_cacheable(m_sh2_state->pc))
 	{
-		m_sh2_state->icount -= access_penalty(m_sh2_state->pc, false);
-		m_last_op_cycle_count = total_cycles();
+		m_sh2_state->icount -= access_penalty(m_sh2_state->pc, false, bus_access);
+		if (bus_access)
+			m_last_op_cycle_count = total_cycles();
 	}
 #endif
-	m_sh2_state->icount -= access_penalty(address, write);
-	m_last_op_cycle_count = total_cycles();
+	m_sh2_state->icount -= access_penalty(address, write, bus_access);
+	if (bus_access)
+		m_last_op_cycle_count = total_cycles();
 }
 
 void sh7709s_device::drc_memory_access_read()
