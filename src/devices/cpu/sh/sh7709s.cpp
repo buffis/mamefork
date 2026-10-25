@@ -758,13 +758,19 @@ void sh7709s_device::ccr_w(offs_t offset, uint32_t data, uint32_t mem_mask)
 		// fetches in the cache flush loop just total an approximation
 		// up here
 
-		// Main loop body (2 instruction fetches per loop due to 32 bit reads):
+		// Main loop body:
 		// MOV.L R0, @R1
 		// DT R2
 		// BFS $AC002A66
 		// ADD #$10, R1
-		m_sh2_state->icount -= (2 /*fetches*/ * 2 /*bus cycle convert*/ * 1024 /*loop iterations*/) *
-			(1 + mcr_rcd() + get_wcr2_timing(m_sh2_state->pc) + mcr_tpc());
+		// On a PCB the loop takes about 35 bus cycles per iteration (706us for
+		// the 1024 iterations with nothing to write back), five uncached
+		// fetches' worth: each instruction fetched on its own, plus the one
+		// prefetched past the delay slot. The instructions run in the shadow
+		// of the fetches, so the 5 cycles the recompiler charges for them
+		// come off.
+		m_sh2_state->icount -= 1024 /*loop iterations*/ *
+			(5 /*fetches*/ * 2 /*bus cycle convert*/ * (1 + mcr_rcd() + get_wcr2_timing(m_sh2_state->pc) + mcr_tpc()) - 5);
 #endif
 	}
 	COMBINE_DATA(&m_ccr);
