@@ -429,6 +429,15 @@ uint32_t sh7709s_device::access_penalty(uint32_t address, bool write, bool &bus_
 	// only need to handle non-cacheable + write for this check
 	m_last_area_accessed_was_write = (!is_cacheable(address) && write);
 
+	// After an uncached SDRAM access the SDRAM precharges itself (READA/WRITA) and takes
+	// no new command until Tpc has passed. Other areas aren't held up (10.3.4).
+	if (m_precharge_remaining_cycles > 0)
+	{
+		if (is_sdram_region(address))
+			cpu_penalty += remaining_cycles(elapsed_cycles, m_precharge_remaining_cycles);
+		m_precharge_remaining_cycles = 0;
+	}
+
 	// The remaining burst words of a prior cache fill still occupy the bus, so
 	// any subsequent access must wait for them to drain
 	if (m_burst_continuation_remaining_cycles > 0)
@@ -476,6 +485,8 @@ uint32_t sh7709s_device::access_penalty(uint32_t address, bool write, bool &bus_
 	// Account for the burst continuation and read close after the critical word lands, writebacks include the cost in the background cycles if there is a conflict
 	else if (is_sdram_region(address) && is_cacheable(address))
 		m_burst_continuation_remaining_cycles = (3 + mcr_tpc()) * 2;
+	else if (is_sdram_region(address))
+		m_precharge_remaining_cycles = mcr_tpc() * 2;
 
 	return cpu_penalty + (bus_penalty * 2);
 }
