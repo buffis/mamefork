@@ -113,6 +113,7 @@ void sh7709s_device::device_start()
 	save_item(NAME(m_wb_active_cycles));
 	save_item(NAME(m_last_sdram_bank));
 	save_item(NAME(m_precharge_remaining_cycles));
+	save_item(NAME(m_burst_continuation_remaining_cycles));
 	save_item(NAME(m_last_op_cycle_count));
 	save_item(NAME(m_cache_port_free));
 }
