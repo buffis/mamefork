@@ -865,6 +865,7 @@ private:
 	u8 m_blitter_busy;
 	u64 m_blit_delay_ns;
 	u16 m_blit_idle_op_bytes;
+	u32 m_blit_stolen_cpu_cycles;      // CPU cycles taken by uploads in the current list
 
 	// fpga firmware
 	std::vector<u8> m_firmware;

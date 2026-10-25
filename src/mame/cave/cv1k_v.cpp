@@ -69,6 +69,7 @@ cv1k_blitter_device::cv1k_blitter_device(const machine_config &mconfig, const ch
 	, m_blitter_busy(0)
 	, m_blit_delay_ns(0)
 	, m_blit_idle_op_bytes(0)
+	, m_blit_stolen_cpu_cycles(0)
 	, m_firmware_pos(0)
 	, m_firmware_port(0)
 	, m_firmware_version(0)
@@ -241,8 +242,9 @@ inline void cv1k_blitter_device::gfx_upload_shadow_copy(address_space &space, of
 	const int num_sram_clk = num_bytes / 4;
 	// Due to the way cv1k titles handle the flash read -> decompress -> flush -> invalidate
 	// for data for the blitter it's pretty safe to just steal the bus cycles directly from
-	// the cpu. Each bus cycle is 2 cpu cycles
-	m_maincpu->m_sh2_state->icount -= num_sram_clk * 2;
+	// the cpu. Each bus cycle is 2 cpu cycles. They are taken once the blit has started,
+	// see gfx_exec_w.
+	m_blit_stolen_cpu_cycles += num_sram_clk * 2;
 	m_blit_delay_ns += num_sram_clk * CV1K_SRAM_CLK_NANOSEC;
 	// Upload operations are written to VRAM as they arrive, and the Blitter will wait
 	// with Bus Request between each 64 byte chunk. See "Blitter Research by buffi".
@@ -850,6 +852,7 @@ void cv1k_blitter_device::gfx_exec_w(address_space &space, offs_t offset, u32 da
 			// Create a copy of the blit list so we can safely thread it.
 			// Copying the Blitter operations will also estimate the delay needed for processing.
 			m_blit_delay_ns = 0;
+			m_blit_stolen_cpu_cycles = 0;
 			gfx_create_shadow_copy(space);
 
 			// Every CV1K_VRAM_H_LINE_PERIOD_NANOSEC, the Blitter will block other operations, due
@@ -864,6 +867,10 @@ void cv1k_blitter_device::gfx_exec_w(address_space &space, offs_t offset, u32 da
 
 			m_blitter_busy = 1;
 			m_blitter_delay_timer->adjust(attotime::from_nsec(m_blit_delay_ns));
+
+			// The bus cycles uploads take from the CPU overlap the blit. Taken before the
+			// timer is set, they would push the start of the blit back by as much.
+			m_maincpu->m_sh2_state->icount -= m_blit_stolen_cpu_cycles;
 
 			m_gfx_addr_shadowcopy = m_gfx_addr;
 			m_blitter_request = osd_work_item_queue(m_work_queue, blit_request_callback, (void*)this, 0);
