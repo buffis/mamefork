@@ -563,15 +563,18 @@ void sh7709s_device::static_generate_memory_accessor(int size, int iswrite, cons
 	alloc_handle(handleptr, name);
 	UML_HANDLE(block, *handleptr);                         // handle  *handleptr
 
+	// P4 (on-chip registers, memory mapped cache arrays) never reaches the external
+	// bus, so it gets neither the address mask nor the access penalty. Jumping past
+	// the arg0/arg1 stores but still into the callback would charge the penalty of
+	// whatever the previous access was.
+	const int p4label = label++;
 	UML_CMP(block, I0, 0xe0000000);
-	UML_JMPc(block, COND_AE, label);
+	UML_JMPc(block, COND_AE, p4label);
 
 	UML_MOV(block, mem(&m_sh2_state->arg0), I0);       // mov     [arg0],i0
 	UML_MOV(block, mem(&m_sh2_state->arg1), size);     // mov     [arg1],size
 
 	UML_AND(block, I0, I0, SH34_AM);     // and r0, r0, #AM (0x1fffffff)
-
-	UML_LABEL(block, label++);              // label:
 
 	if (!debugger_enabled())
 	{
@@ -682,6 +685,28 @@ void sh7709s_device::static_generate_memory_accessor(int size, int iswrite, cons
 		UML_CALLC(block, cfunc_drc_memory_access_read, this); // callc  cfunc_drc_memory_access_read,this
 	}
 
+	UML_RET(block);                         // ret
+
+	// P4: plain access, no penalty accounting
+	UML_LABEL(block, p4label);
+	if (iswrite)
+	{
+		switch (size)
+		{
+		case 1: UML_WRITE(block, I0, I1, SIZE_BYTE, SPACE_PROGRAM); break;
+		case 2: UML_WRITE(block, I0, I1, SIZE_WORD, SPACE_PROGRAM); break;
+		case 4: UML_WRITE(block, I0, I1, SIZE_DWORD, SPACE_PROGRAM); break;
+		}
+	}
+	else
+	{
+		switch (size)
+		{
+		case 1: UML_READ(block, I0, I0, SIZE_BYTE, SPACE_PROGRAM); break;
+		case 2: UML_READ(block, I0, I0, SIZE_WORD, SPACE_PROGRAM); break;
+		case 4: UML_READ(block, I0, I0, SIZE_DWORD, SPACE_PROGRAM); break;
+		}
+	}
 	UML_RET(block);                         // ret
 
 	block.end();
