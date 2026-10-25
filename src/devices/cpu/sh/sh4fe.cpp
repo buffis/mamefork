@@ -35,6 +35,47 @@ uint16_t sh34_base_device::sh4_frontend::read_word(opcode_desc &desc)
 }
 
 
+/*-------------------------------------------------
+    multiplier contention (SH-3)
+
+    The instruction tables give MUL.L as "2 (to 5)"
+    cycles: MACH/MACL aren't ready until the
+    multiplier finishes, so an STS that reads them
+    straight after the multiply waits out the rest.
+-------------------------------------------------*/
+
+static uint32_t multiply_extra_cycles(uint16_t opcode)
+{
+	switch (opcode & 0xf00f)
+	{
+	case 0x0007: // MUL.L
+	case 0x000f: // MAC.L
+	case 0x3005: // DMULU.L
+	case 0x300d: // DMULS.L
+	case 0x400f: // MAC.W
+		return 3;
+
+	case 0x200e: // MULU.W
+	case 0x200f: // MULS.W
+		return 2;
+	}
+	return 0;
+}
+
+uint32_t sh34_base_device::sh4_frontend::mac_read_stall(opcode_desc const &desc, opcode_desc const *prev)
+{
+	if (m_sh->m_cpu_type != CPU_TYPE_SH3 || !prev || prev->pc != desc.pc - 2)
+		return 0;
+
+	const uint32_t adjacent = multiply_extra_cycles(prev->opptr);
+	if (adjacent)
+		return adjacent;
+
+	// one instruction in between hides as many cycles as it takes
+	const uint32_t behind = multiply_extra_cycles(m_sh->m_pr16(desc.physpc - 4));
+	return (behind > prev->cycles) ? (behind - prev->cycles) : 0;
+}
+
 bool sh34_base_device::sh4_frontend::describe_group_0(opcode_desc &desc, const opcode_desc *prev, uint16_t opcode)
 {
 	switch (opcode & 0xff)
@@ -42,6 +83,13 @@ bool sh34_base_device::sh4_frontend::describe_group_0(opcode_desc &desc, const o
 	default:
 		// fall through to SH2 handlers
 		return frontend::describe_group_0(desc, prev, opcode);
+
+	case 0x0a: // STS MACH,Rn
+	case 0x1a: // STS MACL,Rn
+		if (!frontend::describe_group_0(desc, prev, opcode))
+			return false;
+		desc.cycles += mac_read_stall(desc, prev);
+		return true;
 
 	case 0x52:
 	case 0x62:
@@ -115,6 +163,13 @@ bool sh34_base_device::sh4_frontend::describe_group_4(opcode_desc &desc, const o
 	default: // LDCMSR (0x0e) has sh2/4 flag difference
 		// fall through to SH2 handlers
 		return frontend::describe_group_4(desc, prev, opcode);
+
+	case 0x02: // STS.L MACH,@-Rn
+	case 0x12: // STS.L MACL,@-Rn
+		if (!frontend::describe_group_4(desc, prev, opcode))
+			return false;
+		desc.cycles += mac_read_stall(desc, prev);
+		return true;
 
 	case 0x42:
 	case 0x46:

@@ -31,6 +31,8 @@ protected:
 private:
 	bool describe_op1111_0x13(opcode_desc &desc, const opcode_desc *prev, uint16_t opcode);
 	bool describe_op1111_0xf13(opcode_desc &desc, const opcode_desc *prev, uint16_t opcode);
+
+	uint32_t mac_read_stall(opcode_desc const &desc, opcode_desc const *prev);
 };
 
 #endif // MAME_CPU_SH_SH4FE_H
