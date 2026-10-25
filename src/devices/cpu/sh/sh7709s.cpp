@@ -800,7 +800,7 @@ void sh7709s_device::cache_address_array_w(offs_t offset, uint32_t data, uint32_
 			uint32_t wb_address = m_cache[entry_block][way].tag * SH7709S_CACHE_LINE_SIZE;
 			m_cache[entry_block][way].dirty = 0;
 			// Always add wcr1 timing here, accesses to the cache address mappings have to be done via instruction from an uncached region
-			m_sh2_state->icount -= (2 + mcr_rcd() + 4 + mcr_trwl() + mcr_tpc() + get_wcr1_timing(3)) * 2;
+			m_sh2_state->icount -= (mcr_rcd() + 4 + mcr_trwl() + mcr_tpc() + get_wcr1_timing(3)) * 2;
 			m_last_area_accessed = get_area(wb_address);
 			LOG("Flushing dirty cache entry idx: %u\n", cache_entry_index);
 		}
