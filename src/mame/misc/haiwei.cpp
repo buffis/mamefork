@@ -43,6 +43,22 @@ It's simulated here at a high level:
 - commands: bit 4 set = read (single length byte), clear = write;
   bits 7-5 select one of several memory areas; 0xaf reads the BCD clock.
 
+unkhaiwei is a player terminal of a networked Baccarat system: the DIP
+switches set its terminal ID (1-15), and after boot the main loop only
+processes messages from a host on the Ethernet port (raw frames, EtherType
+0x6806 as read by the game). The host broadcasts round state (message 0x82,
+0x50 byte block), polls terminals (0x8a, answered with 0x8b and 26 bytes of
+terminal data) and adjusts terminal accounts (0xcc); 0x55, 0x7f, 0x8e, 0x8f
+and 0xee are also handled. Without a host the game sits at the empty table
+and ignores the keys. The host isn't dumped (it might be a different board
+or program).
+
+Inputs: the game scans 0x01500002, 0x01500000 and 0x0150000a (active low)
+into key codes 0x00-0x14 through a table; keys named by the game include
+Player, Banker, Tie, rules and the score up/down (上分/退分) buttons, but the
+mapping can't be checked without a host. 0x0150000a bits 0 and 1 are also
+counted separately with debounce, probably coin in and key in.
+
 TODO:
 - the watchdog period is a guess;
 - the protocol of the SIO device beyond the commands used during boot and
@@ -57,6 +73,7 @@ TODO:
 #include "emu.h"
 
 #include "cpu/se3208/se3208.h"
+#include "machine/dp8390.h"
 #include "machine/nvram.h"
 #include "machine/vrender0.h"
 #include "sound/vrender0.h"
@@ -76,7 +93,8 @@ public:
 		: driver_device(mconfig, type, tag),
 		m_maincpu(*this, "maincpu"),
 		m_vr0soc(*this, "vr0soc"),
-		m_nvram(*this, "nvram")
+		m_nvram(*this, "nvram"),
+		m_nic(*this, "nic")
 	{}
 
 	void hqdf(machine_config &config) ATTR_COLD;
@@ -96,6 +114,7 @@ private:
 	required_device<se3208_device> m_maincpu;
 	required_device<vrender0soc_device> m_vr0soc;
 	required_device<nvram_device> m_nvram;
+	required_device<rtl8019a_device> m_nic;
 
 	emu_timer *m_watchdog_timer = nullptr;
 	emu_timer *m_sio_rx_timer = nullptr;
@@ -104,6 +123,7 @@ private:
 	u32 m_watchdog_ctrl = 0;
 	u32 m_watchdog_count = 0;
 
+	std::unique_ptr<u8 []> m_nic_ram;
 	std::unique_ptr<u8 []> m_sio_ram;
 	u8 m_sio_frame[0x100] = { };
 	u16 m_sio_nibbles = 0;
@@ -124,6 +144,9 @@ private:
 	void pioldat_w(offs_t offset, u32 data, u32 mem_mask = ~0);
 	u32 pioedat_r();
 
+	u8 nic_r(offs_t offset);
+	void nic_w(offs_t offset, u8 data);
+
 	void watchdog_w(offs_t offset, u32 data, u32 mem_mask = ~0);
 	void watchdog_restart();
 	TIMER_CALLBACK_MEMBER(watchdog_expired);
@@ -143,12 +166,14 @@ void haiwei_state::machine_start()
 	m_watchdog_timer = timer_alloc(FUNC(haiwei_state::watchdog_expired), this);
 	m_sio_rx_timer = timer_alloc(FUNC(haiwei_state::sio_rx_next), this);
 
+	m_nic_ram = make_unique_clear<u8 []>(0x4000);
 	m_sio_ram = std::make_unique<u8 []>(SIO_AREAS * SIO_AREA_SIZE);
 	m_nvram->set_base(m_sio_ram.get(), SIO_AREAS * SIO_AREA_SIZE);
 
 	save_item(NAME(m_pio));
 	save_item(NAME(m_watchdog_ctrl));
 	save_item(NAME(m_watchdog_count));
+	save_pointer(NAME(m_nic_ram), 0x4000);
 	save_pointer(NAME(m_sio_ram), SIO_AREAS * SIO_AREA_SIZE);
 	save_item(NAME(m_sio_frame));
 	save_item(NAME(m_sio_nibbles));
@@ -191,6 +216,32 @@ void haiwei_state::pioldat_w(offs_t offset, u32 data, u32 mem_mask)
 u32 haiwei_state::pioedat_r()
 {
 	return 0;
+}
+
+
+// RTL8019AS: one register per 0x100 bytes, NE2000-style data port after the registers
+// TODO: data/reset port locations assumed from the NE2000 layout (no packets get that far without a host); interrupt not hooked up (polled)
+u8 haiwei_state::nic_r(offs_t offset)
+{
+	unsigned const reg = offset >> 6;
+	if (reg < 0x10)
+		return m_nic->cs_read(reg);
+	else if (reg == 0x10)
+		return m_nic->remote_read();
+	else if (reg == 0x1f && !machine().side_effects_disabled())
+		m_nic->dp8390_reset(CLEAR_LINE);
+	return 0;
+}
+
+void haiwei_state::nic_w(offs_t offset, u8 data)
+{
+	unsigned const reg = offset >> 6;
+	if (reg < 0x10)
+		m_nic->cs_write(reg, data);
+	else if (reg == 0x10)
+		m_nic->remote_write(data);
+	else if (reg == 0x1f)
+		m_nic->dp8390_reset(CLEAR_LINE);
 }
 
 
@@ -329,7 +380,7 @@ void haiwei_state::sio_process_frame()
 	else if (BIT(cmd, 4))
 	{
 		// read
-		unsigned const count = payload_length ? payload[0] : 0;
+		unsigned const count = std::min<unsigned>(payload_length ? payload[0] : 0, std::size(m_sio_rx_buf) - 5);
 		u8 data[0x100];
 		for (unsigned i = 0; i < count; i++)
 			data[i] = sio_mem(cmd, addr + i);
@@ -398,6 +449,7 @@ void haiwei_state::common_map(address_map &map)
 	map(0x01500000, 0x01500003).portr("IN0");
 	map(0x01500004, 0x01500007).portr("DSW2");
 	map(0x01500008, 0x0150000b).portr("IN1");
+	map(0x01608000, 0x01609fff).rw(FUNC(haiwei_state::nic_r), FUNC(haiwei_state::nic_w)).umask32(0x000000ff);
 
 	map(0x01800000, 0x01ffffff).m(m_vr0soc, FUNC(vrender0soc_device::regs_map));
 	map(0x01800010, 0x01800017).w(FUNC(haiwei_state::watchdog_w));
@@ -508,7 +560,7 @@ static INPUT_PORTS_START( hqdf )
 	PORT_BIT( 0xff00ff00, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	// read bit-reversed: switch 1 is bit 7
-	PORT_DIPNAME( 0x000000f0, 0x00000070, "Machine number" ) PORT_DIPLOCATION("SW1:1,2,3,4") // game stops with "games num error" if 0
+	PORT_DIPNAME( 0x000000f0, 0x00000070, "Terminal ID" ) PORT_DIPLOCATION("SW1:1,2,3,4") // unkhaiwei stops with "games num error" if 0
 	PORT_DIPSETTING(          0x000000f0, "0 (invalid)" )
 	PORT_DIPSETTING(          0x00000070, "1" )
 	PORT_DIPSETTING(          0x000000b0, "2" )
@@ -525,8 +577,10 @@ static INPUT_PORTS_START( hqdf )
 	PORT_DIPSETTING(          0x00000040, "13" )
 	PORT_DIPSETTING(          0x00000080, "14" )
 	PORT_DIPSETTING(          0x00000000, "15" )
-	PORT_DIPUNKNOWN_DIPLOC( 0x00000008, 0x00000008, "SW1:5" )
-	PORT_DIPUNKNOWN_DIPLOC( 0x00000004, 0x00000004, "SW1:6" )
+	PORT_DIPUNKNOWN_DIPLOC( 0x00000008, 0x00000008, "SW1:5" ) // unkhaiwei: when on, calls extra init code and stays at the logo
+	PORT_DIPNAME( 0x00000004, 0x00000004, "Pair bets" ) PORT_DIPLOCATION("SW1:6") // unkhaiwei: adds Player pair / Banker pair spots to the table
+	PORT_DIPSETTING(          0x00000004, DEF_STR( Off ) )
+	PORT_DIPSETTING(          0x00000000, DEF_STR( On ) )
 	PORT_DIPUNKNOWN_DIPLOC( 0x00000002, 0x00000002, "SW1:7" )
 	PORT_DIPUNKNOWN_DIPLOC( 0x00000001, 0x00000001, "SW1:8" )
 
@@ -549,6 +603,10 @@ void haiwei_state::hqdf(machine_config &config)
 
 	NVRAM(config, m_nvram, nvram_device::DEFAULT_ALL_0); // in the SIO device
 
+	RTL8019A(config, m_nic, 0);
+	m_nic->mem_read_callback().set([this] (offs_t offset) -> u8 { return ((offset & 0xc000) == 0x4000) ? m_nic_ram[offset & 0x3fff] : 0xff; });
+	m_nic->mem_write_callback().set([this] (offs_t offset, u8 data) { if ((offset & 0xc000) == 0x4000) m_nic_ram[offset & 0x3fff] = data; });
+
 	SPEAKER(config, "speaker", 2).front();
 	m_vr0soc->add_route(0, "speaker", 1.0, 0);
 	m_vr0soc->add_route(1, "speaker", 1.0, 1);
@@ -570,7 +628,7 @@ ROM_START( hqdf )
 	ROM_LOAD( "3", 0x400000, 0x200000, CRC(4edea690) SHA1(ba919577418e9f245113160adbdca9d63c54822e) )
 ROM_END
 
-ROM_START( unkhaiwei ) // probably a baccarat game, given the strings
+ROM_START( unkhaiwei ) // title screen says BACCARAT
 	ROM_REGION32_LE( 0x800000, "maincpu", 0 )
 	ROM_LOAD( "1", 0x000000, 0x400000, CRC(7850ff4d) SHA1(f247965d0b79ab3cb85efef8a0ac4d788f63ff7b) )
 	ROM_LOAD( "2", 0x400000, 0x400000, CRC(d123e649) SHA1(3c6aadb61acfa7c4536dc37b1e1505bcac4db504) )
@@ -612,4 +670,4 @@ void haiwei_state::decrypt(const char *region)
 
 
 GAME( 2006, hqdf,      0, hqdf,     hqdf, haiwei_state, init_haiwei, ROT0, "Hai Wei Technology", "Huanqiu Dafuweng",                MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
-GAME( 200?, unkhaiwei, 0, baccarat, hqdf, haiwei_state, init_haiwei, ROT0, "Hai Wei Technology", "unknown Hai Wei Technology game", MACHINE_NO_SOUND | MACHINE_NOT_WORKING )
+GAME( 200?, unkhaiwei, 0, baccarat, hqdf, haiwei_state, init_haiwei, ROT0, "Hai Wei Technology", "Baccarat (Hai Wei Technology, terminal)", MACHINE_NO_SOUND | MACHINE_NOT_WORKING ) // needs the network host to run rounds
